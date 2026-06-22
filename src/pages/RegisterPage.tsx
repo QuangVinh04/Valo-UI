@@ -9,7 +9,7 @@ import { register } from '@/services/auth.service';
 import '@/styles/pages/home.css';
 
 function RegisterPage() {
-  const { isAuthenticated } = useAuth();
+  const { authLoading, isAuthenticated } = useAuth();
   const toast = useToast();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -30,6 +30,10 @@ function RegisterPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (authLoading) {
+    return null;
+  }
 
   if (isAuthenticated) {
     return <Navigate to="/chat" replace />;

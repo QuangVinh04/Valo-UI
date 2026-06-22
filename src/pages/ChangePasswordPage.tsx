@@ -10,7 +10,7 @@ import { changePassword } from '@/services/auth.service';
 import '@/styles/pages/home.css';
 
 function ChangePasswordPage() {
-  const { isAuthenticated } = useAuth();
+  const { authLoading, isAuthenticated } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState('');
@@ -31,6 +31,14 @@ function ChangePasswordPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="auth-loading" role="status" aria-live="polite">
+        Checking session...
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;

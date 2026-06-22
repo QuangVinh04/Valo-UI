@@ -1,9 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { getAuthUser, type StoredAuthUser } from '@/lib/auth';
+import { clearAuthState, getAuthUser, storeAuthUser, type StoredAuthUser } from '@/lib/auth';
 import { getCurrentUserPermissions } from '@/services/auth.service';
+import { getCurrentUser } from '@/services/user.service';
 
 type AuthContextValue = {
   isAuthenticated: boolean;
+  authLoading: boolean;
   user: StoredAuthUser | null;
   permissions: string[];
   permissionsLoading: boolean;
@@ -14,6 +16,7 @@ type AuthContextValue = {
 
 type AuthState = {
   isAuthenticated: boolean;
+  authLoading: boolean;
   user: StoredAuthUser | null;
   permissions: string[];
   permissionsLoading: boolean;
@@ -22,63 +25,87 @@ type AuthState = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function readAuthState(): AuthState {
+  const hasAccessToken = Boolean(localStorage.getItem('accessToken'));
   const user = getAuthUser();
-  const isAuthenticated = Boolean(localStorage.getItem('accessToken') && user);
 
   return {
-    isAuthenticated,
+    isAuthenticated: false,
+    authLoading: hasAccessToken,
     user,
     permissions: [],
-    permissionsLoading: isAuthenticated,
+    permissionsLoading: hasAccessToken,
   };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(readAuthState);
-  const isRefreshingPermissionsRef = useRef(false);
+  const hydrateRequestIdRef = useRef(0);
 
-  const refreshPermissions = useCallback(async () => {
+  const hydrateAuth = useCallback(async () => {
+    const requestId = hydrateRequestIdRef.current + 1;
+    hydrateRequestIdRef.current = requestId;
+
     if (!localStorage.getItem('accessToken')) {
       setAuthState((current) => ({
         ...current,
+        isAuthenticated: false,
+        authLoading: false,
+        user: null,
         permissions: [],
         permissionsLoading: false,
       }));
       return;
     }
 
-    if (isRefreshingPermissionsRef.current) {
-      return;
-    }
-
-    isRefreshingPermissionsRef.current = true;
     setAuthState((current) => ({
       ...current,
+      isAuthenticated: false,
+      authLoading: true,
       permissionsLoading: true,
     }));
 
     try {
-      const permissions = await getCurrentUserPermissions();
+      const currentUser = await getCurrentUser();
+      const permissions = await getCurrentUserPermissions().catch(() => []);
+
+      if (hydrateRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      const user = {
+        fullName: currentUser.fullName,
+        email: currentUser.email,
+      };
+
+      storeAuthUser(user);
       setAuthState((current) => ({
         ...current,
+        isAuthenticated: true,
+        authLoading: false,
+        user,
         permissions,
         permissionsLoading: false,
       }));
     } catch {
-      setAuthState((current) => ({
-        ...current,
+      if (hydrateRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      clearAuthState();
+      setAuthState({
+        isAuthenticated: false,
+        authLoading: false,
+        user: null,
         permissions: [],
         permissionsLoading: false,
-      }));
-    } finally {
-      isRefreshingPermissionsRef.current = false;
+      });
     }
   }, []);
 
   const refreshAuth = useCallback(() => {
     setAuthState(readAuthState());
-    void refreshPermissions();
-  }, [refreshPermissions]);
+    void hydrateAuth();
+  }, [hydrateAuth]);
 
   useEffect(() => {
     window.addEventListener('storage', refreshAuth);
@@ -91,8 +118,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refreshAuth]);
 
   useEffect(() => {
-    void refreshPermissions();
-  }, [refreshPermissions]);
+    void hydrateAuth();
+  }, [hydrateAuth]);
 
   const value = useMemo<AuthContextValue>(() => {
     const permissionSet = new Set(authState.permissions);

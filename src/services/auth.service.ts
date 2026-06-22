@@ -1,5 +1,5 @@
 import { apiRequest } from '@/lib/api';
-import type { UserSettings } from '@/context/PreferencesContext';
+import { normalizeUserSettings, type UserSettingsInput } from '@/context/PreferencesContext';
 import { clearAuthState, storeAuthUser } from '@/lib/auth';
 
 export type AuthUser = {
@@ -10,7 +10,7 @@ export type AuthUser = {
   address: string | null;
   mustChangePassword: boolean;
   accessToken: string | null;
-  settings: UserSettings;
+  settings: UserSettingsInput;
 };
 
 export async function register(fullName: string, email: string): Promise<boolean> {
@@ -31,9 +31,11 @@ export async function login(email: string, password: string): Promise<AuthUser> 
   if (user.accessToken) {
     localStorage.setItem('accessToken', user.accessToken);
     storeAuthUser({ fullName: user.fullName, email: user.email });
-    localStorage.setItem('theme', user.settings.theme);
-    localStorage.setItem('language', user.settings.language);
-    document.documentElement.dataset.theme = user.settings.theme;
+    const settings = normalizeUserSettings(user.settings);
+    localStorage.setItem('theme', settings.theme);
+    localStorage.setItem('language', settings.language);
+    document.documentElement.dataset.theme = settings.theme;
+    document.documentElement.lang = settings.language;
 
     window.dispatchEvent(new Event('auth:changed'));
     window.dispatchEvent(new Event('preferences:changed'));

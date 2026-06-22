@@ -7,7 +7,7 @@ import { getErrorMessage } from '@/lib/error';
 import { login } from '@/services/auth.service';
 
 function Hero() {
-  const { isAuthenticated } = useAuth();
+  const { authLoading, isAuthenticated } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -27,6 +27,10 @@ function Hero() {
       setIsSubmitting(false);
     }
   };
+
+  if (authLoading && !isSubmitting) {
+    return null;
+  }
 
   if (isAuthenticated && !isSubmitting) {
     return <Navigate to="/chat" replace />;

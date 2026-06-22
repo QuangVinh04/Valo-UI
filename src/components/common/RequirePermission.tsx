@@ -10,13 +10,9 @@ type RequirePermissionProps = {
 };
 
 function RequirePermission({ permission, anyOf, children }: RequirePermissionProps) {
-  const { hasAnyPermission, hasPermission, isAuthenticated, permissionsLoading } = useAuth();
+  const { authLoading, hasAnyPermission, hasPermission, isAuthenticated, permissionsLoading } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (permissionsLoading) {
+  if (authLoading || permissionsLoading) {
     return (
       <div className="management-page">
         <section className="data-card access-denied-card">
@@ -25,6 +21,10 @@ function RequirePermission({ permission, anyOf, children }: RequirePermissionPro
         </section>
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
   }
 
   const canAccess = anyOf?.length

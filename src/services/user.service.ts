@@ -1,5 +1,5 @@
 import { apiRequest, apiRequestWithMeta, type ApiMeta } from '@/lib/api';
-import type { UserSettings } from '@/context/PreferencesContext';
+import type { UserSettings, UserSettingsInput } from '@/context/PreferencesContext';
 
 export type UserDto = {
   id: string;
@@ -61,7 +61,7 @@ export type UserProfileDto = {
   fullName: string;
   phoneNumber: string | null;
   address: string | null;
-  settings: UserSettings;
+  settings: UserSettingsInput;
 };
 
 export async function updateUserSettings(settings: UserSettings): Promise<UserSettings> {

@@ -10,10 +10,15 @@ export type UserSettings = {
   language: Language;
 };
 
+export type UserSettingsInput = {
+  theme?: string | null;
+  language?: string | null;
+} | null | undefined;
+
 type PreferencesContextValue = UserSettings & {
   setTheme: (theme: Theme) => void;
   setLanguage: (language: Language) => void;
-  applySettings: (settings: UserSettings, options?: { sync?: boolean }) => void;
+  applySettings: (settings: UserSettingsInput, options?: { sync?: boolean }) => void;
 };
 
 const defaultSettings: UserSettings = {
@@ -27,9 +32,13 @@ function readSettings(): UserSettings {
   const theme = localStorage.getItem('theme');
   const language = localStorage.getItem('language');
 
+  return normalizeUserSettings({ theme, language });
+}
+
+export function normalizeUserSettings(settings: UserSettingsInput): UserSettings {
   return {
-    theme: theme === 'light' ? 'light' : defaultSettings.theme,
-    language: language === 'en' ? 'en' : defaultSettings.language,
+    theme: settings?.theme === 'light' ? 'light' : defaultSettings.theme,
+    language: settings?.language === 'en' ? 'en' : defaultSettings.language,
   };
 }
 
@@ -48,15 +57,17 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     persistSettings(settings);
   }, [settings]);
 
-  const applySettings = useCallback((nextSettings: UserSettings, options?: { sync?: boolean }) => {
-    setSettings(nextSettings);
-    persistSettings(nextSettings);
+  const applySettings = useCallback((nextSettings: UserSettingsInput, options?: { sync?: boolean }) => {
+    const normalizedSettings = normalizeUserSettings(nextSettings);
+
+    setSettings(normalizedSettings);
+    persistSettings(normalizedSettings);
 
     if (options?.sync === false || !localStorage.getItem('accessToken')) {
       return;
     }
 
-    void updateUserSettings(nextSettings).catch(() => {
+    void updateUserSettings(normalizedSettings).catch(() => {
       // Keep local UI preference even when server sync fails.
     });
   }, []);
