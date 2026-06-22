@@ -1,0 +1,232 @@
+import { useEffect, useState } from 'react';
+import { useToast } from '@/context/ToastContext';
+import { removeGroupMembers, type GroupMemberDto } from '@/services/group.service';
+import GroupAddMembersPanel from './GroupAddMembersPanel';
+import type { GroupViewModel } from './group-view-model';
+
+type GroupMembersModalProps = {
+  group: GroupViewModel;
+  onClose: () => void;
+  onMembersChanged: () => void;
+};
+
+function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersModalProps) {
+  const toast = useToast();
+  const [currentMembers, setCurrentMembers] = useState(group.members);
+  const [currentMemberCount, setCurrentMemberCount] = useState(group.memberCount);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [memberPage, setMemberPage] = useState<'list' | 'add'>('list');
+  const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+
+  useEffect(() => {
+    setCurrentMembers(group.members);
+    setCurrentMemberCount(group.memberCount);
+    setSelectedMemberIds([]);
+    setMemberPage('list');
+    setIsConfirmingRemove(false);
+  }, [group]);
+
+  function toggleSelectedMember(userId: string) {
+    setSelectedMemberIds((current) => (
+      current.includes(userId)
+        ? current.filter((id) => id !== userId)
+        : [...current, userId]
+    ));
+  }
+
+  function toggleAllMembers() {
+    setSelectedMemberIds((current) => (
+      current.length === currentMembers.length ? [] : currentMembers.map((member) => member.id)
+    ));
+  }
+
+  function openRemoveConfirmation() {
+    if (selectedMemberIds.length === 0) {
+      toast.error('Please select at least one member');
+      return;
+    }
+
+    setIsConfirmingRemove(true);
+  }
+
+  async function handleRemoveMembers() {
+    setIsRemoving(true);
+
+    try {
+      const updatedGroup = await removeGroupMembers(group.id, selectedMemberIds);
+      toast.success(`${selectedMemberIds.length} member${selectedMemberIds.length > 1 ? 's' : ''} removed from "${group.name}".`);
+      setCurrentMembers(updatedGroup.members);
+      setCurrentMemberCount(updatedGroup.memberCount);
+      setSelectedMemberIds([]);
+      setIsConfirmingRemove(false);
+      onMembersChanged();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Cannot remove user from group';
+      toast.error(message);
+    } finally {
+      setIsRemoving(false);
+    }
+  }
+
+  function handleMembersAdded(updatedGroup: GroupMemberDto) {
+    setCurrentMembers(updatedGroup.members);
+    setCurrentMemberCount(updatedGroup.memberCount);
+    setSelectedMemberIds([]);
+    setMemberPage('list');
+    onMembersChanged();
+  }
+
+  function getMemberInitials(name: string): string {
+    return name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || 'U';
+  }
+
+  const isAllMembersSelected = currentMembers.length > 0 && selectedMemberIds.length === currentMembers.length;
+  const selectedCountLabel = selectedMemberIds.length > 0 ? `${selectedMemberIds.length} selected` : 'None selected';
+  const isAddPage = memberPage === 'add';
+
+  return (
+    <div className="modal-backdrop">
+      <section className="modal-card group-modal">
+        <header className="modal-header stacked">
+          <div>
+            <h2>{isAddPage ? 'Add Members' : 'Manage Members'}</h2>
+            <p>{isAddPage ? `Attach existing users to ${group.name}.` : `Add or remove users in ${group.name}.`}</p>
+          </div>
+          <button type="button" aria-label="Close member management" onClick={onClose}>×</button>
+        </header>
+
+        <div className="modal-body">
+          <p className="form-kicker">Target Group</p>
+          <div className="mock-input">
+            <strong>{group.name}</strong>
+            <span className="muted">{currentMemberCount} current members</span>
+          </div>
+
+          {isAddPage ? (
+            <GroupAddMembersPanel
+              group={group}
+              currentMemberIds={currentMembers.map((member) => member.id)}
+              onBack={() => setMemberPage('list')}
+              onMembersAdded={handleMembersAdded}
+            />
+          ) : (
+            <section className="member-table-card">
+              <div className="member-section-header">
+                <div>
+                  <p className="form-kicker">Current Members</p>
+                  <span className="member-selection-count">{selectedCountLabel}</span>
+                </div>
+                <div className="member-section-actions">
+                  <button
+                    className="btn-danger-link"
+                    type="button"
+                    onClick={openRemoveConfirmation}
+                    disabled={selectedMemberIds.length === 0 || isRemoving}
+                  >
+                    {isRemoving ? 'Deleting...' : 'Delete selected'}
+                  </button>
+                  <button
+                    className="btn-chip"
+                    type="button"
+                    onClick={() => setMemberPage('add')}
+                  >
+                    Add member
+                  </button>
+                </div>
+              </div>
+              <div className="member-table-wrap">
+                {currentMembers.length > 0 ? (
+                  <table className="data-table member-management-table">
+                    <thead>
+                      <tr>
+                        <th>
+                          <label className="member-check-cell">
+                            <input
+                              className="member-checkbox-input"
+                              type="checkbox"
+                              checked={isAllMembersSelected}
+                              onChange={toggleAllMembers}
+                            />
+                            <span className="member-checkbox-box" aria-hidden="true" />
+                            <span className="sr-only">Select all members</span>
+                          </label>
+                        </th>
+                        <th>Name</th>
+                        <th>Email</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentMembers.map((member) => (
+                        <tr className={selectedMemberIds.includes(member.id) ? 'selected' : undefined} key={member.id}>
+                          <td>
+                            <label className="member-check-cell">
+                              <input
+                                className="member-checkbox-input"
+                                type="checkbox"
+                                checked={selectedMemberIds.includes(member.id)}
+                                onChange={() => toggleSelectedMember(member.id)}
+                              />
+                              <span className="member-checkbox-box" aria-hidden="true" />
+                              <span className="sr-only">Select {member.fullName}</span>
+                            </label>
+                          </td>
+                          <td>
+                            <div className="user-cell">
+                              <span className="member-avatar-small" aria-hidden="true">{getMemberInitials(member.fullName)}</span>
+                              <strong>{member.fullName}</strong>
+                            </div>
+                          </td>
+                          <td>{member.email}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="member-row muted">No members in this group</div>
+                )}
+              </div>
+            </section>
+          )}
+        </div>
+
+        <footer className="modal-footer">
+          <button className="btn-cancel" type="button" onClick={onClose}>Done</button>
+        </footer>
+      </section>
+
+      {isConfirmingRemove && (
+        <section className="confirm-popover" role="dialog" aria-modal="true" aria-labelledby="remove-members-title">
+          <header className="confirm-popover-header">
+            <div>
+              <p className="form-kicker">Remove Members</p>
+              <h3 id="remove-members-title">Confirm removal</h3>
+            </div>
+            <button type="button" aria-label="Close remove confirmation" onClick={() => setIsConfirmingRemove(false)}>×</button>
+          </header>
+          <div className="confirm-popover-body">
+            <p>
+              Remove <strong>{selectedMemberIds.length}</strong> member{selectedMemberIds.length > 1 ? 's' : ''} from <strong>{group.name}</strong>?
+            </p>
+            <span>This only detaches the selected users from this group.</span>
+          </div>
+          <footer className="confirm-popover-actions">
+            <button className="btn-cancel flat" type="button" onClick={() => setIsConfirmingRemove(false)} disabled={isRemoving}>
+              Cancel
+            </button>
+            <button className="btn-danger-solid" type="button" onClick={handleRemoveMembers} disabled={isRemoving}>
+              {isRemoving ? 'Removing...' : 'Remove Members'}
+            </button>
+          </footer>
+        </section>
+      )}
+    </div>
+  );
+}
+
+export default GroupMembersModal;

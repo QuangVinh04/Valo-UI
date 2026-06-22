@@ -1,0 +1,184 @@
+.form-kicker,
+.label,
+.data-table th {
+  color: var(--blue-2);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.auth-submit,
+.btn-primary,
+.btn-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 0;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: var(--button-shadow);
+}
+
+.btn-primary,
+.btn-ghost,
+.btn-chip,
+.btn-cancel,
+.btn-blue,
+.btn-outline-danger,
+.btn-solid-danger,
+.btn-muted,
+.theme-btn,
+.select-mock {
+  min-height: 48px;
+  border-radius: 15px;
+  padding: 0 1.35rem;
+}
+
+.btn-primary {
+  min-width: 154px;
+  color: var(--primary-button-text);
+  background: var(--primary-button-bg);
+  box-shadow: var(--button-shadow);
+}
+
+.btn-xl {
+  min-height: 74px;
+  border-radius: 999px;
+  padding: 0 2.2rem;
+  font-size: 1.1rem;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.icon-button {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--action-text);
+  padding: 0;
+}
+
+.icon-button:hover {
+  border-color: var(--line);
+  background: var(--panel-3);
+  color: var(--blue-2);
+}
+
+.settings-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(5, 7, 8, 0.72);
+}
+
+.settings-modal {
+  width: min(520px, 100%);
+  padding: 1.5rem;
+}
+
+.settings-modal header,
+.settings-modal footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-modal header {
+  margin-bottom: 1.5rem;
+}
+
+.settings-modal header h3 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.settings-modal header button {
+  border: 0;
+  background: transparent;
+  color: var(--action-text);
+  font-size: 2rem;
+}
+
+.settings-modal-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings-modal label {
+  display: grid;
+  gap: 0.55rem;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.settings-modal input {
+  min-height: 54px;
+  border: 1px solid var(--modal-input-border);
+  border-radius: 10px;
+  background: var(--modal-input-bg);
+  color: var(--text);
+  padding: 0 1rem;
+}
+
+.confirm-description {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.settings-modal footer {
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.settings-modal button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.btn-blue {
+  min-width: 120px;
+  border-radius: 999px;
+}
+
+.btn-outline-danger {
+  min-width: 120px;
+  border: 1px solid var(--danger);
+  background: transparent;
+  color: var(--danger);
+  border-radius: 999px;
+}
+
+.btn-solid-danger {
+  min-width: 120px;
+  border: 0;
+  background: var(--danger);
+  color: #451616;
+  border-radius: 999px;
+}
+
+.btn-muted {
+  min-width: 120px;
+  border: 0;
+  background: var(--muted-button-bg);
+  color: var(--muted-button-text);
+  border-radius: 999px;
+}

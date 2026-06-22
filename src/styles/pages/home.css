@@ -1,0 +1,160 @@
+.home-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 2rem 2.25rem;
+}
+
+.auth-header,
+.auth-footer {
+  width: min(1360px, 100%);
+  margin: 0 auto;
+}
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-brand {
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.auth-back-link {
+  color: #d8dce4;
+  font-size: 1rem;
+}
+
+.home-main {
+  display: grid;
+  place-items: center;
+  padding: 5rem 0 2rem;
+}
+
+.auth-card-wrap {
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.auth-card {
+  width: min(560px, calc(100vw - 2rem));
+  background: var(--panel);
+  border: 1px solid rgba(153, 169, 194, 0.35);
+  border-radius: 10px;
+  padding: 3rem;
+  box-shadow: var(--panel-shadow);
+}
+
+.auth-kicker {
+  margin: 0 0 1rem;
+  color: var(--blue-2);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.auth-card h1 {
+  margin: 0;
+  font-size: 2.2rem;
+  line-height: 1.1;
+}
+
+.auth-subtitle {
+  margin: 1.5rem 0 2.2rem;
+  color: #d6dae3;
+  line-height: 1.65;
+  font-size: 1.05rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.auth-form label {
+  margin-top: 0.85rem;
+  font-weight: 700;
+}
+
+.auth-form input {
+  width: 100%;
+  min-height: 54px;
+  background: var(--modal-input-bg);
+  color: var(--text);
+  border: 1px solid var(--modal-input-border);
+  border-radius: 8px;
+  padding: 0 1.25rem;
+  outline: none;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field span {
+  position: absolute;
+  right: 1.2rem;
+  top: 50%;
+  color: #a9b0bd;
+  transform: translateY(-50%);
+}
+
+.auth-form input:focus {
+  border-color: #679ce8;
+  box-shadow: 0 0 0 3px rgba(36, 120, 230, 0.22);
+}
+
+.auth-submit {
+  display: grid;
+  place-items: center;
+  min-height: 54px;
+  margin-top: 1.05rem;
+  border-radius: 8px;
+}
+
+.auth-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.auth-switch {
+  margin: 1.35rem 0 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.auth-switch a {
+  color: var(--blue-2);
+  font-weight: 800;
+}
+
+.auth-footer {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  color: #99a2b1;
+  letter-spacing: 0.16em;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.73rem;
+  padding-bottom: 1.25rem;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .home-shell {
+    padding: 1rem;
+  }
+
+  .auth-card {
+    padding: 1.6rem;
+    border-radius: 20px;
+  }
+
+  .auth-card h1 {
+    font-size: 2.2rem;
+  }
+}

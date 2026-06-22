@@ -1,0 +1,184 @@
+@import './common.css';
+
+:root {
+  --bg: #090d0f;
+  --panel: #141719;
+  --panel-2: #1d2023;
+  --panel-3: #25292d;
+  --panel-elevated: #171b1f;
+  --line: rgba(197, 211, 232, 0.12);
+  --line-strong: rgba(174, 197, 235, 0.28);
+  --text: #f0f2f5;
+  --muted: #c2c7d1;
+  --soft: #8e96a4;
+  --blue: #2478e6;
+  --blue-2: #a9c5ff;
+  --blue-dark: #0f2a49;
+  --danger: #ffaaa5;
+  --sidebar-bg: #0d1112;
+  --sidebar-text: #d7dbe3;
+  --icon-bg: #102b48;
+  --icon-danger-bg: #46191c;
+  --panel-shadow: none;
+  --button-shadow: 0 14px 28px rgba(12, 39, 73, 0.35);
+  --primary-button-bg: #2478e6;
+  --primary-button-text: #ffffff;
+  --muted-button-bg: #343738;
+  --muted-button-text: #f1f3f6;
+  --chat-bubble-bg: #282a2c;
+  --composer-bg: #202224;
+  --table-row-line: rgba(255, 255, 255, 0.035);
+  --action-text: #c9ced9;
+  --pill-bg: #17385c;
+  --badge-bg: #303743;
+  --badge-text: #bfd1f3;
+  --modal-input-bg: #172538;
+  --modal-input-border: #345172;
+  --modal-footer-bg: rgba(255, 255, 255, 0.03);
+  --tag-bg: #11395f;
+  --tag-border: #185da5;
+  --tag-text: #8ebeff;
+  --focus-ring: rgba(169, 197, 255, 0.34);
+  --success: #47d18c;
+  --warning: #f6c85f;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html[data-theme='light'] {
+  --bg: #f3f6fb;
+  --panel: #ffffff;
+  --panel-2: #f7f9fc;
+  --panel-3: #e8f1ff;
+  --panel-elevated: #ffffff;
+  --line: rgba(20, 31, 45, 0.14);
+  --line-strong: rgba(20, 31, 45, 0.28);
+  --text: #121820;
+  --muted: #4d5b6b;
+  --soft: #6f7b8a;
+  --blue: #1d67d4;
+  --blue-2: #245da8;
+  --blue-dark: #dceaff;
+  --danger: #c9342f;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #263445;
+  --icon-bg: #e8f1ff;
+  --icon-danger-bg: #fff0f0;
+  --panel-shadow: 0 18px 42px rgba(20, 31, 45, 0.06);
+  --button-shadow: 0 12px 24px rgba(29, 103, 212, 0.22);
+  --primary-button-bg: #0f6ed8;
+  --primary-button-text: #ffffff;
+  --muted-button-bg: #e8edf5;
+  --muted-button-text: #243247;
+  --chat-bubble-bg: #ffffff;
+  --composer-bg: #ffffff;
+  --table-row-line: rgba(20, 31, 45, 0.1);
+  --action-text: #506176;
+  --pill-bg: #e8f1ff;
+  --badge-bg: #e8f1ff;
+  --badge-text: #245da8;
+  --modal-input-bg: #ffffff;
+  --modal-input-border: rgba(20, 31, 45, 0.18);
+  --modal-footer-bg: #f7f9fc;
+  --tag-bg: #e8f1ff;
+  --tag-border: #b8d4ff;
+  --tag-text: #245da8;
+  --focus-ring: rgba(15, 110, 216, 0.22);
+  --success: #168653;
+  --warning: #9a6500;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+body {
+  color: var(--text);
+  background:
+    radial-gradient(70% 90% at 50% 40%, rgba(28, 35, 39, 0.2), rgba(9, 13, 15, 0) 62%),
+    var(--bg);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-title {
+  margin: 0 0 1rem;
+}
+
+.panel-dark {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 16px;
+  box-shadow: var(--panel-shadow);
+}
+
+.state-row.error {
+  color: var(--danger);
+}
+
+.toast-region {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 60;
+  display: grid;
+  gap: 0.75rem;
+  width: min(380px, calc(100vw - 2.5rem));
+}
+
+.toast {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid var(--line-strong);
+  border-left-width: 5px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--panel-shadow);
+  padding: 0.85rem 1rem;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.toast-success {
+  border-left-color: #47d18c;
+}
+
+.toast-error {
+  border-left-color: var(--danger);
+}
+
+.toast-warning {
+  border-left-color: #f6c85f;
+}
+
+.toast-info {
+  border-left-color: var(--blue);
+}
