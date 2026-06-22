@@ -44,10 +44,9 @@ function ChatSidebarRecents() {
     };
   }, []);
 
-  const handleSelectConversation = async (conversationId: string) => {
+  const handleSelectConversation = (conversationId: string) => {
     if (editingId) return;
-    await chat.selectConversation(conversationId);
-    navigate('/chat');
+    navigate(`/chat/${conversationId}`);
   };
 
   const toggleMenu = (conversationId: string, trigger: HTMLButtonElement) => {
@@ -149,7 +148,7 @@ function ChatSidebarRecents() {
                   type="button"
                   className="sidebar-chat-title"
                   title={conversation.title}
-                  onClick={() => void handleSelectConversation(conversation.id)}
+                  onClick={() => handleSelectConversation(conversation.id)}
                 >
                   <MessageSquare size={15} aria-hidden="true" />
                   <span>{conversation.title}</span>

@@ -75,7 +75,13 @@ export async function sendMessageStream(input: {
 
   while (true) {
     const { done, value } = await reader.read();
-    if (done) break;
+    if (done) {
+      buffer += decoder.decode();
+      if (buffer.trim()) {
+        handleStreamChunk(buffer, handlers);
+      }
+      break;
+    }
 
     buffer += decoder.decode(value, { stream: true });
     const chunks = buffer.split('\n\n');
@@ -110,13 +116,22 @@ async function getStreamErrorMessage(response: Response): Promise<string> {
 }
 
 function handleStreamChunk(chunk: string, handlers: StreamHandlers) {
-  const eventLine = chunk.split('\n').find((line) => line.startsWith('event:'));
-  const dataLine = chunk.split('\n').find((line) => line.startsWith('data:'));
+  const lines = chunk.split('\n');
+  const eventLine = lines.find((line) => line.startsWith('event:'));
+  const dataLines = lines.filter((line) => line.startsWith('data:'));
 
-  if (!eventLine || !dataLine) return;
+  if (!eventLine || !dataLines.length) return;
 
   const event = eventLine.replace('event:', '').trim();
-  const data = JSON.parse(dataLine.replace('data:', '').trim()) as unknown;
+  const rawData = dataLines.map((line) => line.replace('data:', '').trim()).join('\n');
+  let data: unknown;
+
+  try {
+    data = JSON.parse(rawData) as unknown;
+  } catch {
+    handlers.onError('Stream returned an invalid event payload');
+    return;
+  }
 
   if (event === 'ready') {
     handlers.onReady(data as StreamReadyEvent);

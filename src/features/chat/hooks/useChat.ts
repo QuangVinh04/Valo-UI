@@ -1,4 +1,5 @@
-import { createContext, createElement, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, createElement, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useMatch, useNavigate } from 'react-router-dom';
 import { uploadChatFile } from '../api/file-upload.api';
 import { deleteConversation, getConversation, getConversations, renameConversation, sendMessageStream } from '../api/chat.api';
 import type { ChatMessage, Conversation, FileUpload, StreamDoneEvent, StreamReadyEvent } from '../types';
@@ -46,6 +47,9 @@ export type SelectedChatFile = {
 };
 
 function useChatState() {
+  const navigate = useNavigate();
+  const chatRouteMatch = useMatch('/chat/:conversationId');
+  const routeConversationId = chatRouteMatch?.params.conversationId ?? null;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -92,7 +96,7 @@ function useChatState() {
   const activeConversationId = activeConversation?.id ?? null;
   const isOpeningConversation = openingConversationId !== null;
 
-  const selectConversation = async (conversationId: string) => {
+  const selectConversation = useCallback(async (conversationId: string) => {
     setError('');
     setOpeningConversationId(conversationId);
     const existing = conversations.find((conversation) => conversation.id === conversationId);
@@ -113,9 +117,17 @@ function useChatState() {
     } finally {
       setOpeningConversationId((current) => current === conversationId ? null : current);
     }
-  };
+  }, [conversations]);
 
-  const startNewChat = () => {
+  useEffect(() => {
+    if (!routeConversationId || routeConversationId === activeConversationId || openingConversationId === routeConversationId) {
+      return;
+    }
+
+    void selectConversation(routeConversationId);
+  }, [activeConversationId, openingConversationId, routeConversationId, selectConversation]);
+
+  const startNewChat = useCallback(() => {
     streamAbortControllerRef.current?.abort();
     setActiveConversation(null);
     setMessages([]);
@@ -123,7 +135,8 @@ function useChatState() {
     setSelectedFiles([]);
     setError('');
     setOpeningConversationId(null);
-  };
+    navigate('/chat');
+  }, [navigate]);
 
   const stopGenerating = () => {
     streamAbortControllerRef.current?.abort();
@@ -250,6 +263,7 @@ function useChatState() {
         updatedAt: new Date().toISOString(),
         messages: [event.userMessage],
       });
+      navigate(`/chat/${event.conversationId}`, { replace: !activeConversationId });
     };
 
     const handleToken = (token: string) => {
@@ -343,7 +357,7 @@ function useChatState() {
     deleteChat,
     stopGenerating,
     sendPrompt,
-  }), [conversations, activeConversationId, messages, prompt, selectedFiles, modelName, isLoading, isOpeningConversation, openingConversationId, isStreaming, isUploadingFiles, error]);
+  }), [conversations, activeConversationId, messages, prompt, selectedFiles, modelName, isLoading, isOpeningConversation, openingConversationId, isStreaming, isUploadingFiles, error, selectConversation, startNewChat]);
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
