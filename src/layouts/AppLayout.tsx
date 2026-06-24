@@ -2,7 +2,8 @@ import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, Settings, Shield, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { ChatProvider, ChatSidebarRecents, useChat } from '@/features/chat';
+import { ChatProvider, useChat } from '@/hooks/useChat';
+import ChatSidebarRecents from '@/pages/chat/components/ChatSidebarRecents';
 import '@/styles/layout.css';
 
 const navItems = [

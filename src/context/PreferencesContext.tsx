@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { updateUserSettings } from '@/services/user.service';
-import i18n from '@/i18n';
+import i18n from '@/i18n/config';
 
 export type Theme = 'dark' | 'light';
 export type Language = 'vi' | 'en';
