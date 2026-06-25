@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UserPlus, UserRound, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
 import { useToast } from '@/context/ToastContext';
@@ -14,6 +15,7 @@ type UserFormModalProps = {
 };
 
 function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalProps) {
+  const { t } = useTranslation();
   const toast = useToast();
   const isUpdate = mode === 'update';
   const [fullName, setFullName] = useState(user?.fullName ?? '');
@@ -23,7 +25,7 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
   const [groupIds, setGroupIds] = useState<string[]>(user?.groups.map((group) => group.id) ?? []);
   const [groupSearch, setGroupSearch] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const emptyGroupLabel = 'No groups selected';
+  const emptyGroupLabel = t('admin.users.noGroupsSelected');
   const selectedGroups = useMemo(
     () => groups.filter((group) => groupIds.includes(group.id)),
     [groupIds, groups]
@@ -57,7 +59,7 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
     const normalizedAddress = address.trim();
 
     if (!name || (!isUpdate && !normalizedEmail)) {
-      toast.error('Full name and email are required');
+      toast.error(t('admin.users.nameEmailRequired'));
       return;
     }
 
@@ -71,7 +73,7 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
           address: normalizedAddress,
         });
 
-        toast.success(`User "${name}" updated successfully.`);
+        toast.success(t('admin.users.updated', { name }));
       } else {
         const createdUser = await createUser({
           fullName: name,
@@ -84,13 +86,13 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
           await assignUserGroups(createdUser.id, groupIds);
         }
 
-        toast.success(`User "${name}" created successfully.`);
+        toast.success(t('admin.users.created', { name }));
       }
 
       onSaved();
       onClose();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Cannot save user';
+      const message = err instanceof Error ? err.message : t('admin.users.saveFailed');
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -103,17 +105,17 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
         <header className="modal-header">
           <h2 className="modal-title">
             {isUpdate ? <UserRound size={21} aria-hidden="true" /> : <UserPlus size={21} aria-hidden="true" />}
-            {isUpdate ? 'Update User' : 'Add New User'}
+            {isUpdate ? t('admin.users.updateUserTitle') : t('admin.users.addNewUser')}
           </h2>
-          <IconButton icon={X} label="Close user form" onClick={onClose} />
+          <IconButton icon={X} label={t('admin.users.closeUserForm')} onClick={onClose} />
         </header>
         <div className="modal-body">
           <label>
-            Full Name
-            <input value={fullName} placeholder="Enter full name" onChange={(event) => setFullName(event.target.value)} />
+            {t('admin.users.fullName')}
+            <input value={fullName} placeholder={t('admin.users.enterFullName')} onChange={(event) => setFullName(event.target.value)} />
           </label>
           <label>
-            Email Address
+            {t('auth.emailAddress')}
             <input
               value={email}
               placeholder="name@company.com"
@@ -122,7 +124,7 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
             />
           </label>
           <label>
-            Phone Number
+            {t('admin.users.phoneNumber')}
             <input
               value={phoneNumber}
               placeholder="+84 901 234 567"
@@ -130,20 +132,20 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
             />
           </label>
           <label>
-            Address
+            {t('admin.users.address')}
             <input
               value={address}
-              placeholder="Enter address"
+              placeholder={t('admin.users.enterAddress')}
               onChange={(event) => setAddress(event.target.value)}
             />
           </label>
           {!isUpdate && (
             <div>
-              <span className="label-text">Groups</span>
+              <span className="label-text">{t('common.groups')}</span>
               <label className="member-search-field group-search-field">
                 <input
                   value={groupSearch}
-                  placeholder="Search group by name..."
+                  placeholder={t('admin.users.searchGroupByName')}
                   onChange={(event) => setGroupSearch(event.target.value)}
                 />
               </label>
@@ -151,13 +153,13 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
                 {availableGroups.map((group) => (
                   <button type="button" key={group.id} onClick={() => addGroup(group.id)}>
                     <strong>{group.name}</strong>
-                    <span>{group.description ?? 'No description'}</span>
+                    <span>{group.description ?? t('common.noDescription')}</span>
                   </button>
                 ))}
                 {groups.length === 0 ? (
                   <span className="muted">{emptyGroupLabel}</span>
                 ) : availableGroups.length === 0 ? (
-                  <span className="muted">No available groups found</span>
+                  <span className="muted">{t('admin.users.noAvailableGroups')}</span>
                 ) : null}
               </div>
               <div className="tag-row">
@@ -173,9 +175,9 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
           )}
         </div>
         <footer className="modal-footer">
-          <button className="btn-cancel" type="button" onClick={onClose}>Cancel</button>
+          <button className="btn-cancel" type="button" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn-primary" type="button" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : isUpdate ? 'Update User' : 'Create User'}
+            {isSubmitting ? t('admin.users.saving') : isUpdate ? t('admin.users.updateUserTitle') : t('admin.users.createUser')}
           </button>
         </footer>
       </section>

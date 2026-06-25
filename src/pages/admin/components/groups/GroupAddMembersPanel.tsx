@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
 import { addGroupMembers, type GroupMemberDto } from '@/services/group.service';
 import { getUsers, type UserListItemDto } from '@/services/user.service';
@@ -12,6 +13,7 @@ type GroupAddMembersPanelProps = {
 };
 
 function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded }: GroupAddMembersPanelProps) {
+  const { t } = useTranslation();
   const toast = useToast();
   const [users, setUsers] = useState<UserListItemDto[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<UserListItemDto[]>([]);
@@ -32,7 +34,7 @@ function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded 
         }
       } catch (err) {
         if (!ignore) {
-          toast.error(err instanceof Error ? err.message : 'Cannot load users');
+          toast.error(err instanceof Error ? err.message : t('admin.users.loadFailed'));
         }
       } finally {
         if (!ignore) {
@@ -46,7 +48,7 @@ function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded 
     return () => {
       ignore = true;
     };
-  }, [toast]);
+  }, [t, toast]);
 
   useEffect(() => {
     setSelectedUsers([]);
@@ -79,7 +81,7 @@ function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded 
 
   async function handleAddMembers() {
     if (selectedUsers.length === 0) {
-      toast.error('Please select at least one user');
+      toast.error(t('admin.groups.selectAtLeastOneUser'));
       return;
     }
 
@@ -87,12 +89,12 @@ function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded 
 
     try {
       const updatedGroup = await addGroupMembers(group.id, selectedUsers.map((user) => user.id));
-      toast.success(`${selectedUsers.length} user${selectedUsers.length > 1 ? 's' : ''} added to "${group.name}".`);
+      toast.success(t('admin.groups.usersAdded', { count: selectedUsers.length, name: group.name }));
       setSelectedUsers([]);
       setSearch('');
       onMembersAdded(updatedGroup);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Cannot add users to group';
+      const message = err instanceof Error ? err.message : t('admin.groups.addUsersFailed');
       toast.error(message);
     } finally {
       setIsAdding(false);
@@ -103,21 +105,21 @@ function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded 
     <section className="add-members-page">
       <div className="member-section-header">
         <div>
-          <p className="form-kicker">Add Members</p>
-          <span className="member-selection-count">{selectedUsers.length} selected</span>
+          <p className="form-kicker">{t('admin.groups.addMembers')}</p>
+          <span className="member-selection-count">{t('common.selected', { count: selectedUsers.length })}</span>
         </div>
         <div className="member-section-actions">
-          <button className="btn-cancel flat" type="button" onClick={onBack}>Back</button>
+          <button className="btn-cancel flat" type="button" onClick={onBack}>{t('common.back')}</button>
           <button className="btn-primary btn-xl" type="button" onClick={handleAddMembers} disabled={isAdding}>
-            {isAdding ? 'Adding...' : 'Add Selected'}
+            {isAdding ? t('admin.users.adding') : t('admin.groups.addSelected')}
           </button>
         </div>
       </div>
 
       <label className="member-search-field">
-        Search User
+        {t('admin.groups.searchUser')}
         <input
-          placeholder={isLoadingUsers ? 'Loading users...' : 'Search by name or email'}
+          placeholder={isLoadingUsers ? t('admin.users.loadingUsers') : t('admin.groups.searchUsersPlaceholder')}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           disabled={isLoadingUsers}
@@ -132,11 +134,11 @@ function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded 
           </button>
         ))}
         {!isLoadingUsers && availableUsers.length === 0 && (
-          <span className="muted">No available users found</span>
+          <span className="muted">{t('admin.groups.noAvailableUsers')}</span>
         )}
       </div>
 
-      <p className="form-kicker">Selected New Members</p>
+      <p className="form-kicker">{t('admin.groups.selectedNewMembers')}</p>
       <div className="tag-row">
         {selectedUsers.length > 0 ? (
           selectedUsers.map((user) => (
@@ -145,7 +147,7 @@ function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded 
             </button>
           ))
         ) : (
-          <span className="muted">No users selected</span>
+          <span className="muted">{t('admin.groups.noUsersSelected')}</span>
         )}
       </div>
     </section>

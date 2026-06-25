@@ -15,12 +15,13 @@ const navItems = [
 ];
 
 function AppLayout() {
+  const { t } = useTranslation();
   const { authLoading, isAuthenticated } = useAuth();
 
   if (authLoading) {
     return (
       <div className="auth-loading" role="status" aria-live="polite">
-        Checking session...
+        {t('layout.checkingSession')}
       </div>
     );
   }
@@ -61,7 +62,7 @@ function AppLayoutContent() {
     <div className="app-layout">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <h2 className="sidebar-title">Agent Hub</h2>
+          <h2 className="sidebar-title">{t('layout.brand')}</h2>
           <p>{t('layout.workspace')}</p>
         </div>
         <nav className="sidebar-nav">

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
 import { getGroups, type GroupListItemDto } from '@/services/group.service';
 import { getUserById, getUsers, type UserDto, type UserListItemDto } from '@/services/user.service';
@@ -26,13 +27,14 @@ const userActionPermissions: Record<Exclude<UserModalAction, 'details'>, string>
 };
 
 const permissionMessages: Record<string, string> = {
-  USER_R: 'You do not have permission to view user details.',
-  USER_C: 'You do not have permission to create users.',
-  USER_U: 'You do not have permission to update users.',
-  USER_D: 'You do not have permission to delete users.',
+  USER_R: 'admin.users.cannotViewDetails',
+  USER_C: 'admin.users.cannotCreate',
+  USER_U: 'admin.users.cannotUpdate',
+  USER_D: 'admin.users.cannotDelete',
 };
 
 export function useUsers() {
+  const { t } = useTranslation();
   const permissions = usePermissions();
   const toast = useToast();
   const canReadUsers = permissions.can('USER_R');
@@ -60,8 +62,8 @@ export function useUsers() {
   }), [activeFilters]);
 
   const showPermissionNotice = useCallback((permission: string) => {
-    toast.warning(permissionMessages[permission] ?? 'You do not have permission for this action.');
-  }, [toast]);
+    toast.warning(t(permissionMessages[permission] ?? 'common.noPagePermission'));
+  }, [t, toast]);
 
   const loadUsers = useCallback(async (targetPage = page) => {
     if (!permissions.can('USER_R')) {
@@ -82,11 +84,11 @@ export function useUsers() {
       setTotalPages(result.meta?.totalPages ?? 1);
       setPage(result.meta?.page ?? targetPage);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Cannot load users');
+      toast.error(err instanceof Error ? err.message : t('admin.users.loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [limit, page, permissions, toast, userQueryFilters]);
+  }, [limit, page, permissions, t, toast, userQueryFilters]);
 
   useEffect(() => {
     let ignore = false;
@@ -118,7 +120,7 @@ export function useUsers() {
         setGroups(groupResult);
       } catch (err) {
         if (!ignore) {
-          toast.error(err instanceof Error ? err.message : 'Cannot load users');
+          toast.error(err instanceof Error ? err.message : t('admin.users.loadFailed'));
         }
       } finally {
         if (!ignore) {
@@ -132,7 +134,7 @@ export function useUsers() {
     return () => {
       ignore = true;
     };
-  }, [limit, page, permissions, toast, userQueryFilters]);
+  }, [limit, page, permissions, t, toast, userQueryFilters]);
 
   function openAddModal() {
     const requiredPermission = userActionPermissions.add;
@@ -153,7 +155,7 @@ export function useUsers() {
     }
 
     if (selectedUserIds.length === 0) {
-      toast.warning('Select at least one user first.');
+      toast.warning(t('admin.users.selectUserFirst'));
       return;
     }
 
@@ -181,7 +183,7 @@ export function useUsers() {
       setSelectedUser(fullUser);
       setModal(action);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Cannot load user details');
+      toast.error(err instanceof Error ? err.message : t('admin.users.loadDetailsFailed'));
     } finally {
       setOpeningUserId(null);
     }

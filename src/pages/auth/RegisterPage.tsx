@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, Navigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -8,6 +9,7 @@ import { getErrorMessage } from '@/lib/error';
 import '@/styles/pages/home.css';
 
 function RegisterPage() {
+  const { t } = useTranslation();
   const { authLoading, isAuthenticated, register } = useAuth();
   const toast = useToast();
   const [fullName, setFullName] = useState('');
@@ -20,11 +22,11 @@ function RegisterPage() {
 
     try {
       await register(fullName, email);
-      toast.success('Account created. Check your email for the temporary password, then sign in.');
+      toast.success(t('auth.registerSuccess'));
       setFullName('');
       setEmail('');
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Registration failed'));
+      toast.error(getErrorMessage(err, t('auth.registrationFailed')));
     } finally {
       setIsSubmitting(false);
     }
@@ -44,24 +46,24 @@ function RegisterPage() {
       <main className="home-main">
         <section className="auth-card-wrap">
           <div className="auth-card">
-            <p className="auth-kicker">REQUEST ACCESS</p>
-            <h1>Create Account</h1>
+            <p className="auth-kicker">{t('auth.requestAccess')}</p>
+            <h1>{t('auth.createAccount')}</h1>
             <p className="auth-subtitle">
-              Register your workspace identity. A temporary password will be sent to your email.
+              {t('auth.registerSubtitle')}
             </p>
 
             <form className="auth-form" onSubmit={handleSubmit}>
-              <label htmlFor="fullName">Full Name</label>
+              <label htmlFor="fullName">{t('auth.fullName')}</label>
               <input
                 id="fullName"
                 type="text"
-                placeholder="Enter your full name"
+                placeholder={t('auth.fullNamePlaceholder')}
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
                 required
               />
 
-              <label htmlFor="registerEmail">Email Address</label>
+              <label htmlFor="registerEmail">{t('auth.emailAddress')}</label>
               <input
                 id="registerEmail"
                 type="email"
@@ -72,12 +74,12 @@ function RegisterPage() {
               />
 
               <button className="auth-submit" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating account...' : 'Create Account'}
+                {isSubmitting ? t('auth.creatingAccount') : t('auth.createAccount')}
               </button>
             </form>
 
             <p className="auth-switch">
-              Already have a temporary password? <Link to="/">Sign in</Link>
+              {t('auth.alreadyHaveTemporaryPassword')} <Link to="/">{t('auth.signIn')}</Link>
             </p>
           </div>
         </section>

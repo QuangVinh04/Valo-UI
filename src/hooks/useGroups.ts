@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
 import { getGroupById, getGroupMembers, getGroups, type GroupListItemDto } from '@/services/group.service';
 import { toGroupViewModel, type GroupViewModel } from '@/pages/admin/components/groups/group-view-model';
@@ -14,13 +15,14 @@ const groupActionPermissions: Record<Exclude<GroupModalAction, 'details'>, strin
 };
 
 const permissionMessages: Record<string, string> = {
-  GROUP_R: 'You do not have permission to view group details.',
-  GROUP_C: 'You do not have permission to create groups.',
-  GROUP_U: 'You do not have permission to update groups or manage members.',
-  GROUP_D: 'You do not have permission to delete groups.',
+  GROUP_R: 'admin.groups.cannotViewDetails',
+  GROUP_C: 'admin.groups.cannotCreate',
+  GROUP_U: 'admin.groups.cannotUpdate',
+  GROUP_D: 'admin.groups.cannotDelete',
 };
 
 export function useGroups() {
+  const { t } = useTranslation();
   const permissions = usePermissions();
   const toast = useToast();
   const canReadGroups = permissions.can('GROUP_R');
@@ -31,9 +33,8 @@ export function useGroups() {
   const [openingGroupId, setOpeningGroupId] = useState<string | null>(null);
 
   const showPermissionNotice = useCallback((permission: string) => {
-    const message = permissionMessages[permission] ?? 'You do not have permission for this action.';
-    toast.warning(message);
-  }, [toast]);
+    toast.warning(t(permissionMessages[permission] ?? 'common.noPagePermission'));
+  }, [t, toast]);
 
   const loadGroups = useCallback(async () => {
     if (permissions.cannot('GROUP_R')) {
@@ -48,11 +49,11 @@ export function useGroups() {
       const data = await getGroups();
       setGroups(data);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Cannot load groups');
+      toast.error(err instanceof Error ? err.message : t('admin.groups.loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [permissions, toast]);
+  }, [permissions, t, toast]);
 
   useEffect(() => {
     void loadGroups();
@@ -111,7 +112,7 @@ export function useGroups() {
 
       setModal(action);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Cannot load group details');
+      toast.error(err instanceof Error ? err.message : t('admin.groups.loadDetailsFailed'));
     } finally {
       setOpeningGroupId(null);
     }

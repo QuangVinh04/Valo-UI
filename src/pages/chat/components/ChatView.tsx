@@ -1,4 +1,5 @@
 import { FormEvent, ReactElement, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bot, Copy, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
 import { useToast } from '@/context/ToastContext';
@@ -6,6 +7,7 @@ import { chatModelOptions, type ChatModelKey, type SelectedChatFile, useChat } f
 import type { ChatMessage } from '@/types/chat.types';
 
 function ChatView() {
+  const { t } = useTranslation();
   const chat = useChat();
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -57,13 +59,13 @@ function ChatView() {
           {chat.isOpeningConversation && (
             <div className="chat-loading-state panel-dark">
               <Loader2 size={18} aria-hidden="true" />
-              Opening conversation...
+              {t('chat.openingConversation')}
             </div>
           )}
           {!chat.messages.length && !chat.isLoading && !chat.isOpeningConversation && (
             <div className="empty-chat panel-dark">
-              <h2>Start a conversation</h2>
-              <p>Send a prompt to create a new chat thread.</p>
+              <h2>{t('chat.startConversation')}</h2>
+              <p>{t('chat.emptySubtitle')}</p>
             </div>
           )}
           {chat.messages.map((message, index) => (
@@ -104,14 +106,14 @@ function ChatView() {
             />
             <IconButton
               icon={Paperclip}
-              label="Attach files"
+              label={t('chat.attachFiles')}
               className="composer-icon"
               onClick={() => fileInputRef.current?.click()}
               disabled={chat.isStreaming || chat.selectedFiles.length >= 5}
             />
             <textarea
               ref={promptRef}
-              placeholder="Enter a prompt here..."
+              placeholder={t('chat.promptPlaceholder')}
               value={chat.prompt}
               onChange={(event) => chat.setPrompt(event.target.value)}
               onKeyDown={(event) => {
@@ -126,7 +128,7 @@ function ChatView() {
             {chat.isStreaming ? (
               <button type="button" className="send-btn stop-btn" onClick={chat.stopGenerating}>
                 <Square size={18} aria-hidden="true" />
-                <span className="sr-only">Stop generating</span>
+                <span className="sr-only">{t('chat.stopGenerating')}</span>
               </button>
             ) : (
               <button
@@ -137,15 +139,15 @@ function ChatView() {
                   || chat.isWaitingForUploads
                   || chat.hasFailedUploads
                 }
-                title={chat.isWaitingForUploads ? 'Please wait for the file to finish uploading' : 'Send prompt'}
+                title={chat.isWaitingForUploads ? t('chat.waitForUpload') : t('chat.sendPrompt')}
               >
                 <Send size={20} aria-hidden="true" />
-                <span className="sr-only">Send prompt</span>
+                <span className="sr-only">{t('chat.sendPrompt')}</span>
               </button>
             )}
           </form>
           <p className="chat-disclaimer">
-            Neural Hub may display inaccurate info, so double-check its responses.
+            {t('chat.disclaimer')}
           </p>
         </footer>
       </main>
@@ -154,16 +156,17 @@ function ChatView() {
 }
 
 function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStreaming: boolean }) {
-  const [copyLabel, setCopyLabel] = useState('Copy response');
+  const { t } = useTranslation();
+  const [copyLabelKey, setCopyLabelKey] = useState('chat.copyResponse');
 
   const copyMessage = async () => {
     try {
       await navigator.clipboard.writeText(message.content);
-      setCopyLabel('Copied');
-      window.setTimeout(() => setCopyLabel('Copy response'), 1400);
+      setCopyLabelKey('chat.copied');
+      window.setTimeout(() => setCopyLabelKey('chat.copyResponse'), 1400);
     } catch {
-      setCopyLabel('Copy failed');
-      window.setTimeout(() => setCopyLabel('Copy response'), 1400);
+      setCopyLabelKey('chat.copyFailed');
+      window.setTimeout(() => setCopyLabelKey('chat.copyResponse'), 1400);
     }
   };
 
@@ -190,7 +193,7 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
               {isStreaming && <span className="stream-cursor" aria-hidden="true" />}
             </>
           ) : (
-            <div className="thinking-indicator" aria-label="Assistant is thinking">
+            <div className="thinking-indicator" aria-label={t('chat.assistantThinking')}>
               <span />
               <span />
               <span />
@@ -203,7 +206,7 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
               {(message.modelName || 'assistant').toUpperCase()} • {formatTime(message.createdAt)}
             </div>
             <div className="message-actions">
-              <IconButton icon={Copy} label={copyLabel} onClick={() => void copyMessage()} />
+              <IconButton icon={Copy} label={t(copyLabelKey)} onClick={() => void copyMessage()} />
             </div>
           </>
         )}
@@ -221,6 +224,7 @@ function SelectedFilePreview({
   index: number;
   onRemove: (index: number) => void;
 }) {
+  const { t } = useTranslation();
   const [objectUrl, setObjectUrl] = useState('');
   const { file } = selectedFile;
   const isImage = file.type.startsWith('image/');
@@ -239,7 +243,7 @@ function SelectedFilePreview({
         href={objectUrl}
         target="_blank"
         rel="noreferrer"
-        title={`Open ${file.name}`}
+        title={t('chat.openFile', { name: file.name })}
       >
         {selectedFile.status === 'uploading' ? (
           <Loader2 size={22} aria-hidden="true" />
@@ -251,16 +255,16 @@ function SelectedFilePreview({
           <FileText size={22} aria-hidden="true" />
         )}
       </a>
-      <button type="button" onClick={() => onRemove(index)} aria-label={`Remove ${file.name}`}>
+      <button type="button" onClick={() => onRemove(index)} aria-label={t('chat.removeFile', { name: file.name })}>
         <X size={14} aria-hidden="true" />
       </button>
       <span title={file.name}>{file.name}</span>
       <small className={`selected-file-status ${selectedFile.status}`}>
         {selectedFile.status === 'uploading'
-          ? 'Uploading...'
+          ? t('chat.uploading')
           : selectedFile.status === 'error'
-            ? 'Upload failed'
-            : 'Ready'}
+            ? t('chat.uploadFailed')
+            : t('chat.ready')}
       </small>
     </div>
   );

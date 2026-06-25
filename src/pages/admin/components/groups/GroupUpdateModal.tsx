@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
 import { updateGroup } from '@/services/group.service';
 import type { GroupViewModel } from './group-view-model';
@@ -13,22 +14,20 @@ type PermissionScope = 'users' | 'groups';
 
 type PermissionRow = {
   key: string;
-  action: string;
-  description: string;
 };
 
 const permissionRows: Record<PermissionScope, PermissionRow[]> = {
   users: [
-    { key: 'USER_C', action: 'Create User', description: 'Invite or create users' },
-    { key: 'USER_R', action: 'Read User', description: 'View user profiles' },
-    { key: 'USER_U', action: 'Update User', description: 'Edit user data and roles' },
-    { key: 'USER_D', action: 'Delete User', description: 'Remove users from workspace' },
+    { key: 'USER_C' },
+    { key: 'USER_R' },
+    { key: 'USER_U' },
+    { key: 'USER_D' },
   ],
   groups: [
-    { key: 'GROUP_C', action: 'Create Group', description: 'Create nested groups' },
-    { key: 'GROUP_R', action: 'Read Group', description: 'View group details and members' },
-    { key: 'GROUP_U', action: 'Update Group', description: 'Edit group identity and permissions' },
-    { key: 'GROUP_D', action: 'Delete Group', description: 'Remove groups and assignments' },
+    { key: 'GROUP_C' },
+    { key: 'GROUP_R' },
+    { key: 'GROUP_U' },
+    { key: 'GROUP_D' },
   ],
 };
 
@@ -78,6 +77,7 @@ function getPermissionSummary(permissions: Record<PermissionScope, string[]>): s
 }
 
 function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) {
+  const { t } = useTranslation();
   const toast = useToast();
   const [groupName, setGroupName] = useState(group.name);
   const [description, setDescription] = useState(group.description);
@@ -96,7 +96,7 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
   async function handleSubmit() {
     const name = groupName.trim();
     if (!name) {
-      toast.error('Group name is required');
+      toast.error(t('admin.groups.groupNameRequired'));
       return;
     }
 
@@ -108,11 +108,11 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
         description: description.trim() || undefined,
         permissions: permissionScopes.flatMap((scope) => permissions[scope]),
       });
-      toast.success(`Group "${name}" updated successfully.`);
+      toast.success(t('admin.groups.groupUpdated', { name }));
       onUpdated();
       onClose();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Cannot update group';
+      const message = err instanceof Error ? err.message : t('admin.groups.updateFailed');
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -124,27 +124,27 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
       <section className="modal-card group-modal">
         <header className="modal-header stacked">
           <div>
-            <h2>Update Group</h2>
-            <p>Modify identity and access control for this group.</p>
+            <h2>{t('admin.groups.updateGroupTitle')}</h2>
+            <p>{t('admin.groups.updateGroupSubtitle')}</p>
           </div>
-          <button type="button" aria-label="Close update group" onClick={onClose}>×</button>
+          <button type="button" aria-label={t('admin.groups.closeUpdateGroup')} onClick={onClose}>×</button>
         </header>
 
         <div className="modal-body">
-          <p className="form-kicker">Identity</p>
+          <p className="form-kicker">{t('admin.groups.identity')}</p>
           <div className="two-col">
             <label>
-              Group Name
+              {t('admin.groups.groupName')}
               <input
-                placeholder="e.g. Quantum Research Team"
+                placeholder={t('admin.groups.groupNamePlaceholder')}
                 value={groupName}
                 onChange={(event) => setGroupName(event.target.value)}
               />
             </label>
             <label>
-              Description
+              {t('admin.groups.description')}
               <input
-                placeholder="Describe this group"
+                placeholder={t('admin.groups.describeGroup')}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
               />
@@ -152,7 +152,7 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
           </div>
 
           <div>
-            <span className="label-text">Permission Type</span>
+            <span className="label-text">{t('admin.groups.permissionType')}</span>
             <div className="segment two-option-segment">
               {permissionScopes.map((scope) => (
                 <button
@@ -161,23 +161,23 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
                   key={scope}
                   onClick={() => setPermissionScope(scope)}
                 >
-                  {formatScopeLabel(scope)}
+                  {scope === 'users' ? t('admin.groups.usersScope') : t('admin.groups.groupsScope')}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="matrix-title">
-            <span className="form-kicker">{permissionLabels[permissionScope]}</span>
-            <em>{permissionDescriptions[permissionScope]}</em>
+            <span className="form-kicker">{permissionScope === 'users' ? t('admin.groups.userPermissions') : t('admin.groups.groupPermissions')}</span>
+            <em>{permissionScope === 'users' ? t('admin.groups.userPermissionsDescription') : t('admin.groups.groupPermissionsDescription')}</em>
           </div>
           <table className="permission-table">
-            <thead><tr><th>Action</th><th>Description</th><th>Grant</th></tr></thead>
+            <thead><tr><th>{t('admin.groups.action')}</th><th>{t('admin.groups.description')}</th><th>{t('admin.groups.grant')}</th></tr></thead>
             <tbody>
               {activeRows.map((row) => (
                 <tr key={row.key}>
-                  <td>{row.action}</td>
-                  <td>{row.description}</td>
+                  <td>{t(`admin.groups.permissionsRows.${row.key}.action`)}</td>
+                  <td>{t(`admin.groups.permissionsRows.${row.key}.description`)}</td>
                   <td>
                     <input
                       type="checkbox"
@@ -189,13 +189,20 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
               ))}
             </tbody>
           </table>
-          <div className="permission-summary">{getPermissionSummary(permissions)}</div>
+          <div className="permission-summary">
+            {permissionScopes
+              .map((scope) => t('admin.groups.permissionSummary', {
+                scope: scope === 'users' ? t('admin.groups.usersScope') : t('admin.groups.groupsScope'),
+                count: getGrantedCount(permissions[scope], scope),
+              }))
+              .join(' / ')}
+          </div>
         </div>
 
         <footer className="modal-footer">
-          <button className="btn-cancel flat" type="button" onClick={onClose}>Cancel</button>
+          <button className="btn-cancel flat" type="button" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn-primary btn-xl" type="button" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Updating...' : 'Update Group'}
+            {isSubmitting ? t('admin.groups.updating') : t('admin.groups.updateGroupTitle')}
           </button>
         </footer>
       </section>

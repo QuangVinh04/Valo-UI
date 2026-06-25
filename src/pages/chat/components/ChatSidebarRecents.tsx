@@ -1,10 +1,12 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Trans, useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Check, MessageSquare, MoreHorizontal, Pencil, Trash2, X } from 'lucide-react';
 import { useChat } from '@/hooks/useChat';
 
 function ChatSidebarRecents() {
+  const { t } = useTranslation();
   const chat = useChat();
   const navigate = useNavigate();
   const location = useLocation();
@@ -107,12 +109,12 @@ function ChatSidebarRecents() {
   return (
     <section className="sidebar-chat-recents">
       <header>
-        <h3>Recents</h3>
+        <h3>{t('chat.recents')}</h3>
       </header>
       <div className="sidebar-chat-list" ref={listRef}>
-        {chat.isLoading && <div className="sidebar-chat-state">Loading conversations...</div>}
+        {chat.isLoading && <div className="sidebar-chat-state">{t('chat.loadingConversations')}</div>}
         {!chat.isLoading && !chat.conversations.length && (
-          <div className="sidebar-chat-state">No conversations yet</div>
+          <div className="sidebar-chat-state">{t('chat.noConversations')}</div>
         )}
         {chat.conversations.map((conversation) => (
           <div
@@ -132,13 +134,13 @@ function ChatSidebarRecents() {
                 />
                 <button
                   type="button"
-                  aria-label="Save conversation title"
+                  aria-label={t('chat.saveConversationTitle')}
                   onClick={() => void saveRename()}
                   disabled={!draftTitle.trim()}
                 >
                   <Check size={15} aria-hidden="true" />
                 </button>
-                <button type="button" aria-label="Cancel rename" onClick={cancelRename}>
+                <button type="button" aria-label={t('chat.cancelRename')} onClick={cancelRename}>
                   <X size={15} aria-hidden="true" />
                 </button>
               </div>
@@ -157,7 +159,7 @@ function ChatSidebarRecents() {
                   <button
                     type="button"
                     className="sidebar-chat-menu-trigger"
-                    aria-label={`Open actions for ${conversation.title}`}
+                    aria-label={t('chat.openActionsFor', { title: conversation.title })}
                     onClick={(event) => toggleMenu(conversation.id, event.currentTarget)}
                   >
                     <MoreHorizontal size={17} aria-hidden="true" />
@@ -166,12 +168,12 @@ function ChatSidebarRecents() {
                     <div className="sidebar-chat-menu" style={menuPosition} ref={menuRef}>
                       <button type="button" onClick={() => startRename(conversation.id, conversation.title)}>
                         <Pencil size={15} aria-hidden="true" />
-                        Rename
+                        {t('chat.rename')}
                       </button>
                       <span className="sidebar-chat-menu-divider" aria-hidden="true" />
                       <button type="button" className="danger" onClick={() => openDeleteConfirmation(conversation.id, conversation.title)}>
                         <Trash2 size={15} aria-hidden="true" />
-                        Delete
+                        {t('common.delete')}
                       </button>
                     </div>,
                     document.body
@@ -186,19 +188,22 @@ function ChatSidebarRecents() {
         <div className="settings-modal-backdrop">
           <section className="settings-modal panel-dark">
             <header>
-              <h3>Delete conversation?</h3>
+              <h3>{t('chat.deleteConversation')}</h3>
               <button type="button" onClick={() => setDeleteTarget(null)}>x</button>
             </header>
             <p className="confirm-description">
-              This will permanently delete <strong>{deleteTarget.title}</strong> and all of its messages.
-              This action cannot be undone.
+              <Trans
+                i18nKey="chat.deleteConversationDescription"
+                values={{ title: deleteTarget.title }}
+                components={{ strong: <strong /> }}
+              />
             </p>
             <footer>
               <button type="button" className="btn-muted" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button type="button" className="btn-solid-danger" onClick={() => void handleDelete()} disabled={isDeleting}>
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isDeleting ? t('common.deleting') : t('common.delete')}
               </button>
             </footer>
           </section>

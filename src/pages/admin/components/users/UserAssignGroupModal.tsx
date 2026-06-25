@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
 import type { GroupListItemDto } from '@/services/group.service';
 import { assignUserGroups } from '@/services/user.service';
@@ -11,6 +12,7 @@ type UserAssignGroupModalProps = {
 };
 
 function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssignGroupModalProps) {
+  const { t } = useTranslation();
   const toast = useToast();
   const [groupIds, setGroupIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -45,7 +47,7 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
 
   async function handleSubmit() {
     if (groupIds.length === 0) {
-      toast.error('Please select at least one group');
+      toast.error(t('admin.users.selectAtLeastOneGroup'));
       return;
     }
 
@@ -53,11 +55,11 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
 
     try {
       await Promise.all(userIds.map((userId) => assignUserGroups(userId, groupIds)));
-      toast.success(`${userIds.length} user${userIds.length > 1 ? 's' : ''} added to ${groupIds.length} group${groupIds.length > 1 ? 's' : ''}.`);
+      toast.success(t('admin.users.assignedToGroups', { count: userIds.length, users: userIds.length, groups: groupIds.length }));
       onAssigned();
       onClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Cannot assign users to group');
+      toast.error(err instanceof Error ? err.message : t('admin.users.assignFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -68,17 +70,17 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
       <section className="modal-card user-modal compact-modal">
         <header className="modal-header stacked">
           <div>
-            <h2>Add to Groups</h2>
-            <p>Select groups for {userIds.length} selected user{userIds.length > 1 ? 's' : ''}.</p>
+            <h2>{t('admin.users.addToGroupsTitle')}</h2>
+            <p>{t('admin.users.selectGroupsFor', { count: userIds.length })}</p>
           </div>
-          <button type="button" aria-label="Close add to group" onClick={onClose}>x</button>
+          <button type="button" aria-label={t('admin.users.closeAddToGroup')} onClick={onClose}>x</button>
         </header>
 
         <div className="modal-body">
           <label>
-            Search Group
+            {t('admin.users.searchGroup')}
             <input
-              placeholder="Search by group name"
+              placeholder={t('admin.users.searchGroupPlaceholder')}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -93,13 +95,13 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
                 onClick={() => toggleGroup(group.id)}
               >
                 <strong>{group.name}</strong>
-                <span>{group.description ?? `${group.memberCount} members`}</span>
+                <span>{group.description ?? t('admin.groups.membersCount', { count: group.memberCount })}</span>
               </button>
             ))}
-            {filteredGroups.length === 0 && <span className="muted">No groups found</span>}
+            {filteredGroups.length === 0 && <span className="muted">{t('admin.users.noGroupsFound')}</span>}
           </div>
 
-          <p className="form-kicker">Selected Groups</p>
+          <p className="form-kicker">{t('admin.users.selectedGroups')}</p>
           <div className="tag-row">
             {selectedGroups.length > 0 ? (
               selectedGroups.map((group) => (
@@ -108,15 +110,15 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
                 </button>
               ))
             ) : (
-              <span className="muted">No groups selected</span>
+              <span className="muted">{t('admin.users.noGroupsSelected')}</span>
             )}
           </div>
         </div>
 
         <footer className="modal-footer">
-          <button className="btn-cancel flat" type="button" onClick={onClose}>Cancel</button>
+          <button className="btn-cancel flat" type="button" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn-primary btn-xl" type="button" onClick={handleSubmit} disabled={isSubmitting || groupIds.length === 0}>
-            {isSubmitting ? 'Adding...' : 'Add to Groups'}
+            {isSubmitting ? t('admin.users.adding') : t('admin.users.addToGroupsTitle')}
           </button>
         </footer>
       </section>

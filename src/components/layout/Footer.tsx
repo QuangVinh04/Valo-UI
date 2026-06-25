@@ -1,8 +1,12 @@
+import { useTranslation } from 'react-i18next';
+
 function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="auth-footer">
-      <small>END-TO-END ENCRYPTED</small>
-      <small>ISO 27001 CERTIFIED</small>
+      <small>{t('auth.encrypted')}</small>
+      <small>{t('auth.certified')}</small>
     </footer>
   );
 }

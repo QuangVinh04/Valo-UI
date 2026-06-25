@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { LockKeyhole } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -9,6 +10,7 @@ import { getErrorMessage } from '@/lib/error';
 import '@/styles/pages/home.css';
 
 function ChangePasswordPage() {
+  const { t } = useTranslation();
   const { authLoading, isAuthenticated, changePassword } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ function ChangePasswordPage() {
       await changePassword({ currentPassword, newPassword, confirmPassword });
       navigate('/chat', { replace: true });
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Password update failed'));
+      toast.error(getErrorMessage(err, t('auth.passwordUpdateFailed')));
     } finally {
       setIsSubmitting(false);
     }
@@ -34,7 +36,7 @@ function ChangePasswordPage() {
   if (authLoading) {
     return (
       <div className="auth-loading" role="status" aria-live="polite">
-        Checking session...
+        {t('layout.checkingSession')}
       </div>
     );
   }
@@ -49,19 +51,19 @@ function ChangePasswordPage() {
       <main className="home-main">
         <section className="auth-card-wrap">
           <div className="auth-card">
-            <p className="auth-kicker">PASSWORD RESET</p>
-            <h1>Change Password</h1>
+            <p className="auth-kicker">{t('auth.passwordReset')}</p>
+            <h1>{t('auth.changePassword')}</h1>
             <p className="auth-subtitle">
-              Set a new password before entering your workspace.
+              {t('auth.changePasswordSubtitle')}
             </p>
 
             <form className="auth-form" onSubmit={handleSubmit}>
-              <label htmlFor="currentPassword">Current Password</label>
+              <label htmlFor="currentPassword">{t('auth.currentPassword')}</label>
               <div className="password-field">
                 <input
                   id="currentPassword"
                   type="password"
-                  placeholder="Enter your temporary password"
+                  placeholder={t('auth.temporaryPasswordPlaceholder')}
                   value={currentPassword}
                   onChange={(event) => setCurrentPassword(event.target.value)}
                   required
@@ -69,22 +71,22 @@ function ChangePasswordPage() {
                 <span aria-hidden="true"><LockKeyhole size={18} /></span>
               </div>
 
-              <label htmlFor="newPassword">New Password</label>
+              <label htmlFor="newPassword">{t('auth.newPassword')}</label>
               <input
                 id="newPassword"
                 type="password"
-                placeholder="Create a new password"
+                placeholder={t('auth.newPasswordPlaceholder')}
                 minLength={8}
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
                 required
               />
 
-              <label htmlFor="confirmPassword">Confirm Password</label>
+              <label htmlFor="confirmPassword">{t('auth.confirmPassword')}</label>
               <input
                 id="confirmPassword"
                 type="password"
-                placeholder="Confirm your new password"
+                placeholder={t('auth.confirmPasswordPlaceholder')}
                 minLength={8}
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
@@ -92,7 +94,7 @@ function ChangePasswordPage() {
               />
 
               <button className="auth-submit" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Updating password...' : 'Update Password'}
+                {isSubmitting ? t('auth.updatingPassword') : t('auth.updatePassword')}
               </button>
             </form>
           </div>

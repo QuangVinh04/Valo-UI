@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
 import { addGroupMembers, createGroup } from '@/services/group.service';
 import { getUsers, type UserListItemDto } from '@/services/user.service';
@@ -12,22 +13,20 @@ type PermissionScope = 'users' | 'groups';
 
 type PermissionRow = {
   key: string;
-  action: string;
-  description: string;
 };
 
 const permissionRows: Record<PermissionScope, PermissionRow[]> = {
   users: [
-    { key: 'USER_C', action: 'Create User', description: 'Invite or create users' },
-    { key: 'USER_R', action: 'Read User', description: 'View user profiles' },
-    { key: 'USER_U', action: 'Update User', description: 'Edit user data and roles' },
-    { key: 'USER_D', action: 'Delete User', description: 'Remove users from workspace' },
+    { key: 'USER_C' },
+    { key: 'USER_R' },
+    { key: 'USER_U' },
+    { key: 'USER_D' },
   ],
   groups: [
-    { key: 'GROUP_C', action: 'Create Group', description: 'Create nested groups' },
-    { key: 'GROUP_R', action: 'Read Group', description: 'View group details and members' },
-    { key: 'GROUP_U', action: 'Update Group', description: 'Edit group identity and permissions' },
-    { key: 'GROUP_D', action: 'Delete Group', description: 'Remove groups and assignments' },
+    { key: 'GROUP_C' },
+    { key: 'GROUP_R' },
+    { key: 'GROUP_U' },
+    { key: 'GROUP_D' },
   ],
 };
 
@@ -71,6 +70,7 @@ function getPermissionSummary(permissions: Record<PermissionScope, string[]>): s
 }
 
 function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
+  const { t } = useTranslation();
   const toast = useToast();
   const [groupName, setGroupName] = useState('');
   const [description, setDescription] = useState('');
@@ -96,7 +96,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
         }
       } catch (err) {
         if (!ignore) {
-          toast.error(err instanceof Error ? err.message : 'Cannot load users');
+          toast.error(err instanceof Error ? err.message : t('admin.users.loadFailed'));
         }
       } finally {
         if (!ignore) {
@@ -110,7 +110,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
     return () => {
       ignore = true;
     };
-  }, [toast]);
+  }, [t, toast]);
 
   const availableUsers = useMemo(() => {
     const selectedIds = new Set(selectedUsers.map((user) => user.id));
@@ -144,7 +144,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
   async function handleSubmit() {
     const name = groupName.trim();
     if (!name) {
-      toast.error('Group name is required');
+      toast.error(t('admin.groups.groupNameRequired'));
       return;
     }
 
@@ -162,11 +162,11 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
         await addGroupMembers(createdGroup.id, memberIds);
       }
 
-      toast.success(`Group "${name}" created successfully.`);
+      toast.success(t('admin.groups.groupCreated', { name }));
       onCreated();
       onClose();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Cannot create group';
+      const message = err instanceof Error ? err.message : t('admin.groups.createFailed');
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -178,27 +178,27 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
       <section className="modal-card group-modal">
         <header className="modal-header stacked">
           <div>
-            <h2>Create New Group</h2>
-            <p>Define identity and access control for your new workspace.</p>
+            <h2>{t('admin.groups.createGroupTitle')}</h2>
+            <p>{t('admin.groups.createGroupSubtitle')}</p>
           </div>
-          <button type="button" aria-label="Close create group" onClick={onClose}>×</button>
+          <button type="button" aria-label={t('admin.groups.closeCreateGroup')} onClick={onClose}>×</button>
         </header>
 
         <div className="modal-body">
-          <p className="form-kicker">Identity</p>
+          <p className="form-kicker">{t('admin.groups.identity')}</p>
           <div className="two-col">
             <label>
-              Group Name
+              {t('admin.groups.groupName')}
               <input
-                placeholder="e.g. Quantum Research Team"
+                placeholder={t('admin.groups.groupNamePlaceholder')}
                 value={groupName}
                 onChange={(event) => setGroupName(event.target.value)}
               />
             </label>
             <label>
-              Description
+              {t('admin.groups.description')}
               <input
-                placeholder="Describe this group"
+                placeholder={t('admin.groups.describeGroup')}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
               />
@@ -206,7 +206,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
           </div>
 
           <div>
-            <span className="label-text">Permission Type</span>
+            <span className="label-text">{t('admin.groups.permissionType')}</span>
             <div className="segment two-option-segment">
               {permissionScopes.map((scope) => (
                 <button
@@ -215,23 +215,23 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
                   key={scope}
                   onClick={() => setPermissionScope(scope)}
                 >
-                  {formatScopeLabel(scope)}
+                  {scope === 'users' ? t('admin.groups.usersScope') : t('admin.groups.groupsScope')}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="matrix-title">
-            <span className="form-kicker">{permissionLabels[permissionScope]}</span>
-            <em>{permissionDescriptions[permissionScope]}</em>
+            <span className="form-kicker">{permissionScope === 'users' ? t('admin.groups.userPermissions') : t('admin.groups.groupPermissions')}</span>
+            <em>{permissionScope === 'users' ? t('admin.groups.userPermissionsDescription') : t('admin.groups.groupPermissionsDescription')}</em>
           </div>
           <table className="permission-table">
-            <thead><tr><th>Action</th><th>Description</th><th>Grant</th></tr></thead>
+            <thead><tr><th>{t('admin.groups.action')}</th><th>{t('admin.groups.description')}</th><th>{t('admin.groups.grant')}</th></tr></thead>
             <tbody>
               {activeRows.map((row) => (
                 <tr key={row.key}>
-                  <td>{row.action}</td>
-                  <td>{row.description}</td>
+                  <td>{t(`admin.groups.permissionsRows.${row.key}.action`)}</td>
+                  <td>{t(`admin.groups.permissionsRows.${row.key}.description`)}</td>
                   <td>
                     <input
                       type="checkbox"
@@ -243,12 +243,19 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
               ))}
             </tbody>
           </table>
-          <div className="permission-summary">{getPermissionSummary(permissions)}</div>
+          <div className="permission-summary">
+            {permissionScopes
+              .map((scope) => t('admin.groups.permissionSummary', {
+                scope: scope === 'users' ? t('admin.groups.usersScope') : t('admin.groups.groupsScope'),
+                count: getGrantedCount(permissions[scope], scope),
+              }))
+              .join(' / ')}
+          </div>
 
-          <p className="form-kicker">Initial Members</p>
+          <p className="form-kicker">{t('admin.groups.initialMembers')}</p>
           <label className="member-search-field">
             <input
-              placeholder={isLoadingUsers ? 'Loading users...' : 'Search by name or email...'}
+              placeholder={isLoadingUsers ? t('admin.users.loadingUsers') : t('admin.groups.searchUsersPlaceholderLong')}
               value={memberSearch}
               onChange={(event) => setMemberSearch(event.target.value)}
               disabled={isLoadingUsers}
@@ -262,7 +269,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
               </button>
             ))}
             {!isLoadingUsers && availableUsers.length === 0 && (
-              <span className="muted">No users found</span>
+              <span className="muted">{t('admin.users.noUsersFound')}</span>
             )}
           </div>
           <div className="tag-row">
@@ -275,9 +282,9 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
         </div>
 
         <footer className="modal-footer">
-          <button className="btn-cancel flat" type="button" onClick={onClose}>Cancel</button>
+          <button className="btn-cancel flat" type="button" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn-primary btn-xl" type="button" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Creating...' : 'Initialize Group'}
+            {isSubmitting ? t('admin.groups.creating') : t('admin.groups.initializeGroup')}
           </button>
         </footer>
       </section>

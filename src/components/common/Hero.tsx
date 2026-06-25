@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { LockKeyhole } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -6,6 +7,7 @@ import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
 
 function Hero() {
+  const { t } = useTranslation();
   const { authLoading, isAuthenticated, login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -21,7 +23,7 @@ function Hero() {
       const user = await login(email, password);
       navigate(user.mustChangePassword ? '/change-password' : '/chat', { replace: true });
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Login failed'));
+      toast.error(getErrorMessage(err, t('auth.loginFailed')));
     } finally {
       setIsSubmitting(false);
     }
@@ -38,14 +40,14 @@ function Hero() {
   return (
     <section className="auth-card-wrap">
       <div className="auth-card">
-        <p className="auth-kicker">SECURE ACCESS</p>
-        <h1>Log In</h1>
+        <p className="auth-kicker">{t('auth.secureAccess')}</p>
+        <h1>{t('auth.loginTitle')}</h1>
         <p className="auth-subtitle">
-          Welcome back to Agent Hub. Enter your credentials to access your dashboard.
+          {t('auth.loginSubtitle')}
         </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <label htmlFor="email">Email Address</label>
+          <label htmlFor="email">{t('auth.emailAddress')}</label>
           <input
             id="email"
             type="email"
@@ -55,12 +57,12 @@ function Hero() {
             required
           />
 
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t('auth.password')}</label>
           <div className="password-field">
             <input
               id="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder={t('auth.passwordPlaceholder')}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
@@ -69,11 +71,11 @@ function Hero() {
           </div>
 
           <button className="auth-submit" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in...' : 'Continue to Dashboard'}
+            {isSubmitting ? t('auth.signingIn') : t('auth.continueToDashboard')}
           </button>
         </form>
         <p className="auth-switch">
-          Need an account? <Link to="/register">Create one</Link>
+          {t('auth.needAccount')} <Link to="/register">{t('auth.createOne')}</Link>
         </p>
       </div>
     </section>

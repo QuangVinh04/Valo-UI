@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Eye, Pencil, Plus, Shield, Trash2, UserPlus } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
 import { useGroups } from '@/hooks/useGroups';
@@ -11,6 +12,7 @@ import GroupUpdateModal from './groups/GroupUpdateModal';
 import { toGroupViewModel } from './groups/group-view-model';
 
 function GroupsView() {
+  const { t } = useTranslation();
   const {
     modal,
     selectedGroup,
@@ -36,8 +38,8 @@ function GroupsView() {
     return (
       <div className="management-page">
         <section className="data-card access-denied-card">
-          <h1>Access denied</h1>
-          <p>You do not have permission to view group data.</p>
+          <h1>{t('common.accessDenied')}</h1>
+          <p>{t('admin.groups.accessDeniedDescription')}</p>
         </section>
       </div>
     );
@@ -47,27 +49,26 @@ function GroupsView() {
     <div className="management-page">
       <header className="page-hero">
         <div>
-          <h1>Group Management</h1>
+          <h1>{t('admin.groups.pageTitle')}</h1>
           <p>
-            Monitor and coordinate high-performance intelligence teams. View active
-            groups, manage permissions, and inspect nested member hierarchies.
+            {t('admin.groups.pageDescription')}
           </p>
         </div>
         <button className="btn-primary btn-xl" type="button" onClick={openCreateModal}>
           <Plus size={18} aria-hidden="true" />
-          Create New Group
+          {t('admin.groups.createNewGroup')}
         </button>
       </header>
 
       <section className="data-card group-card">
         <div className="card-title-row">
-          <h2>Active Groups</h2>
-          <span className="count-badge">{tableGroups.length} Total</span>
+          <h2>{t('admin.groups.activeGroups')}</h2>
+          <span className="count-badge">{t('admin.groups.total', { count: tableGroups.length })}</span>
         </div>
-        {isLoading && <div className="state-row">Loading groups from backend...</div>}
+        {isLoading && <div className="state-row">{t('admin.groups.loadingGroups')}</div>}
         <table className="data-table group-table">
           <thead>
-            <tr><th>Group Name</th><th>Member Count</th><th>Actions</th></tr>
+            <tr><th>{t('admin.groups.groupName')}</th><th>{t('admin.groups.memberCount')}</th><th>{t('common.actions')}</th></tr>
           </thead>
           <tbody>
             {tableGroups.map((group) => (
@@ -78,13 +79,13 @@ function GroupsView() {
                     <strong>{group.name}</strong>
                   </div>
                 </td>
-                <td>{group.memberCount} members</td>
+                <td>{t('admin.groups.membersCount', { count: group.memberCount })}</td>
                 <td>
                   <div className="row-actions">
-                    <IconButton icon={Eye} label={`View ${group.name}`} onClick={() => openGroupModal('details', group)} disabled={openingGroupId === group.id} />
-                    <IconButton icon={UserPlus} label={`Manage members for ${group.name}`} onClick={() => openGroupModal('members', group)} disabled={openingGroupId === group.id} />
-                    <IconButton icon={Pencil} label={`Update ${group.name}`} onClick={() => openGroupModal('update', group)} disabled={openingGroupId === group.id} />
-                    <IconButton icon={Trash2} label={`Delete ${group.name}`} onClick={() => openGroupModal('delete', group)} />
+                    <IconButton icon={Eye} label={t('admin.groups.viewGroup', { name: group.name })} onClick={() => openGroupModal('details', group)} disabled={openingGroupId === group.id} />
+                    <IconButton icon={UserPlus} label={t('admin.groups.manageMembersFor', { name: group.name })} onClick={() => openGroupModal('members', group)} disabled={openingGroupId === group.id} />
+                    <IconButton icon={Pencil} label={t('admin.groups.updateGroup', { name: group.name })} onClick={() => openGroupModal('update', group)} disabled={openingGroupId === group.id} />
+                    <IconButton icon={Trash2} label={t('admin.groups.deleteGroup', { name: group.name })} onClick={() => openGroupModal('delete', group)} />
                   </div>
                 </td>
               </tr>
@@ -94,8 +95,8 @@ function GroupsView() {
         {!isLoading && tableGroups.length === 0 && (
           <div className="empty-state">
             <Shield size={28} aria-hidden="true" />
-            <h3>No groups found</h3>
-            <p>Create a group to start assigning permissions and members.</p>
+            <h3>{t('admin.groups.noGroupsFound')}</h3>
+            <p>{t('admin.groups.noGroupsDescription')}</p>
           </div>
         )}
       </section>
