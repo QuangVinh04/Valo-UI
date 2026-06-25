@@ -57,6 +57,7 @@ function RegisterPage() {
               <input
                 id="fullName"
                 type="text"
+                autoComplete="name"
                 placeholder={t('auth.fullNamePlaceholder')}
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
@@ -67,6 +68,7 @@ function RegisterPage() {
               <input
                 id="registerEmail"
                 type="email"
+                autoComplete="email"
                 placeholder="name@company.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}

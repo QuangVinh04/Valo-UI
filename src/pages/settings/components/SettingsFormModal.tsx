@@ -38,6 +38,12 @@ function SettingsFormModal({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (mode === 'password' && newPassword !== confirmPassword) {
+      toast.error(t('settings.passwordsDoNotMatch'));
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -70,15 +76,15 @@ function SettingsFormModal({
           <div className="settings-modal-body">
             <label>
               {t('settings.currentPassword')}
-              <input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required />
+              <input type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required />
             </label>
             <label>
               {t('settings.newPassword')}
-              <input type="password" minLength={8} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required />
+              <input type="password" autoComplete="new-password" minLength={8} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required />
             </label>
             <label>
               {t('settings.confirmPassword')}
-              <input type="password" minLength={8} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required />
+              <input type="password" autoComplete="new-password" minLength={8} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required />
             </label>
           </div>
         ) : (

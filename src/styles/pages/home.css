@@ -2,6 +2,7 @@
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr auto;
+  overflow-x: hidden;
   padding: 2rem 2.25rem;
 }
 
@@ -15,16 +16,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
 }
 
 .auth-brand {
+  flex: 0 0 auto;
   font-size: 1.45rem;
   font-weight: 800;
 }
 
 .auth-back-link {
+  min-width: 0;
   color: #d8dce4;
   font-size: 1rem;
+  line-height: 1.35;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .home-main {
@@ -34,12 +42,14 @@
 }
 
 .auth-card-wrap {
+  min-width: 0;
   width: 100%;
   display: grid;
   place-items: center;
 }
 
 .auth-card {
+  min-width: 0;
   width: min(560px, calc(100vw - 2rem));
   background: var(--panel);
   border: 1px solid rgba(153, 169, 194, 0.35);
@@ -149,12 +159,34 @@
     padding: 1rem;
   }
 
+  .auth-header {
+    align-items: flex-start;
+  }
+
+  .auth-back-link {
+    max-width: 46%;
+    font-size: 0.9rem;
+  }
+
+  .home-main {
+    padding-top: 4rem;
+  }
+
   .auth-card {
+    width: 100%;
+    max-width: calc(100vw - 2rem);
     padding: 1.6rem;
     border-radius: 20px;
   }
 
   .auth-card h1 {
     font-size: 2.2rem;
+  }
+
+  .auth-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    text-align: center;
   }
 }

@@ -51,6 +51,7 @@ function Hero() {
           <input
             id="email"
             type="email"
+            autoComplete="email"
             placeholder="name@company.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -62,6 +63,7 @@ function Hero() {
             <input
               id="password"
               type="password"
+              autoComplete="current-password"
               placeholder={t('auth.passwordPlaceholder')}
               value={password}
               onChange={(event) => setPassword(event.target.value)}

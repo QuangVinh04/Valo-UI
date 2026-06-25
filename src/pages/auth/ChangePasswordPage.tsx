@@ -21,6 +21,12 @@ function ChangePasswordPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (newPassword !== confirmPassword) {
+      toast.error(t('auth.passwordsDoNotMatch'));
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -63,6 +69,7 @@ function ChangePasswordPage() {
                 <input
                   id="currentPassword"
                   type="password"
+                  autoComplete="current-password"
                   placeholder={t('auth.temporaryPasswordPlaceholder')}
                   value={currentPassword}
                   onChange={(event) => setCurrentPassword(event.target.value)}
@@ -75,6 +82,7 @@ function ChangePasswordPage() {
               <input
                 id="newPassword"
                 type="password"
+                autoComplete="new-password"
                 placeholder={t('auth.newPasswordPlaceholder')}
                 minLength={8}
                 value={newPassword}
@@ -86,6 +94,7 @@ function ChangePasswordPage() {
               <input
                 id="confirmPassword"
                 type="password"
+                autoComplete="new-password"
                 placeholder={t('auth.confirmPasswordPlaceholder')}
                 minLength={8}
                 value={confirmPassword}
