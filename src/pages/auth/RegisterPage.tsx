@@ -5,11 +5,10 @@ import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
-import { register } from '@/services/auth.service';
 import '@/styles/pages/home.css';
 
 function RegisterPage() {
-  const { authLoading, isAuthenticated } = useAuth();
+  const { authLoading, isAuthenticated, register } = useAuth();
   const toast = useToast();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');

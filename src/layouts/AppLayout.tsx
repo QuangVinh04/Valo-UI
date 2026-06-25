@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MessageSquare, Settings, Shield, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { ChatProvider, useChat } from '@/hooks/useChat';
+import { usePermissions } from '@/hooks/usePermissions';
 import ChatSidebarRecents from '@/pages/chat/components/ChatSidebarRecents';
 import '@/styles/layout.css';
 
@@ -37,7 +38,8 @@ function AppLayout() {
 
 function AppLayoutContent() {
   const { t } = useTranslation();
-  const { hasAnyPermission, user } = useAuth();
+  const { user } = useAuth();
+  const permissions = usePermissions();
   const location = useLocation();
   const chat = useChat();
   const isChatRoute = location.pathname.startsWith('/chat');
@@ -45,11 +47,11 @@ function AppLayoutContent() {
   const avatarInitial = loginUsername.trim().charAt(0).toUpperCase() || 'U';
   const visibleNavItems = navItems.filter((item) => {
     if (item.to === '/users') {
-      return hasAnyPermission(['USER_R']);
+      return permissions.any(['USER_R']);
     }
 
     if (item.to === '/groups') {
-      return hasAnyPermission(['GROUP_R']);
+      return permissions.any(['GROUP_R']);
     }
 
     return true;

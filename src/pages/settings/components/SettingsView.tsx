@@ -1,42 +1,33 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { HardDrive, Languages, LogOut, MapPin, Moon, Palette, Phone, ShieldCheck, Sun, Trash2, User, UserX } from 'lucide-react';
-import { useToast } from '@/context/ToastContext';
-import { usePreferences } from '@/context/PreferencesContext';
-import type { UserProfileDto } from '@/services/user.service';
-import { useSettingsProfile } from '@/hooks/useSettingsProfile';
-import type { ConfirmAction, SettingsFormModal } from '@/types/settings.types';
+import { useSettings } from '@/hooks/useSettings';
 import ConfirmActionModal from './ConfirmActionModal';
 import SettingRow from './SettingRow';
 import SettingsFormModalComponent from './SettingsFormModal';
 import StorageModal from './StorageModal';
 
-const fallbackPhoneNumber = '+1 (555) 000-0000';
-const fallbackAddress = '123 Digital Way, Silicon Valley, CA';
-
 function SettingsView() {
-  const { theme, language, setTheme, setLanguage } = usePreferences();
   const { t } = useTranslation();
-  const toast = useToast();
-  const navigate = useNavigate();
-  const [modal, setModal] = useState<SettingsFormModal | null>(null);
-  const [showStorage, setShowStorage] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
-  const { profile, error: profileError, updateProfileFromUser } = useSettingsProfile();
-  const phoneNumber = profile.phoneNumber || fallbackPhoneNumber;
-  const address = profile.address || fallbackAddress;
-
-  const handleProfileSaved = (user: UserProfileDto) => {
-    updateProfileFromUser(user);
-    setModal(null);
-  };
-
-  useEffect(() => {
-    if (profileError) {
-      toast.error(profileError);
-    }
-  }, [profileError, toast]);
+  const settings = useSettings();
+  const {
+    theme,
+    language,
+    setTheme,
+    setLanguage,
+    modal,
+    showStorage,
+    confirmAction,
+    phoneNumber,
+    address,
+    openModal,
+    closeModal,
+    openStorage,
+    closeStorage,
+    openConfirmAction,
+    closeConfirmAction,
+    handleProfileSaved,
+    handleSignedOut,
+  } = settings;
 
   return (
     <div className="settings-page">
@@ -48,7 +39,7 @@ function SettingsView() {
           description={phoneNumber}
           buttonLabel={t('settings.update')}
           buttonClassName="btn-blue"
-          onClick={() => setModal('phone')}
+          onClick={() => openModal('phone')}
         />
         <SettingRow
           icon={MapPin}
@@ -56,7 +47,7 @@ function SettingsView() {
           description={address}
           buttonLabel={t('settings.update')}
           buttonClassName="btn-blue"
-          onClick={() => setModal('address')}
+          onClick={() => openModal('address')}
         />
       </section>
 
@@ -110,7 +101,7 @@ function SettingsView() {
           description={t('settings.storageDescription')}
           buttonLabel={t('settings.manage')}
           buttonClassName="btn-blue"
-          onClick={() => setShowStorage(true)}
+          onClick={openStorage}
         />
       </section>
 
@@ -122,7 +113,7 @@ function SettingsView() {
           description={t('settings.passwordDescription')}
           buttonLabel={t('settings.update')}
           buttonClassName="btn-blue"
-          onClick={() => setModal('password')}
+          onClick={() => openModal('password')}
         />
         <SettingRow
           icon={Trash2}
@@ -131,7 +122,7 @@ function SettingsView() {
           buttonLabel={t('settings.clear')}
           buttonClassName="btn-outline-danger"
           danger
-          onClick={() => setConfirmAction('clearChat')}
+          onClick={() => openConfirmAction('clearChat')}
         />
         <SettingRow
           icon={UserX}
@@ -140,7 +131,7 @@ function SettingsView() {
           buttonLabel={t('settings.delete')}
           buttonClassName="btn-solid-danger"
           danger
-          onClick={() => setConfirmAction('deleteAccount')}
+          onClick={() => openConfirmAction('deleteAccount')}
         />
         <SettingRow
           icon={LogOut}
@@ -148,7 +139,7 @@ function SettingsView() {
           description={t('settings.signOutDescription')}
           buttonLabel={t('settings.signOut')}
           buttonClassName="btn-muted"
-          onClick={() => setConfirmAction('signOut')}
+          onClick={() => openConfirmAction('signOut')}
         />
       </section>
 
@@ -157,18 +148,18 @@ function SettingsView() {
           mode={modal}
           phoneNumber={phoneNumber}
           address={address}
-          onClose={() => setModal(null)}
+          onClose={closeModal}
           onProfileSaved={handleProfileSaved}
         />
       )}
       {showStorage && (
-        <StorageModal onClose={() => setShowStorage(false)} />
+        <StorageModal onClose={closeStorage} />
       )}
       {confirmAction && (
         <ConfirmActionModal
           action={confirmAction}
-          onClose={() => setConfirmAction(null)}
-          onSignedOut={() => navigate('/')}
+          onClose={closeConfirmAction}
+          onSignedOut={handleSignedOut}
         />
       )}
     </div>

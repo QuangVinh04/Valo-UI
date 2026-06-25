@@ -6,11 +6,10 @@ import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
-import { changePassword } from '@/services/auth.service';
 import '@/styles/pages/home.css';
 
 function ChangePasswordPage() {
-  const { authLoading, isAuthenticated } = useAuth();
+  const { authLoading, isAuthenticated, changePassword } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState('');

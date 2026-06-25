@@ -1,6 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { clearAuthState, getAuthUser, storeAuthUser, type StoredAuthUser } from '@/lib/auth';
-import { getCurrentUserPermissions } from '@/services/auth.service';
+import {
+  changePassword as changePasswordRequest,
+  getCurrentUserPermissions,
+  login as loginRequest,
+  logout as logoutRequest,
+  register as registerRequest,
+  type AuthUser,
+} from '@/services/auth.service';
 import { getCurrentUser } from '@/services/user.service';
 
 type AuthContextValue = {
@@ -12,6 +19,14 @@ type AuthContextValue = {
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (permissions: string[]) => boolean;
   refreshAuth: () => void;
+  login: (email: string, password: string) => Promise<AuthUser>;
+  logout: () => Promise<void>;
+  register: (fullName: string, email: string) => Promise<boolean>;
+  changePassword: (input: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => Promise<null>;
 };
 
 type AuthState = {
@@ -107,6 +122,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void hydrateAuth();
   }, [hydrateAuth]);
 
+  const login = useCallback(async (email: string, password: string) => {
+    const user = await loginRequest(email, password);
+    await hydrateAuth();
+    return user;
+  }, [hydrateAuth]);
+
+  const logout = useCallback(async () => {
+    await logoutRequest();
+    refreshAuth();
+  }, [refreshAuth]);
+
+  const register = useCallback((fullName: string, email: string) => (
+    registerRequest(fullName, email)
+  ), []);
+
+  const changePassword = useCallback((input: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => changePasswordRequest(input), []);
+
   useEffect(() => {
     window.addEventListener('storage', refreshAuth);
     window.addEventListener('auth:changed', refreshAuth);
@@ -129,8 +165,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       hasPermission: (permission) => permissionSet.has(permission),
       hasAnyPermission: (permissions) => permissions.some((permission) => permissionSet.has(permission)),
       refreshAuth,
+      login,
+      logout,
+      register,
+      changePassword,
     };
-  }, [authState, refreshAuth]);
+  }, [authState, changePassword, login, logout, refreshAuth, register]);
 
   return (
     <AuthContext.Provider value={value}>

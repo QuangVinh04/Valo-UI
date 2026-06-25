@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { clearAuthState } from '@/lib/auth';
 import { getErrorMessage } from '@/lib/error';
-import { logout } from '@/services/auth.service';
 import { clearChatHistory, deleteCurrentAccount } from '@/services/settings.service';
 import type { ConfirmAction } from '@/types/settings.types';
 
@@ -14,6 +15,7 @@ type ConfirmActionModalProps = {
 
 function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModalProps) {
   const { t } = useTranslation();
+  const { logout, refreshAuth } = useAuth();
   const toast = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -50,7 +52,8 @@ function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModal
 
       if (action === 'deleteAccount') {
         await deleteCurrentAccount();
-        localStorage.removeItem('accessToken');
+        clearAuthState();
+        refreshAuth();
         onSignedOut();
         return;
       }

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import '@/styles/pages/management.css';
 
 type RequirePermissionProps = {
@@ -10,7 +11,8 @@ type RequirePermissionProps = {
 };
 
 function RequirePermission({ permission, anyOf, children }: RequirePermissionProps) {
-  const { authLoading, hasAnyPermission, hasPermission, isAuthenticated, permissionsLoading } = useAuth();
+  const { authLoading, isAuthenticated, permissionsLoading } = useAuth();
+  const permissions = usePermissions();
 
   if (authLoading || permissionsLoading) {
     return (
@@ -28,8 +30,8 @@ function RequirePermission({ permission, anyOf, children }: RequirePermissionPro
   }
 
   const canAccess = anyOf?.length
-    ? hasAnyPermission(anyOf)
-    : Boolean(permission && hasPermission(permission));
+    ? permissions.any(anyOf)
+    : Boolean(permission && permissions.can(permission));
 
   if (!canAccess) {
     return (

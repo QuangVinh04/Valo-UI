@@ -1,66 +1,28 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Eye, Pencil, Plus, Shield, Trash2, UserPlus } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/context/ToastContext';
-import { getGroupById, getGroupMembers, getGroups, type GroupListItemDto } from '@/services/group.service';
+import { useGroups } from '@/hooks/useGroups';
 import '@/styles/pages/management.css';
 import GroupCreateModal from './groups/GroupCreateModal';
 import GroupDeleteModal from './groups/GroupDeleteModal';
 import GroupDetailsModal from './groups/GroupDetailsModal';
 import GroupMembersModal from './groups/GroupMembersModal';
 import GroupUpdateModal from './groups/GroupUpdateModal';
-import { toGroupViewModel, type GroupViewModel } from './groups/group-view-model';
-
-type GroupModalAction = 'create' | 'details' | 'update' | 'members' | 'delete';
-
-const groupActionPermissions: Record<Exclude<GroupModalAction, 'details'>, string> = {
-  create: 'GROUP_C',
-  update: 'GROUP_U',
-  members: 'GROUP_U',
-  delete: 'GROUP_D',
-};
-
-const permissionMessages: Record<string, string> = {
-  GROUP_R: 'You do not have permission to view group details.',
-  GROUP_C: 'You do not have permission to create groups.',
-  GROUP_U: 'You do not have permission to update groups or manage members.',
-  GROUP_D: 'You do not have permission to delete groups.',
-};
+import { toGroupViewModel } from './groups/group-view-model';
 
 function GroupsView() {
-  const { hasPermission } = useAuth();
-  const toast = useToast();
-  const canReadGroups = hasPermission('GROUP_R');
-  const [modal, setModal] = useState<GroupModalAction | null>(null);
-  const [selectedGroup, setSelectedGroup] = useState<GroupViewModel | null>(null);
-  const [groups, setGroups] = useState<GroupListItemDto[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [openingGroupId, setOpeningGroupId] = useState<string | null>(null);
-
-  const loadGroups = useCallback(async () => {
-    if (!hasPermission('GROUP_R')) {
-      setGroups([]);
-      toast.warning('You can open Group Management, but you do not have permission to view group data.');
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const data = await getGroups();
-      setGroups(data);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Cannot load groups');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [hasPermission, toast]);
-
-  useEffect(() => {
-    void loadGroups();
-  }, [loadGroups]);
+  const {
+    modal,
+    selectedGroup,
+    groups,
+    isLoading,
+    openingGroupId,
+    canReadGroups,
+    loadGroups,
+    openCreateModal,
+    openGroupModal,
+    closeModal,
+  } = useGroups();
 
   const tableGroups = useMemo(() => {
     if (!canReadGroups) {
@@ -69,11 +31,6 @@ function GroupsView() {
 
     return groups.map(toGroupViewModel);
   }, [canReadGroups, groups]);
-
-  function showPermissionNotice(permission: string) {
-    const message = permissionMessages[permission] ?? 'You do not have permission for this action.';
-    toast.warning(message);
-  }
 
   if (!canReadGroups) {
     return (
@@ -84,70 +41,6 @@ function GroupsView() {
         </section>
       </div>
     );
-  }
-
-  function openCreateModal() {
-    const requiredPermission = groupActionPermissions.create;
-    if (!hasPermission(requiredPermission)) {
-      showPermissionNotice(requiredPermission);
-      return;
-    }
-
-    setModal('create');
-  }
-
-  async function openGroupModal(action: Exclude<GroupModalAction, 'create'>, group: GroupViewModel) {
-    if (action === 'details' && !hasPermission('GROUP_R')) {
-      showPermissionNotice('GROUP_R');
-      return;
-    }
-
-    if (action !== 'details') {
-      const requiredPermission = groupActionPermissions[action];
-      if (!hasPermission(requiredPermission)) {
-        showPermissionNotice(requiredPermission);
-        return;
-      }
-    }
-
-    if (action === 'delete') {
-      setSelectedGroup(group);
-      setModal(action);
-      return;
-    }
-
-    try {
-      setOpeningGroupId(group.id);
-
-      if (action === 'members') {
-        const memberGroup = await getGroupMembers(group.id);
-        setSelectedGroup(toGroupViewModel({ ...group, ...memberGroup }));
-      } else {
-        const detailGroup = await getGroupById(group.id);
-        const memberGroup = action === 'details'
-          ? await getGroupMembers(group.id)
-          : null;
-
-        setSelectedGroup(toGroupViewModel({
-          ...detailGroup,
-          ...(memberGroup ? {
-            memberCount: memberGroup.memberCount,
-            members: memberGroup.members,
-          } : {}),
-        }));
-      }
-
-      setModal(action);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Cannot load group details');
-    } finally {
-      setOpeningGroupId(null);
-    }
-  }
-
-  function closeModal() {
-    setModal(null);
-    setSelectedGroup(null);
   }
 
   return (

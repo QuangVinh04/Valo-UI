@@ -1,8 +1,8 @@
 import { FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
-import { changePassword } from '@/services/auth.service';
 import { updateCurrentUserProfile, type UserProfileDto } from '@/services/user.service';
 import type { SettingsFormModal as SettingsFormModalType } from '@/types/settings.types';
 
@@ -22,6 +22,7 @@ function SettingsFormModal({
   onProfileSaved,
 }: SettingsFormModalProps) {
   const { t } = useTranslation();
+  const { changePassword } = useAuth();
   const toast = useToast();
   const [value, setValue] = useState(mode === 'phone' ? phoneNumber : address);
   const [currentPassword, setCurrentPassword] = useState('');

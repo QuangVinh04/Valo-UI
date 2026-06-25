@@ -4,10 +4,9 @@ import { LockKeyhole } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
-import { login } from '@/services/auth.service';
 
 function Hero() {
-  const { authLoading, isAuthenticated } = useAuth();
+  const { authLoading, isAuthenticated, login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
