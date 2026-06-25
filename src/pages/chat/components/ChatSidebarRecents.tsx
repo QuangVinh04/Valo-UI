@@ -1,7 +1,7 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Archive, Check, Folder, MessageSquare, MoreHorizontal, Pencil, Pin, Share2, Trash2, UserPlus, X } from 'lucide-react';
+import { Check, MessageSquare, MoreHorizontal, Pencil, Trash2, X } from 'lucide-react';
 import { useChat } from '@/hooks/useChat';
 
 function ChatSidebarRecents() {
@@ -59,8 +59,8 @@ function ChatSidebarRecents() {
     const rect = trigger.getBoundingClientRect();
     setOpenMenuId(conversationId);
     setMenuPosition({
-      top: Math.min(rect.bottom + 6, window.innerHeight - 260),
-      left: Math.min(rect.right - 12, window.innerWidth - 196),
+      top: Math.max(8, Math.min(rect.bottom + 6, window.innerHeight - 260)),
+      left: Math.max(8, Math.min(rect.right - 12, window.innerWidth - 196)),
     });
   };
 

@@ -1,4 +1,4 @@
-import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
+import { FormEvent, ReactElement, useEffect, useRef, useState } from 'react';
 import { Bot, Copy, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
 import { useToast } from '@/context/ToastContext';
@@ -125,7 +125,7 @@ function ChatView() {
             />
             {chat.isStreaming ? (
               <button type="button" className="send-btn stop-btn" onClick={chat.stopGenerating}>
-                {chat.isUploadingFiles ? <Loader2 size={18} aria-hidden="true" /> : <Square size={18} aria-hidden="true" />}
+                <Square size={18} aria-hidden="true" />
                 <span className="sr-only">Stop generating</span>
               </button>
             ) : (
@@ -168,12 +168,10 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
   };
 
   if (message.senderType === 'user') {
-    const visibleContent = getVisibleUserMessageContent(message.content);
-
     return (
       <>
         <div className="user-bubble">
-          {visibleContent && <p>{visibleContent}</p>}
+          {message.content && <p>{message.content}</p>}
           <FileUploadList fileUploads={message.fileUploads} />
         </div>
         <div className="msg-time">{formatTime(message.createdAt)}</div>
@@ -268,12 +266,6 @@ function SelectedFilePreview({
   );
 }
 
-function getVisibleUserMessageContent(content: string): string {
-  return content
-    .split('[FILE TÀI LIỆU CỦA USER]')[0]
-    .trim();
-}
-
 function FileUploadList({ fileUploads }: { fileUploads?: ChatMessage['fileUploads'] }) {
   if (!fileUploads?.length) return null;
 
@@ -296,7 +288,7 @@ function FileUploadList({ fileUploads }: { fileUploads?: ChatMessage['fileUpload
   );
 }
 
-function renderMarkdown(content: string): ReactNode[] {
+function renderMarkdown(content: string): ReactElement[] {
   const blocks = content.split(/```/);
 
   return blocks.flatMap((block, index) => {
@@ -309,8 +301,8 @@ function renderMarkdown(content: string): ReactNode[] {
   });
 }
 
-function renderTextBlock(block: string, blockIndex: number): ReactNode[] {
-  const nodes: ReactNode[] = [];
+function renderTextBlock(block: string, blockIndex: number): ReactElement[] {
+  const nodes: ReactElement[] = [];
   const lines = block.split('\n');
   let listItems: string[] = [];
   let listType: 'ul' | 'ol' | null = null;

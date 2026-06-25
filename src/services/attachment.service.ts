@@ -2,6 +2,7 @@ import { apiRequest, apiRequestWithMeta, type ApiMeta } from '@/lib/api';
 
 export type AttachmentItem = {
   id: string;
+  messageId?: string | null;
   name: string;
   mime: string;
   url?: string | null;

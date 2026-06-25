@@ -42,7 +42,6 @@ export type SelectedChatFile = {
   file: File;
   status: 'uploading' | 'ready' | 'error';
   fileUpload?: FileUpload;
-  fileContext?: string;
   error?: string;
 };
 
@@ -59,7 +58,6 @@ function useChatState() {
   const [isLoading, setIsLoading] = useState(true);
   const [openingConversationId, setOpeningConversationId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [error, setError] = useState('');
   const streamAbortControllerRef = useRef<AbortController | null>(null);
 
@@ -162,7 +160,6 @@ function useChatState() {
                 ...item,
                 status: 'ready',
                 fileUpload: uploaded.fileUpload,
-                fileContext: uploaded.fileContext,
                 error: undefined,
               }
               : item
@@ -246,13 +243,13 @@ function useChatState() {
     setPrompt('');
     setError('');
     setIsStreaming(true);
-    setIsUploadingFiles(false);
     const abortController = new AbortController();
     streamAbortControllerRef.current = abortController;
 
     let assistantMessage = createPendingAssistantMessage(modelName);
 
     const handleReady = (event: StreamReadyEvent) => {
+      setSelectedFiles([]);
       setMessages((current) => [...current, event.userMessage, assistantMessage]);
       setActiveConversation((current) => current ?? {
         id: event.conversationId,
@@ -298,12 +295,6 @@ function useChatState() {
 
     try {
       const fileUploads = readyFiles.flatMap((file) => file.fileUpload ? [file.fileUpload] : []);
-      const fileContext = readyFiles
-        .map((file) => file.fileContext)
-        .filter(Boolean)
-        .join('\n\n---\n\n');
-
-      setSelectedFiles([]);
 
       await sendMessageStream({
         conversationId: activeConversationId,
@@ -311,7 +302,6 @@ function useChatState() {
         modelName,
         title: activeConversationId ? undefined : question.slice(0, 50),
         fileUploads,
-        fileContext: fileContext || undefined,
         signal: abortController.signal,
       }, {
         onReady: handleReady,
@@ -327,7 +317,6 @@ function useChatState() {
       if (streamAbortControllerRef.current === abortController) {
         streamAbortControllerRef.current = null;
       }
-      setIsUploadingFiles(false);
       setIsStreaming(false);
     }
   };
@@ -343,7 +332,6 @@ function useChatState() {
     isOpeningConversation,
     openingConversationId,
     isStreaming,
-    isUploadingFiles,
     isWaitingForUploads: selectedFiles.some((file) => file.status === 'uploading'),
     hasFailedUploads: selectedFiles.some((file) => file.status === 'error'),
     error,
@@ -357,7 +345,7 @@ function useChatState() {
     deleteChat,
     stopGenerating,
     sendPrompt,
-  }), [conversations, activeConversationId, messages, prompt, selectedFiles, modelName, isLoading, isOpeningConversation, openingConversationId, isStreaming, isUploadingFiles, error, selectConversation, startNewChat]);
+  }), [conversations, activeConversationId, messages, prompt, selectedFiles, modelName, isLoading, isOpeningConversation, openingConversationId, isStreaming, error, selectConversation, startNewChat]);
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {

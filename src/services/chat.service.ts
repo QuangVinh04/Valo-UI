@@ -38,7 +38,6 @@ export async function sendMessageStream(input: {
   modelName: string;
   title?: string;
   fileUploads?: FileUpload[];
-  fileContext?: string;
   signal?: AbortSignal;
 }, handlers: StreamHandlers): Promise<void> {
   const token = localStorage.getItem('accessToken');
@@ -50,7 +49,6 @@ export async function sendMessageStream(input: {
     modelName: input.modelName,
     ...(input.title ? { title: input.title } : {}),
     ...(input.fileUploads?.length ? { fileUploads: input.fileUploads } : {}),
-    ...(input.fileContext ? { fileContext: input.fileContext } : {}),
   });
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
