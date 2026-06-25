@@ -114,6 +114,7 @@ async function getStreamErrorMessage(response: Response): Promise<string> {
 }
 
 function handleStreamChunk(chunk: string, handlers: StreamHandlers) {
+  // Phân tích từng sự kiện SSE để cập nhật UI chat theo ready/token/done/error.
   const lines = chunk.split('\n');
   const eventLine = lines.find((line) => line.startsWith('event:'));
   const dataLines = lines.filter((line) => line.startsWith('data:'));

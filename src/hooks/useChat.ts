@@ -65,6 +65,7 @@ function useChatState() {
   useEffect(() => {
     let ignore = false;
 
+    // Tải danh sách hội thoại ban đầu và bỏ qua kết quả nếu lịch sử vừa bị xóa.
     async function loadConversations() {
       const resetVersion = historyResetVersionRef.current;
 
@@ -97,6 +98,7 @@ function useChatState() {
   const activeConversationId = activeConversation?.id ?? null;
   const isOpeningConversation = openingConversationId !== null;
 
+  // Mở một hội thoại, ưu tiên dữ liệu cache để UI phản hồi nhanh rồi làm mới từ API.
   const selectConversation = useCallback(async (conversationId: string) => {
     const resetVersion = historyResetVersionRef.current;
 
@@ -136,6 +138,7 @@ function useChatState() {
     void selectConversation(routeConversationId);
   }, [activeConversationId, openingConversationId, routeConversationId, selectConversation]);
 
+  // Reset vùng chat để bắt đầu hội thoại mới.
   const startNewChat = useCallback(() => {
     streamAbortControllerRef.current?.abort();
     setActiveConversation(null);
@@ -147,6 +150,7 @@ function useChatState() {
     navigate('/chat');
   }, [navigate]);
 
+  // Xóa toàn bộ trạng thái chat trong bộ nhớ sau khi backend đã xóa lịch sử.
   const clearChatHistoryState = useCallback(() => {
     historyResetVersionRef.current += 1;
     streamAbortControllerRef.current?.abort();
@@ -167,10 +171,12 @@ function useChatState() {
     }
   }, [navigate, routeConversationId]);
 
+  // Dừng stream đang chạy nhưng giữ lại nội dung đã nhận được.
   const stopGenerating = () => {
     streamAbortControllerRef.current?.abort();
   };
 
+  // Thêm tệp vào hàng đợi upload và cập nhật trạng thái từng tệp độc lập.
   const addFiles = (files: FileList | File[]) => {
     const availableSlots = Math.max(5 - selectedFiles.length, 0);
     const nextFiles = Array.from(files).slice(0, availableSlots);
@@ -210,10 +216,12 @@ function useChatState() {
     });
   };
 
+  // Xóa tệp đã chọn khỏi composer theo vị trí hiển thị.
   const removeFile = (index: number) => {
     setSelectedFiles((current) => current.filter((_, fileIndex) => fileIndex !== index));
   };
 
+  // Đổi tên hội thoại và đồng bộ lại cả sidebar lẫn hội thoại đang mở.
   const renameChat = async (conversationId: string, title: string) => {
     const nextTitle = title.trim();
     if (!nextTitle) return;
@@ -237,6 +245,7 @@ function useChatState() {
     }
   };
 
+  // Xóa một hội thoại; nếu đang mở hội thoại đó thì quay về chat mới.
   const deleteChat = async (conversationId: string) => {
     setError('');
 
@@ -252,6 +261,7 @@ function useChatState() {
     }
   };
 
+  // Gửi prompt/file lên AI, xử lý upload chờ, stream phản hồi và cập nhật sidebar.
   const sendPrompt = async () => {
     const content = prompt.trim();
     const filesToSend = selectedFiles;
@@ -280,6 +290,7 @@ function useChatState() {
 
     let assistantMessage = createPendingAssistantMessage(modelName);
 
+    // Khi backend tạo hội thoại/tin nhắn xong, hiển thị ngay tin nhắn đầu tiên.
     const handleReady = (event: StreamReadyEvent) => {
       if (historyResetVersionRef.current !== resetVersion) return;
 
@@ -297,6 +308,7 @@ function useChatState() {
       navigate(`/chat/${event.conversationId}`, { replace: !activeConversationId });
     };
 
+    // Ghép token stream vào tin nhắn assistant tạm thời.
     const handleToken = (token: string) => {
       if (historyResetVersionRef.current !== resetVersion) return;
 
@@ -309,6 +321,7 @@ function useChatState() {
       )));
     };
 
+    // Khi stream kết thúc, thay tin nhắn tạm bằng dữ liệu chuẩn từ backend.
     const handleDone = async (event: StreamDoneEvent) => {
       if (historyResetVersionRef.current !== resetVersion) return;
 

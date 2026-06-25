@@ -48,6 +48,7 @@ const permissionDescriptions: Record<PermissionScope, string> = {
 const permissionScopes: PermissionScope[] = ['users', 'groups'];
 
 function togglePermission(permissions: string[], permission: string): string[] {
+  // Bật/tắt một quyền trong nhóm quyền hiện tại.
   if (permissions.includes(permission)) {
     return permissions.filter((item) => item !== permission);
   }
@@ -86,6 +87,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
   useEffect(() => {
     let ignore = false;
 
+    // Tải danh sách người dùng để người quản trị có thể gán thành viên ban đầu.
     async function loadUsers() {
       setIsLoadingUsers(true);
 
@@ -126,6 +128,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
   }, [memberSearch, selectedUsers, users]);
 
   function handlePermissionToggle(permission: string) {
+    // Cập nhật quyền theo scope đang được chọn trong segmented control.
     setPermissions((current) => ({
       ...current,
       [permissionScope]: togglePermission(current[permissionScope], permission),
@@ -133,15 +136,18 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
   }
 
   function addSelectedUser(user: UserListItemDto) {
+    // Thêm thành viên ban đầu và xóa ô tìm kiếm để chọn người tiếp theo nhanh hơn.
     setSelectedUsers((current) => [...current, user]);
     setMemberSearch('');
   }
 
   function removeSelectedUser(userId: string) {
+    // Bỏ một thành viên khỏi danh sách sẽ được thêm vào nhóm mới.
     setSelectedUsers((current) => current.filter((user) => user.id !== userId));
   }
 
   async function handleSubmit() {
+    // Tạo nhóm trước, sau đó gán thành viên ban đầu nếu có lựa chọn.
     const name = groupName.trim();
     if (!name) {
       toast.error(t('admin.groups.groupNameRequired'));

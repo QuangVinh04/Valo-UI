@@ -42,6 +42,7 @@ function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModal
     },
   }[action];
 
+  // Thực thi thao tác nhạy cảm sau khi người dùng xác nhận trong modal.
   const handleConfirm = async () => {
     setIsSaving(true);
 

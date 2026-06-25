@@ -18,6 +18,7 @@ function GroupDeleteModal({ group, onClose, onDeleted }: GroupDeleteModalProps) 
   const canDelete = confirmName.trim() === group.name;
 
   async function handleDelete() {
+    // Chỉ xóa khi tên xác nhận khớp để tránh xóa nhầm nhóm.
     if (!canDelete) {
       toast.error(t('admin.groups.confirmGroupNameRequired'));
       return;

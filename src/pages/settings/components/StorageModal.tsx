@@ -30,6 +30,7 @@ function StorageModal({ onClose }: StorageModalProps) {
 
   const selectedIdsSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
+  // Tải trang tệp đầu tiên hoặc trang kế tiếp dựa trên cursor.
   const loadAttachments = async (cursor?: string | null) => {
     setIsLoading(true);
 
@@ -50,6 +51,7 @@ function StorageModal({ onClose }: StorageModalProps) {
     void loadAttachments();
   }, []);
 
+  // Chọn hoặc bỏ chọn một tệp trong danh sách lưu trữ.
   const toggleAttachment = (id: string) => {
     setSelectedIds((current) => (
       current.includes(id)
@@ -58,6 +60,7 @@ function StorageModal({ onClose }: StorageModalProps) {
     ));
   };
 
+  // Chọn toàn bộ tệp đang hiển thị hoặc bỏ chọn nhóm đó.
   const toggleAllVisible = () => {
     setSelectedIds((current) => {
       if (allVisibleSelected) {
@@ -72,6 +75,7 @@ function StorageModal({ onClose }: StorageModalProps) {
     });
   };
 
+  // Xóa các tệp đã chọn và giữ lại những id backend báo không tìm thấy.
   const handleDeleteSelected = async () => {
     if (!selectedIds.length) return;
 

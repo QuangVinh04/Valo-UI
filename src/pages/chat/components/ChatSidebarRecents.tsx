@@ -21,6 +21,7 @@ function ChatSidebarRecents() {
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    // Đóng menu hành động khi người dùng bấm ra ngoài vùng sidebar/menu.
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (!listRef.current?.contains(target) && !menuRef.current?.contains(target)) {
@@ -29,6 +30,7 @@ function ChatSidebarRecents() {
       }
     };
 
+    // Escape đóng menu, modal xóa và trạng thái đổi tên đang mở.
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setOpenMenuId(null);
@@ -46,11 +48,13 @@ function ChatSidebarRecents() {
     };
   }, []);
 
+  // Điều hướng đến hội thoại được chọn, trừ khi đang sửa tên.
   const handleSelectConversation = (conversationId: string) => {
     if (editingId) return;
     navigate(`/chat/${conversationId}`);
   };
 
+  // Mở menu hành động tại vị trí của nút ba chấm nhưng giữ trong viewport.
   const toggleMenu = (conversationId: string, trigger: HTMLButtonElement) => {
     if (openMenuId === conversationId) {
       setOpenMenuId(null);
@@ -66,6 +70,7 @@ function ChatSidebarRecents() {
     });
   };
 
+  // Chuyển một dòng hội thoại sang chế độ nhập tên mới.
   const startRename = (conversationId: string, title: string) => {
     setEditingId(conversationId);
     setDraftTitle(title);
@@ -73,6 +78,7 @@ function ChatSidebarRecents() {
     setMenuPosition(null);
   };
 
+  // Lưu tên hội thoại sau khi đã kiểm tra có nội dung hợp lệ.
   const saveRename = async () => {
     if (!editingId) return;
     if (!draftTitle.trim()) return;
@@ -82,17 +88,20 @@ function ChatSidebarRecents() {
     setDraftTitle('');
   };
 
+  // Hủy đổi tên và xóa draft hiện tại.
   const cancelRename = () => {
     setEditingId(null);
     setDraftTitle('');
   };
 
+  // Mở modal xác nhận xóa cho đúng hội thoại người dùng chọn.
   const openDeleteConfirmation = (conversationId: string, title: string) => {
     setOpenMenuId(null);
     setMenuPosition(null);
     setDeleteTarget({ id: conversationId, title });
   };
 
+  // Xóa hội thoại qua shared chat state để sidebar và nội dung đang mở cùng cập nhật.
   const handleDelete = async () => {
     if (!deleteTarget) return;
 

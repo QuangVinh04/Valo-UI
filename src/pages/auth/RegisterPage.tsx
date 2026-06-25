@@ -16,6 +16,7 @@ function RegisterPage() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Gửi yêu cầu tạo tài khoản và xóa form sau khi backend chấp nhận.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);

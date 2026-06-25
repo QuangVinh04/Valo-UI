@@ -73,6 +73,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
+    // Đồng bộ lại theme/ngôn ngữ khi localStorage thay đổi từ tab khác hoặc từ đăng nhập.
     const handlePreferencesChanged = () => {
       setSettings(readSettings());
     };

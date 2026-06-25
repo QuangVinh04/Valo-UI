@@ -19,6 +19,7 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const selectedGroupIds = useMemo(() => new Set(groupIds), [groupIds]);
 
+  // Lọc nhóm ngay trên UI để người quản trị tìm nhanh nhóm cần gán.
   const filteredGroups = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
@@ -28,12 +29,14 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
     });
   }, [groups, search]);
 
+  // Dùng dữ liệu nhóm đầy đủ để hiển thị tag các nhóm đã chọn.
   const selectedGroups = useMemo(
     () => groups.filter((group) => selectedGroupIds.has(group.id)),
     [groups, selectedGroupIds]
   );
 
   function toggleGroup(groupId: string) {
+    // Chọn lại cùng một nhóm sẽ bỏ chọn nhóm đó.
     setGroupIds((current) => (
       current.includes(groupId)
         ? current.filter((id) => id !== groupId)
@@ -42,10 +45,12 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
   }
 
   function removeGroup(groupId: string) {
+    // Cho phép bỏ nhóm đã chọn trực tiếp từ danh sách tag.
     setGroupIds((current) => current.filter((id) => id !== groupId));
   }
 
   async function handleSubmit() {
+    // Gán cùng một tập nhóm cho toàn bộ người dùng đang được chọn.
     if (groupIds.length === 0) {
       toast.error(t('admin.users.selectAtLeastOneGroup'));
       return;

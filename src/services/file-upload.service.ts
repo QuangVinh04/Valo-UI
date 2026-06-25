@@ -6,6 +6,7 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET a
 export async function uploadChatFile(file: File): Promise<{
   fileUpload: FileUpload;
 }> {
+  // Kiểm tra cấu hình trước khi cho chat upload tệp lên Cloudinary.
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
     throw new Error('Cloudinary upload is not configured.');
   }
@@ -16,6 +17,7 @@ export async function uploadChatFile(file: File): Promise<{
 }
 
 async function uploadToCloudinary(file: File): Promise<FileUpload> {
+  // Gửi file trực tiếp lên Cloudinary và chuyển response về định dạng chat hiểu được.
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET!);
@@ -50,10 +52,12 @@ async function uploadToCloudinary(file: File): Promise<FileUpload> {
 }
 
 function getCloudinaryResourceType(file: File): 'image' | 'raw' {
+  // Cloudinary cần resource type khác nhau giữa ảnh và tài liệu/raw file.
   return file.type.startsWith('image/') ? 'image' : 'raw';
 }
 
 function inferMimeFromName(name: string): string {
+  // Dự phòng khi browser không cung cấp MIME type cho file.
   const lowerName = name.toLowerCase();
   if (lowerName.endsWith('.pdf')) return 'application/pdf';
   if (lowerName.endsWith('.png')) return 'image/png';

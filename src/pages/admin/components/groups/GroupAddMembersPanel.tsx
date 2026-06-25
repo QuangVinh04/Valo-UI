@@ -24,6 +24,7 @@ function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded 
   useEffect(() => {
     let ignore = false;
 
+    // Tải danh sách người dùng để lọc ra các thành viên có thể thêm vào nhóm.
     async function loadUsers() {
       setIsLoadingUsers(true);
 
@@ -71,15 +72,18 @@ function GroupAddMembersPanel({ group, currentMemberIds, onBack, onMembersAdded 
   }, [currentMemberIds, search, selectedUsers, users]);
 
   function addSelectedUser(user: UserListItemDto) {
+    // Thêm người dùng vào danh sách sẽ gán và xóa ô tìm kiếm.
     setSelectedUsers((current) => [...current, user]);
     setSearch('');
   }
 
   function removeSelectedUser(userId: string) {
+    // Bỏ người dùng khỏi danh sách sẽ gán vào nhóm.
     setSelectedUsers((current) => current.filter((user) => user.id !== userId));
   }
 
   async function handleAddMembers() {
+    // Gửi danh sách người dùng đã chọn lên backend để thêm vào nhóm.
     if (selectedUsers.length === 0) {
       toast.error(t('admin.groups.selectAtLeastOneUser'));
       return;

@@ -59,6 +59,7 @@ function getInitialPermissions(group: GroupViewModel): Record<PermissionScope, s
 }
 
 function togglePermission(permissions: string[], permission: string): string[] {
+  // Bật/tắt một quyền trong nhóm quyền hiện tại.
   if (permissions.includes(permission)) {
     return permissions.filter((item) => item !== permission);
   }
@@ -87,6 +88,7 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
   const activeRows = permissionRows[permissionScope];
 
   function handlePermissionToggle(permission: string) {
+    // Cập nhật quyền theo scope đang được chọn trong segmented control.
     setPermissions((current) => ({
       ...current,
       [permissionScope]: togglePermission(current[permissionScope], permission),
@@ -94,6 +96,7 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
   }
 
   async function handleSubmit() {
+    // Lưu tên, mô tả và toàn bộ quyền đã chọn cho nhóm hiện tại.
     const name = groupName.trim();
     if (!name) {
       toast.error(t('admin.groups.groupNameRequired'));

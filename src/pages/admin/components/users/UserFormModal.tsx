@@ -44,15 +44,18 @@ function UserFormModal({ mode, user, groups, onClose, onSaved }: UserFormModalPr
   }, [groupIds, groupSearch, groups]);
 
   function addGroup(groupId: string) {
+    // Thêm nhóm vào người dùng mới và xóa từ khóa tìm kiếm nhóm.
     setGroupIds((current) => current.includes(groupId) ? current : [...current, groupId]);
     setGroupSearch('');
   }
 
   function removeGroup(groupId: string) {
+    // Bỏ nhóm đã chọn khỏi danh sách gán ban đầu.
     setGroupIds((current) => current.filter((id) => id !== groupId));
   }
 
   async function handleSubmit() {
+    // Chuẩn hóa dữ liệu form trước khi tạo mới hoặc cập nhật người dùng.
     const name = fullName.trim();
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedPhoneNumber = phoneNumber.trim();

@@ -19,6 +19,7 @@ function ChangePasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Kiểm tra xác nhận mật khẩu trước khi gọi API đổi mật khẩu.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 

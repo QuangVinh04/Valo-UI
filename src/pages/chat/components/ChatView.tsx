@@ -35,6 +35,7 @@ function ChatView() {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 148)}px`;
   }, [chat.prompt]);
 
+  // Gửi prompt khi submit form, còn logic validate/stream nằm trong useChat.
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     void chat.sendPrompt();
@@ -159,6 +160,7 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
   const { t } = useTranslation();
   const [copyLabelKey, setCopyLabelKey] = useState('chat.copyResponse');
 
+  // Sao chép nội dung phản hồi và đổi nhãn nút trong thời gian ngắn để báo trạng thái.
   const copyMessage = async () => {
     try {
       await navigator.clipboard.writeText(message.content);

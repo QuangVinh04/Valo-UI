@@ -52,6 +52,7 @@ function UsersView() {
   }, [canReadUsers, users]);
 
   function toggleAllUsers() {
+    // Chọn hoặc bỏ chọn toàn bộ người dùng đang hiển thị trên trang hiện tại.
     toggleAllUsersSelection(tableUsers.map((user) => user.id));
   }
 

@@ -15,6 +15,7 @@ function Hero() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Xử lý đăng nhập và điều hướng theo trạng thái bắt buộc đổi mật khẩu.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);

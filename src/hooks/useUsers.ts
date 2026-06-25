@@ -53,6 +53,7 @@ export function useUsers() {
   const [filterDraft, setFilterDraft] = useState<UserFilters>(defaultUserFilters);
   const [activeFilters, setActiveFilters] = useState<UserFilters>(defaultUserFilters);
 
+  // Chuẩn hóa bộ lọc trên UI thành query gửi lên API.
   const userQueryFilters = useMemo(() => ({
     search: activeFilters.search.trim() || undefined,
     groupId: activeFilters.groupId || undefined,
@@ -65,6 +66,7 @@ export function useUsers() {
     toast.warning(t(permissionMessages[permission] ?? 'common.noPagePermission'));
   }, [t, toast]);
 
+  // Tải lại danh sách người dùng theo trang hiện tại và bộ lọc đang áp dụng.
   const loadUsers = useCallback(async (targetPage = page) => {
     if (!permissions.can('USER_R')) {
       setUsers([]);
@@ -93,6 +95,7 @@ export function useUsers() {
   useEffect(() => {
     let ignore = false;
 
+    // Lần tải đầu cần lấy cả danh sách người dùng và nhóm để phục vụ bộ lọc/gán nhóm.
     async function loadInitialData() {
       if (!permissions.can('USER_R')) {
         setUsers([]);
@@ -137,6 +140,7 @@ export function useUsers() {
   }, [limit, page, permissions, t, toast, userQueryFilters]);
 
   function openAddModal() {
+    // Chặn mở modal nếu người dùng hiện tại không có quyền tạo tài khoản.
     const requiredPermission = userActionPermissions.add;
     if (permissions.cannot(requiredPermission)) {
       showPermissionNotice(requiredPermission);
@@ -148,6 +152,7 @@ export function useUsers() {
   }
 
   function openAssignGroupModal() {
+    // Gán nhóm là thao tác cập nhật người dùng nên dùng quyền USER_U.
     const requiredPermission = userActionPermissions.assignGroup;
     if (permissions.cannot(requiredPermission)) {
       showPermissionNotice(requiredPermission);
@@ -163,6 +168,7 @@ export function useUsers() {
   }
 
   async function openUserModal(action: Exclude<UserModalAction, 'add' | 'assignGroup'>, user: UserListItemDto) {
+    // Mỗi modal cần dữ liệu chi tiết mới nhất để tránh sửa/xóa trên dữ liệu danh sách bị cũ.
     if (action === 'details' && permissions.cannot('USER_R')) {
       showPermissionNotice('USER_R');
       return;
@@ -190,11 +196,13 @@ export function useUsers() {
   }
 
   function closeModal() {
+    // Đóng modal đồng thời xóa bản ghi đang chọn để lần mở sau không dùng dữ liệu cũ.
     setModal(null);
     setSelectedUser(null);
   }
 
   function goToPage(targetPage: number) {
+    // Giữ số trang trong giới hạn hợp lệ và tránh đổi trang khi đang tải.
     const nextPage = Math.min(Math.max(targetPage, 1), totalPages);
     if (nextPage === page || isLoading) return;
 
@@ -202,6 +210,7 @@ export function useUsers() {
   }
 
   function toggleSelectedUser(userId: string) {
+    // Bật/tắt chọn một người dùng trong danh sách hiện tại.
     setSelectedUserIds((current) => (
       current.includes(userId)
         ? current.filter((id) => id !== userId)
@@ -210,17 +219,20 @@ export function useUsers() {
   }
 
   function toggleAllUsers(visibleUserIds: string[]) {
+    // Nếu đã chọn toàn bộ hàng đang hiển thị thì bỏ chọn, ngược lại chọn tất cả.
     setSelectedUserIds((current) => (
       current.length === visibleUserIds.length ? [] : visibleUserIds
     ));
   }
 
   function applyFilters() {
+    // Chỉ áp dụng bộ lọc khi người dùng bấm nút, sau đó quay về trang đầu.
     setActiveFilters(filterDraft);
     setPage(1);
   }
 
   function clearFilters() {
+    // Đưa cả bộ lọc nháp và bộ lọc đang áp dụng về mặc định.
     setFilterDraft(defaultUserFilters);
     setActiveFilters(defaultUserFilters);
     setPage(1);

@@ -27,35 +27,43 @@ export function useSettings() {
   }, [profileError, toast]);
 
   function openModal(nextModal: SettingsFormModal) {
+    // Mở modal chỉnh sửa đúng loại thông tin người dùng chọn.
     setModal(nextModal);
   }
 
   function closeModal() {
+    // Đóng modal chỉnh sửa thông tin cá nhân hoặc mật khẩu.
     setModal(null);
   }
 
   function openStorage() {
+    // Mở màn hình quản lý các tệp đã tải lên.
     setShowStorage(true);
   }
 
   function closeStorage() {
+    // Đóng màn hình quản lý tệp.
     setShowStorage(false);
   }
 
   function openConfirmAction(action: ConfirmAction) {
+    // Mở modal xác nhận cho các thao tác nhạy cảm như xóa lịch sử hoặc đăng xuất.
     setConfirmAction(action);
   }
 
   function closeConfirmAction() {
+    // Hủy thao tác xác nhận hiện tại.
     setConfirmAction(null);
   }
 
   function handleProfileSaved(user: UserProfileDto) {
+    // Cập nhật lại hồ sơ trên UI sau khi lưu thành công từ modal.
     updateProfileFromUser(user);
     closeModal();
   }
 
   function handleSignedOut() {
+    // Đưa người dùng về màn hình đăng nhập sau khi phiên kết thúc.
     navigate('/');
   }
 

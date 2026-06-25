@@ -30,6 +30,7 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   }, [group]);
 
   function toggleSelectedMember(userId: string) {
+    // Chọn hoặc bỏ chọn một thành viên hiện có trong nhóm.
     setSelectedMemberIds((current) => (
       current.includes(userId)
         ? current.filter((id) => id !== userId)
@@ -38,12 +39,14 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   }
 
   function toggleAllMembers() {
+    // Chọn toàn bộ thành viên hiện có hoặc bỏ chọn tất cả.
     setSelectedMemberIds((current) => (
       current.length === currentMembers.length ? [] : currentMembers.map((member) => member.id)
     ));
   }
 
   function openRemoveConfirmation() {
+    // Yêu cầu xác nhận trước khi gỡ thành viên khỏi nhóm.
     if (selectedMemberIds.length === 0) {
       toast.error(t('admin.groups.selectAtLeastOneMember'));
       return;
@@ -53,6 +56,7 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   }
 
   async function handleRemoveMembers() {
+    // Gỡ các thành viên đã chọn và cập nhật lại danh sách trong modal.
     setIsRemoving(true);
 
     try {
@@ -72,6 +76,7 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   }
 
   function handleMembersAdded(updatedGroup: GroupMemberDto) {
+    // Nhận danh sách thành viên mới từ panel thêm thành viên và quay lại trang danh sách.
     setCurrentMembers(updatedGroup.members);
     setCurrentMemberCount(updatedGroup.memberCount);
     setSelectedMemberIds([]);

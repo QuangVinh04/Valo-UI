@@ -17,6 +17,7 @@ function UserDeleteModal({ user, onClose, onDeleted }: UserDeleteModalProps) {
   const canDelete = confirmEmail.trim().toLowerCase() === user.email.toLowerCase();
 
   async function handleDelete() {
+    // Chỉ xóa khi email xác nhận khớp để tránh thao tác nhầm người dùng.
     if (!canDelete) {
       toast.error(t('admin.users.confirmEmailRequired'));
       return;

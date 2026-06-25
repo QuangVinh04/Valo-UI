@@ -32,10 +32,11 @@ function SettingsFormModal({
 
   const title = mode === 'phone'
     ? t('settings.updatePhone')
-    : mode === 'address'
-      ? t('settings.updateAddress')
-      : t('settings.updatePassword');
+      : mode === 'address'
+        ? t('settings.updateAddress')
+        : t('settings.updatePassword');
 
+  // Lưu thay đổi hồ sơ hoặc đổi mật khẩu tùy theo modal đang mở.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
