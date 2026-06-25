@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useChat } from '@/hooks/useChat';
 import { clearAuthState } from '@/lib/auth';
 import { getErrorMessage } from '@/lib/error';
 import { clearChatHistory, deleteCurrentAccount } from '@/services/settings.service';
@@ -16,6 +17,7 @@ type ConfirmActionModalProps = {
 function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModalProps) {
   const { t } = useTranslation();
   const { logout, refreshAuth } = useAuth();
+  const chat = useChat();
   const toast = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -46,6 +48,7 @@ function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModal
     try {
       if (action === 'clearChat') {
         await clearChatHistory();
+        chat.clearChatHistoryState();
         onClose();
         return;
       }

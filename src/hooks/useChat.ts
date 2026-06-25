@@ -60,25 +60,28 @@ function useChatState() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState('');
   const streamAbortControllerRef = useRef<AbortController | null>(null);
+  const historyResetVersionRef = useRef(0);
 
   useEffect(() => {
     let ignore = false;
 
     async function loadConversations() {
+      const resetVersion = historyResetVersionRef.current;
+
       setIsLoading(true);
       setError('');
 
       try {
         const data = await getConversations();
-        if (ignore) return;
+        if (ignore || historyResetVersionRef.current !== resetVersion) return;
 
         setConversations(data);
       } catch (err) {
-        if (!ignore) {
+        if (!ignore && historyResetVersionRef.current === resetVersion) {
           setError(err instanceof Error ? err.message : 'Cannot load conversations');
         }
       } finally {
-        if (!ignore) {
+        if (!ignore && historyResetVersionRef.current === resetVersion) {
           setIsLoading(false);
         }
       }
@@ -95,6 +98,8 @@ function useChatState() {
   const isOpeningConversation = openingConversationId !== null;
 
   const selectConversation = useCallback(async (conversationId: string) => {
+    const resetVersion = historyResetVersionRef.current;
+
     setError('');
     setOpeningConversationId(conversationId);
     const existing = conversations.find((conversation) => conversation.id === conversationId);
@@ -106,14 +111,20 @@ function useChatState() {
 
     try {
       const conversation = await getConversation(conversationId);
+      if (historyResetVersionRef.current !== resetVersion) return;
+
       setActiveConversation(conversation);
       setMessages(getConversationMessages(conversation));
       setModelName(normalizeModelName(conversation.modelName));
       setConversations((current) => current.map((item) => item.id === conversation.id ? conversation : item));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Cannot load conversation');
+      if (historyResetVersionRef.current === resetVersion) {
+        setError(err instanceof Error ? err.message : 'Cannot load conversation');
+      }
     } finally {
-      setOpeningConversationId((current) => current === conversationId ? null : current);
+      if (historyResetVersionRef.current === resetVersion) {
+        setOpeningConversationId((current) => current === conversationId ? null : current);
+      }
     }
   }, [conversations]);
 
@@ -135,6 +146,26 @@ function useChatState() {
     setOpeningConversationId(null);
     navigate('/chat');
   }, [navigate]);
+
+  const clearChatHistoryState = useCallback(() => {
+    historyResetVersionRef.current += 1;
+    streamAbortControllerRef.current?.abort();
+    streamAbortControllerRef.current = null;
+
+    setConversations([]);
+    setActiveConversation(null);
+    setMessages([]);
+    setPrompt('');
+    setSelectedFiles([]);
+    setIsLoading(false);
+    setIsStreaming(false);
+    setError('');
+    setOpeningConversationId(null);
+
+    if (routeConversationId) {
+      navigate('/chat', { replace: true });
+    }
+  }, [navigate, routeConversationId]);
 
   const stopGenerating = () => {
     streamAbortControllerRef.current?.abort();
@@ -245,10 +276,13 @@ function useChatState() {
     setIsStreaming(true);
     const abortController = new AbortController();
     streamAbortControllerRef.current = abortController;
+    const resetVersion = historyResetVersionRef.current;
 
     let assistantMessage = createPendingAssistantMessage(modelName);
 
     const handleReady = (event: StreamReadyEvent) => {
+      if (historyResetVersionRef.current !== resetVersion) return;
+
       setSelectedFiles([]);
       setMessages((current) => [...current, event.userMessage, assistantMessage]);
       setActiveConversation((current) => current ?? {
@@ -264,6 +298,8 @@ function useChatState() {
     };
 
     const handleToken = (token: string) => {
+      if (historyResetVersionRef.current !== resetVersion) return;
+
       assistantMessage = {
         ...assistantMessage,
         content: assistantMessage.content + token,
@@ -274,12 +310,16 @@ function useChatState() {
     };
 
     const handleDone = async (event: StreamDoneEvent) => {
+      if (historyResetVersionRef.current !== resetVersion) return;
+
       setMessages((current) => current.map((message) => (
         message.id === assistantMessage.id ? event.assistantMessage : message
       )));
 
       try {
         const conversation = await getConversation(event.conversationId);
+        if (historyResetVersionRef.current !== resetVersion) return;
+
         setActiveConversation(conversation);
         setMessages(getConversationMessages(conversation));
         setConversations((current) => {
@@ -341,11 +381,12 @@ function useChatState() {
     removeFile,
     selectConversation,
     startNewChat,
+    clearChatHistoryState,
     renameChat,
     deleteChat,
     stopGenerating,
     sendPrompt,
-  }), [conversations, activeConversationId, messages, prompt, selectedFiles, modelName, isLoading, isOpeningConversation, openingConversationId, isStreaming, error, selectConversation, startNewChat]);
+  }), [conversations, activeConversationId, messages, prompt, selectedFiles, modelName, isLoading, isOpeningConversation, openingConversationId, isStreaming, error, selectConversation, startNewChat, clearChatHistoryState]);
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
