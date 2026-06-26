@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, Settings, Shield, Users } from 'lucide-react';
+import { MessageSquare, PanelLeft, Settings, Shield, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { ChatProvider, useChat } from '@/hooks/useChat';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -43,6 +44,7 @@ function AppLayoutContent() {
   const permissions = usePermissions();
   const location = useLocation();
   const chat = useChat();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const isChatRoute = location.pathname.startsWith('/chat');
   const loginUsername = user?.fullName || user?.email || t('layout.role');
   const avatarInitial = loginUsername.trim().charAt(0).toUpperCase() || 'U';
@@ -59,11 +61,22 @@ function AppLayoutContent() {
   });
 
   return (
-    <div className="app-layout">
+    <div className={`app-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <aside className="sidebar">
-        <div className="sidebar-brand">
-          <h2 className="sidebar-title">{t('layout.brand')}</h2>
-          <p>{t('layout.workspace')}</p>
+        <div className="sidebar-top">
+          <div className="sidebar-brand">
+            <h2 className="sidebar-title">{t('layout.brand')}</h2>
+            <p>{t('layout.workspace')}</p>
+          </div>
+          <button
+            type="button"
+            className="sidebar-toggle"
+            aria-label={isSidebarCollapsed ? 'Open sidebar' : 'Close sidebar'}
+            aria-pressed={isSidebarCollapsed}
+            onClick={() => setIsSidebarCollapsed((current) => !current)}
+          >
+            <PanelLeft size={20} aria-hidden="true" />
+          </button>
         </div>
         <nav className="sidebar-nav">
           {visibleNavItems.map((item) => (

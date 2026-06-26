@@ -3,7 +3,7 @@
 .data-table th {
   color: var(--blue-2);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -17,7 +17,7 @@
   border: 0;
   background: var(--blue);
   color: #fff;
-  font-weight: 800;
+  font-weight: 600;
   box-shadow: var(--button-shadow);
 }
 
@@ -31,23 +31,25 @@
 .btn-muted,
 .theme-btn,
 .select-mock {
-  min-height: 48px;
-  border-radius: 15px;
-  padding: 0 1.35rem;
+  min-height: 38px;
+  border-radius: 8px;
+  padding: 0 0.9rem;
+  font-size: 0.92rem;
+  font-weight: 500;
 }
 
 .btn-primary {
-  min-width: 154px;
+  min-width: 118px;
   color: var(--primary-button-text);
   background: var(--primary-button-bg);
   box-shadow: var(--button-shadow);
 }
 
 .btn-xl {
-  min-height: 74px;
-  border-radius: 999px;
-  padding: 0 2.2rem;
-  font-size: 1.1rem;
+  min-height: 44px;
+  border-radius: 10px;
+  padding: 0 1.15rem;
+  font-size: 0.98rem;
 }
 
 .btn-ghost {
@@ -107,14 +109,14 @@
 
 .settings-modal header h3 {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
 }
 
 .settings-modal header button {
   border: 0;
   background: transparent;
   color: var(--action-text);
-  font-size: 2rem;
+  font-size: 1.45rem;
 }
 
 .settings-modal-body {
@@ -126,11 +128,11 @@
   display: grid;
   gap: 0.55rem;
   color: var(--text);
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .settings-modal input {
-  min-height: 54px;
+  min-height: 42px;
   border: 1px solid var(--modal-input-border);
   border-radius: 10px;
   background: var(--modal-input-bg);
@@ -155,30 +157,30 @@
 }
 
 .btn-blue {
-  min-width: 120px;
-  border-radius: 999px;
+  min-width: 96px;
+  border-radius: 8px;
 }
 
 .btn-outline-danger {
-  min-width: 120px;
+  min-width: 96px;
   border: 1px solid var(--danger);
   background: transparent;
   color: var(--danger);
-  border-radius: 999px;
+  border-radius: 8px;
 }
 
 .btn-solid-danger {
-  min-width: 120px;
+  min-width: 96px;
   border: 0;
   background: var(--danger);
   color: #451616;
-  border-radius: 999px;
+  border-radius: 8px;
 }
 
 .btn-muted {
-  min-width: 120px;
+  min-width: 96px;
   border: 0;
   background: var(--muted-button-bg);
   color: var(--muted-button-text);
-  border-radius: 999px;
+  border-radius: 8px;
 }

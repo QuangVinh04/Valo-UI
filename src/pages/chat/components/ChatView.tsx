@@ -1,6 +1,6 @@
 import { FormEvent, ReactElement, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bot, Copy, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
+import { Bot, Check, ChevronDown, Copy, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
 import { useToast } from '@/context/ToastContext';
 import { chatModelOptions, type ChatModelKey, type SelectedChatFile, useChat } from '@/hooks/useChat';
@@ -13,6 +13,10 @@ function ChatView() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
   const threadRef = useRef<HTMLElement | null>(null);
+  const modelMenuRef = useRef<HTMLDivElement | null>(null);
+  const isEmptyChat = !chat.messages.length && !chat.isLoading && !chat.isOpeningConversation;
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
+  const selectedModel = chatModelOptions.find((model) => model.value === chat.modelName) ?? chatModelOptions[0];
 
   useEffect(() => {
     if (chat.error) {
@@ -35,6 +39,30 @@ function ChatView() {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 148)}px`;
   }, [chat.prompt]);
 
+  useEffect(() => {
+    if (!isModelMenuOpen) return;
+
+    const closeMenu = (event: MouseEvent) => {
+      if (!modelMenuRef.current?.contains(event.target as Node)) {
+        setIsModelMenuOpen(false);
+      }
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsModelMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', closeMenu);
+    document.addEventListener('keydown', closeOnEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', closeMenu);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isModelMenuOpen]);
+
   // Gửi prompt khi submit form, còn logic validate/stream nằm trong useChat.
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,19 +71,7 @@ function ChatView() {
 
   return (
     <div className="chat-page">
-      <main className="chat-main">
-        <header className="chat-topbar">
-          <select
-            className="model-pill"
-            value={chat.modelName}
-            onChange={(event) => chat.setModelName(event.target.value as ChatModelKey)}
-          >
-            {chatModelOptions.map((model) => (
-              <option key={model.value} value={model.value}>{model.label}</option>
-            ))}
-          </select>
-        </header>
-
+      <main className={`chat-main ${isEmptyChat ? 'chat-main-empty' : ''}`}>
         <section className="chat-thread" ref={threadRef}>
           {chat.isOpeningConversation && (
             <div className="chat-loading-state panel-dark">
@@ -63,10 +79,9 @@ function ChatView() {
               {t('chat.openingConversation')}
             </div>
           )}
-          {!chat.messages.length && !chat.isLoading && !chat.isOpeningConversation && (
-            <div className="empty-chat panel-dark">
+          {isEmptyChat && (
+            <div className="empty-chat">
               <h2>{t('chat.startConversation')}</h2>
-              <p>{t('chat.emptySubtitle')}</p>
             </div>
           )}
           {chat.messages.map((message, index) => (
@@ -78,7 +93,7 @@ function ChatView() {
           ))}
         </section>
 
-        <footer className="chat-composer-wrap">
+        <footer className={`chat-composer-wrap ${isEmptyChat ? 'chat-composer-empty' : ''}`}>
           {chat.selectedFiles.length > 0 && (
             <div className="selected-files">
               {chat.selectedFiles.map((file, index) => (
@@ -126,6 +141,48 @@ function ChatView() {
               disabled={chat.isStreaming}
               rows={1}
             />
+            <div className={`composer-model ${isEmptyChat ? 'composer-model-empty' : ''}`} ref={modelMenuRef}>
+              <span aria-hidden="true" />
+              <button
+                type="button"
+                className="composer-model-trigger"
+                aria-expanded={isModelMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setIsModelMenuOpen((current) => !current)}
+              >
+                {selectedModel.label}
+                <ChevronDown size={16} aria-hidden="true" />
+              </button>
+              {isModelMenuOpen && (
+                <div className="model-menu" role="menu">
+                  {chatModelOptions.map((model) => {
+                    const isSelected = model.value === chat.modelName;
+
+                    return (
+                      <button
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={isSelected}
+                        className="model-menu-item"
+                        key={model.value}
+                        onClick={() => {
+                          chat.setModelName(model.value as ChatModelKey);
+                          setIsModelMenuOpen(false);
+                        }}
+                      >
+                        <span className="model-menu-check">
+                          {isSelected && <Check size={16} aria-hidden="true" />}
+                        </span>
+                        <span>
+                          <strong>{model.label}</strong>
+                          <small>{model.value === 'flowise-agent' ? 'Trợ giúp toàn diện' : 'Câu trả lời nhanh nhất'}</small>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             {chat.isStreaming ? (
               <button type="button" className="send-btn stop-btn" onClick={chat.stopGenerating}>
                 <Square size={18} aria-hidden="true" />
@@ -147,7 +204,7 @@ function ChatView() {
               </button>
             )}
           </form>
-          <p className="chat-disclaimer">
+          <p className={`chat-disclaimer ${isEmptyChat ? 'chat-disclaimer-empty' : ''}`}>
             {t('chat.disclaimer')}
           </p>
         </footer>

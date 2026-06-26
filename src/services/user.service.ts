@@ -2,7 +2,7 @@ import { api } from '@/lib/api-client';
 import { AppError } from '@/errors/app-error';
 import { handleServiceError } from './service-error.helper';
 import type { ApiMeta, ApiResponse } from '@/types/api.type';
-import type { UserSettings, UserSettingsInput } from '@/context/PreferencesContext';
+import type { UserSettings } from '@/context/PreferencesContext';
 import type {
   CreatedUserDto,
   CreateUserPayload,
