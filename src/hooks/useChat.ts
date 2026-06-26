@@ -2,7 +2,7 @@ import { createContext, createElement, ReactNode, useCallback, useContext, useEf
 import { useMatch, useNavigate } from 'react-router-dom';
 import { uploadChatFile } from '@/services/file-upload.service';
 import { deleteConversation, getConversation, getConversations, renameConversation, sendMessageStream } from '@/services/chat.service';
-import type { ChatMessage, Conversation, FileUpload, StreamDoneEvent, StreamReadyEvent } from '@/types/chat.types';
+import type { ChatMessage, Conversation, FileUpload, StreamDoneEvent, StreamReadyEvent } from '@/types/chat.type';
 
 export const chatModelOptions = [
   { value: 'groq-llama-3.3', label: 'Llama 3.3' },
@@ -21,6 +21,24 @@ function normalizeModelName(modelName: string | null | undefined): ChatModelKey 
 
 function getConversationMessages(conversation: Conversation): ChatMessage[] {
   return Array.isArray(conversation.messages) ? conversation.messages : [];
+}
+
+function mergeConversation(current: Conversation, next: Conversation): Conversation {
+  return {
+    ...current,
+    ...next,
+    messages: next.messages ?? current.messages,
+  };
+}
+
+function upsertConversationAtTop(current: Conversation[], conversation: Conversation): Conversation[] {
+  const existing = current.find((item) => item.id === conversation.id);
+  const nextConversation = existing ? mergeConversation(existing, conversation) : conversation;
+
+  return [
+    nextConversation,
+    ...current.filter((item) => item.id !== conversation.id),
+  ];
 }
 
 function createPendingAssistantMessage(modelName: string): ChatMessage {
@@ -294,6 +312,8 @@ function useChatState() {
     const handleReady = (event: StreamReadyEvent) => {
       if (historyResetVersionRef.current !== resetVersion) return;
 
+      const now = new Date().toISOString();
+
       setSelectedFiles([]);
       setMessages((current) => [...current, event.userMessage, assistantMessage]);
       setActiveConversation((current) => current ?? {
@@ -304,6 +324,25 @@ function useChatState() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         messages: [event.userMessage],
+      });
+      setConversations((current) => {
+        const existing = current.find((conversation) => conversation.id === event.conversationId);
+        const conversation = existing
+          ? {
+            ...existing,
+            updatedAt: now,
+          }
+          : {
+            id: event.conversationId,
+            title: question.slice(0, 50),
+            modelName,
+            userId: '',
+            createdAt: now,
+            updatedAt: now,
+            messages: [event.userMessage],
+          };
+
+        return upsertConversationAtTop(current, conversation);
       });
       navigate(`/chat/${event.conversationId}`, { replace: !activeConversationId });
     };
@@ -335,12 +374,7 @@ function useChatState() {
 
         setActiveConversation(conversation);
         setMessages(getConversationMessages(conversation));
-        setConversations((current) => {
-          const exists = current.some((item) => item.id === conversation.id);
-          return exists
-            ? current.map((item) => item.id === conversation.id ? conversation : item)
-            : [conversation, ...current];
-        });
+        setConversations((current) => upsertConversationAtTop(current, conversation));
       } catch {
         // The streamed messages are already visible; conversation refresh can be retried later.
       }

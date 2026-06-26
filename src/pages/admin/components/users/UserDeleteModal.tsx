@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
-import { deleteUser, type UserDto } from '@/services/user.service';
+import { deleteUser } from '@/services/user.service';
+import type { UserDto } from '@/types/user.type';
 
 type UserDeleteModalProps = {
   user: UserDto;

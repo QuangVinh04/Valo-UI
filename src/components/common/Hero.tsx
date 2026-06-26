@@ -11,7 +11,7 @@ function Hero() {
   const { authLoading, isAuthenticated, login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,7 +21,7 @@ function Hero() {
     setIsSubmitting(true);
 
     try {
-      const user = await login(email, password);
+      const user = await login(username, password);
       navigate(user.mustChangePassword ? '/change-password' : '/chat', { replace: true });
     } catch (err) {
       toast.error(getErrorMessage(err, t('auth.loginFailed')));
@@ -48,14 +48,14 @@ function Hero() {
         </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <label htmlFor="email">{t('auth.emailAddress')}</label>
+          <label htmlFor="username">{t('auth.username')}</label>
           <input
-            id="email"
+            id="username"
             type="email"
-            autoComplete="email"
+            autoComplete="username"
             placeholder="name@company.com"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
             required
           />
 

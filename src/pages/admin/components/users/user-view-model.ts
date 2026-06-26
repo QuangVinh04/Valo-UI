@@ -1,4 +1,4 @@
-import type { UserListItemDto } from '@/services/user.service';
+import type { UserListItemDto } from '@/types/user.type';
 
 export type UserTableItem = UserListItemDto & {
   initials: string;

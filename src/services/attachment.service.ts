@@ -1,36 +1,44 @@
-import { apiRequest, apiRequestWithMeta, type ApiMeta } from '@/lib/api';
-
-export type AttachmentItem = {
-  id: string;
-  messageId?: string | null;
-  name: string;
-  mime: string;
-  url?: string | null;
-  size?: number | null;
-  createdAt: string;
-};
-
-export type DeleteAttachmentsResult = {
-  deletedCount: number;
-  notFoundIds: string[];
-};
+import { api } from '@/lib/api-client';
+import { AppError } from '@/errors/app-error';
+import { handleServiceError } from './service-error.helper';
+import type { ApiMeta, ApiResponse } from '@/types/api.type';
+import type { AttachmentItem, DeleteAttachmentsResult } from '@/types/attachment.type';
 
 export async function getAttachments(input: {
   cursor?: string | null;
   limit?: number;
 } = {}): Promise<{ data: AttachmentItem[]; meta: ApiMeta | null }> {
-  // Lấy danh sách tệp theo cursor để modal Storage có thể tải thêm.
-  const params = new URLSearchParams();
-  params.set('limit', String(input.limit ?? 20));
-  if (input.cursor) params.set('cursor', input.cursor);
+  try {
+    const params = new URLSearchParams();
+    params.set('limit', String(input.limit ?? 20));
+    if (input.cursor) params.set('cursor', input.cursor);
 
-  return apiRequestWithMeta<AttachmentItem[]>(`/attachments?${params.toString()}`);
+    const response = await api.get<ApiResponse<AttachmentItem[]>>(`/attachments?${params.toString()}`);
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return {
+      data: response.data.data,
+      meta: response.data.meta ?? null,
+    };
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function deleteAttachments(ids: string[]): Promise<DeleteAttachmentsResult> {
-  // Xóa các tệp đã chọn và trả về những id không còn tồn tại nếu có.
-  return apiRequest<DeleteAttachmentsResult>('/attachments', {
-    method: 'DELETE',
-    body: JSON.stringify({ ids }),
-  });
+  try {
+    const response = await api.delete<ApiResponse<DeleteAttachmentsResult>>('/attachments', {
+      data: { ids },
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }

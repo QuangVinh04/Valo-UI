@@ -4,7 +4,7 @@ import { Bot, Copy, FileText, Image, Loader2, Paperclip, Send, Square, X } from 
 import IconButton from '@/components/common/IconButton';
 import { useToast } from '@/context/ToastContext';
 import { chatModelOptions, type ChatModelKey, type SelectedChatFile, useChat } from '@/hooks/useChat';
-import type { ChatMessage } from '@/types/chat.types';
+import type { ChatMessage } from '@/types/chat.type';
 
 function ChatView() {
   const { t } = useTranslation();

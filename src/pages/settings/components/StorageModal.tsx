@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, FileText, Loader2, Trash2 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
-import { deleteAttachments, getAttachments, type AttachmentItem } from '@/services/attachment.service';
+import { deleteAttachments, getAttachments } from '@/services/attachment.service';
+import type { AttachmentItem } from '@/types/attachment.type';
 
 type StorageModalProps = {
   onClose: () => void;

@@ -1,74 +1,102 @@
-import { apiRequest, apiRequestWithMeta } from '@/lib/api';
-import type { Conversation, FileUpload, StreamDoneEvent, StreamReadyEvent } from '@/types/chat.types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4001/api/v1';
-
-type StreamHandlers = {
-  onReady: (event: StreamReadyEvent) => void;
-  onToken: (content: string) => void;
-  onDone: (event: StreamDoneEvent) => void;
-  onError: (message: string) => void;
-};
+import { API_BASE_URL, api } from '@/lib/api-client';
+import { AppError } from '@/errors/app-error';
+import { handleServiceError } from './service-error.helper';
+import type { ApiResponse } from '@/types/api.type';
+import type { Conversation, FileUpload, StreamDoneEvent, StreamHandlers, StreamReadyEvent } from '@/types/chat.type';
 
 export async function getConversations(): Promise<Conversation[]> {
-  const result = await apiRequestWithMeta<Conversation[]>('/conversations?page=1&limit=50');
-  return result.data;
+  try {
+    const response = await api.get<ApiResponse<Conversation[]>>('/conversations?page=1&limit=50');
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function getConversation(id: string): Promise<Conversation> {
-  return apiRequest<Conversation>(`/conversations/${id}`);
+  try {
+    const response = await api.get<ApiResponse<Conversation>>(`/conversations/${id}`);
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function renameConversation(id: string, title: string): Promise<Conversation> {
-  return apiRequest<Conversation>(`/conversations/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify({ title }),
-  });
+  try {
+    const response = await api.put<ApiResponse<Conversation>>(`/conversations/${id}`, { title });
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function deleteConversation(id: string): Promise<void> {
-  await apiRequest<null>(`/conversations/${id}`, {
-    method: 'DELETE',
-  });
+  try {
+    const response = await api.delete<ApiResponse<null>>(`/conversations/${id}`);
+    if (!response.data.success) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
-export async function sendMessageStream(input: {
-  conversationId?: string | null;
-  question: string;
-  modelName: string;
-  title?: string;
-  fileUploads?: FileUpload[];
-  signal?: AbortSignal;
-}, handlers: StreamHandlers): Promise<void> {
-  const token = localStorage.getItem('accessToken');
+export async function sendMessageStream(
+  input: {
+    conversationId?: string | null;
+    question: string;
+    modelName: string;
+    title?: string;
+    fileUploads?: FileUpload[];
+    signal?: AbortSignal;
+  },
+  handlers: StreamHandlers
+): Promise<void> {
   const path = input.conversationId
     ? `/messages/conversations/${input.conversationId}`
     : '/messages';
-  const body = JSON.stringify({
+
+  const body = {
     question: input.question,
     modelName: input.modelName,
     ...(input.title ? { title: input.title } : {}),
     ...(input.fileUploads?.length ? { fileUploads: input.fileUploads } : {}),
-  });
+  };
+
+  const token = localStorage.getItem('accessToken');
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
+    body: JSON.stringify(body),
     signal: input.signal,
-    body,
   });
 
   if (!response.ok || !response.body) {
-    handlers.onError(await getStreamErrorMessage(response));
-    return;
+    const errorText = await getStreamErrorMessage(response);
+    throw new AppError(errorText, response.status);
   }
 
   const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder('utf-8');
   let buffer = '';
 
   while (true) {
@@ -86,7 +114,9 @@ export async function sendMessageStream(input: {
     buffer = chunks.pop() ?? '';
 
     for (const chunk of chunks) {
-      handleStreamChunk(chunk, handlers);
+      if (chunk.trim()) {
+        handleStreamChunk(chunk, handlers);
+      }
     }
   }
 }
@@ -95,8 +125,14 @@ async function getStreamErrorMessage(response: Response): Promise<string> {
   const fallback = `Cannot send message (${response.status} ${response.statusText})`;
   const contentType = response.headers.get('content-type') ?? '';
 
-  if (contentType.includes('application/json')) {
-    const data = await response.json().catch(() => null) as {
+  try {
+    const rawText = await response.text();
+
+    if (!contentType.includes('application/json')) {
+      return rawText || fallback;
+    }
+
+    const data = JSON.parse(rawText || 'null') as {
       message?: string;
       errors?: Array<{ message?: string }>;
     } | null;
@@ -107,14 +143,12 @@ async function getStreamErrorMessage(response: Response): Promise<string> {
       .join(', ');
 
     return details || data?.message || fallback;
+  } catch {
+    return fallback;
   }
-
-  const text = await response.text().catch(() => '');
-  return text || fallback;
 }
 
 function handleStreamChunk(chunk: string, handlers: StreamHandlers) {
-  // Phân tích từng sự kiện SSE để cập nhật UI chat theo ready/token/done/error.
   const lines = chunk.split('\n');
   const eventLine = lines.find((line) => line.startsWith('event:'));
   const dataLines = lines.filter((line) => line.startsWith('data:'));
@@ -126,28 +160,26 @@ function handleStreamChunk(chunk: string, handlers: StreamHandlers) {
   let data: unknown;
 
   try {
-    data = JSON.parse(rawData) as unknown;
+    data = JSON.parse(rawData);
   } catch {
     handlers.onError('Stream returned an invalid event payload');
     return;
   }
 
-  if (event === 'ready') {
-    handlers.onReady(data as StreamReadyEvent);
-    return;
-  }
-
-  if (event === 'token') {
-    handlers.onToken((data as { content: string }).content);
-    return;
-  }
-
-  if (event === 'done') {
-    handlers.onDone(data as StreamDoneEvent);
-    return;
-  }
-
-  if (event === 'error') {
-    handlers.onError((data as { message?: string }).message ?? 'Stream failed');
+  switch (event) {
+    case 'ready':
+      handlers.onReady(data as StreamReadyEvent);
+      break;
+    case 'token':
+      handlers.onToken((data as { content: string }).content);
+      break;
+    case 'done':
+      handlers.onDone(data as StreamDoneEvent);
+      break;
+    case 'error':
+      handlers.onError((data as { message?: string }).message ?? 'Stream failed');
+      break;
+    default:
+      break;
   }
 }

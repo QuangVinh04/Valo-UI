@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
-import { getGroupById, getGroupMembers, getGroups, type GroupListItemDto } from '@/services/group.service';
+import { getGroupById, getGroupMembers, getGroups } from '@/services/group.service';
+import type { GroupListItemDto } from '@/types/group.type';
 import { toGroupViewModel, type GroupViewModel } from '@/pages/admin/components/groups/group-view-model';
 import { usePermissions } from './usePermissions';
 

@@ -1,4 +1,5 @@
-import type { FileUpload } from '@/types/chat.types';
+import axios from 'axios';
+import type { FileUpload } from '@/types/chat.type';
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined;
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined;
@@ -23,27 +24,25 @@ async function uploadToCloudinary(file: File): Promise<FileUpload> {
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET!);
   formData.append('folder', 'valo-chat-documents');
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${getCloudinaryResourceType(file)}/upload`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  );
-
-  const data = await response.json().catch(() => null) as {
+  const response = await axios.post<{
     secure_url?: string;
     original_filename?: string;
     format?: string;
     error?: { message?: string };
-  } | null;
+  }>(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${getCloudinaryResourceType(file)}/upload`,
+    formData,
+    {
+      validateStatus: () => true,
+    }
+  );
 
-  if (!response.ok || !data?.secure_url) {
-    throw new Error(data?.error?.message ?? `Cannot upload ${file.name}`);
+  if (response.status < 200 || response.status >= 300 || !response.data.secure_url) {
+    throw new Error(response.data.error?.message ?? `Cannot upload ${file.name}`);
   }
 
   return {
-    data: data.secure_url,
+    data: response.data.secure_url,
     name: file.name,
     type: 'url',
     mime: file.type || inferMimeFromName(file.name),

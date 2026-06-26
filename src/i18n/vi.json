@@ -48,6 +48,7 @@
     "secureAccess": "TRUY CẬP BẢO MẬT",
     "loginTitle": "Đăng nhập",
     "loginSubtitle": "Chào mừng bạn quay lại Agent Hub. Nhập thông tin đăng nhập để truy cập không gian làm việc.",
+    "username": "Tên đăng nhập",
     "emailAddress": "Địa chỉ email",
     "password": "Mật khẩu",
     "passwordPlaceholder": "Nhập mật khẩu",

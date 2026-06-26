@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getCurrentUser, type UserProfileDto } from '@/services/user.service';
-import type { UserProfile } from '@/types/settings.types';
+import { getCurrentUser } from '@/services/user.service';
+import type { UserProfileDto } from '@/types/user.type';
+import type { UserProfile } from '@/types/settings.type';
 
 export function useSettingsProfile() {
   const { t } = useTranslation();
@@ -18,6 +19,7 @@ export function useSettingsProfile() {
         const user = await getCurrentUser();
         if (!ignore) {
           setProfile({
+            id: user.id,
             phoneNumber: user.phoneNumber,
             address: user.address,
           });
@@ -38,6 +40,7 @@ export function useSettingsProfile() {
 
   const updateProfileFromUser = (user: UserProfileDto) => {
     setProfile({
+      id: user.id,
       phoneNumber: user.phoneNumber,
       address: user.address,
     });

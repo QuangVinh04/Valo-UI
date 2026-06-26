@@ -6,9 +6,9 @@ import {
   login as loginRequest,
   logout as logoutRequest,
   register as registerRequest,
-  type AuthUser,
 } from '@/services/auth.service';
 import { getCurrentUser } from '@/services/user.service';
+import type { AuthUser } from '@/types/auth.type';
 
 type AuthContextValue = {
   isAuthenticated: boolean;
@@ -19,7 +19,7 @@ type AuthContextValue = {
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (permissions: string[]) => boolean;
   refreshAuth: () => void;
-  login: (email: string, password: string) => Promise<AuthUser>;
+  login: (username: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   register: (fullName: string, email: string) => Promise<boolean>;
   changePassword: (input: {
@@ -122,8 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void hydrateAuth();
   }, [hydrateAuth]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const user = await loginRequest(email, password);
+  const login = useCallback(async (username: string, password: string) => {
+    const user = await loginRequest(username, password);
     await hydrateAuth();
     return user;
   }, [hydrateAuth]);

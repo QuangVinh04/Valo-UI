@@ -19,6 +19,7 @@ function SettingsView() {
     confirmAction,
     phoneNumber,
     address,
+    userId,
     openModal,
     closeModal,
     openStorage,
@@ -146,6 +147,7 @@ function SettingsView() {
       {modal && (
         <SettingsFormModalComponent
           mode={modal}
+          userId={userId}
           phoneNumber={phoneNumber}
           address={address}
           onClose={closeModal}

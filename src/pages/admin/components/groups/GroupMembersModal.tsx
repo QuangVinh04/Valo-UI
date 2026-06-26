@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
-import { removeGroupMembers, type GroupMemberDto } from '@/services/group.service';
+import { removeGroupMembers } from '@/services/group.service';
+import type { GroupMemberDto } from '@/types/group.type';
 import GroupAddMembersPanel from './GroupAddMembersPanel';
 import type { GroupViewModel } from './group-view-model';
 

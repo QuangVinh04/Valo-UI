@@ -36,3 +36,10 @@ export type StreamDoneEvent = {
   conversationId: string;
   assistantMessage: ChatMessage;
 };
+
+export type StreamHandlers = {
+  onReady: (event: StreamReadyEvent) => void;
+  onToken: (content: string) => void;
+  onDone: (event: StreamDoneEvent) => void;
+  onError: (message: string) => void;
+};

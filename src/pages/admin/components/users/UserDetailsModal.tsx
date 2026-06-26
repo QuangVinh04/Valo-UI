@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { UserRound, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
-import type { UserDto } from '@/services/user.service';
+import type { UserDto } from '@/types/user.type';
 import { formatUserDate } from './user-view-model';
 
 type UserDetailsModalProps = {

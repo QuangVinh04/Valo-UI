@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePreferences } from '@/context/PreferencesContext';
 import { useToast } from '@/context/ToastContext';
-import type { UserProfileDto } from '@/services/user.service';
-import type { ConfirmAction, SettingsFormModal } from '@/types/settings.types';
+import type { UserProfileDto } from '@/types/user.type';
+import type { ConfirmAction, SettingsFormModal } from '@/types/settings.type';
 import { useSettingsProfile } from './useSettingsProfile';
 
 const fallbackPhoneNumber = '+1 (555) 000-0000';
@@ -17,6 +17,7 @@ export function useSettings() {
   const [showStorage, setShowStorage] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const { profile, error: profileError, updateProfileFromUser } = useSettingsProfile();
+  const userId = profile.id;
   const phoneNumber = profile.phoneNumber || fallbackPhoneNumber;
   const address = profile.address || fallbackAddress;
 
@@ -77,6 +78,7 @@ export function useSettings() {
     confirmAction,
     phoneNumber,
     address,
+    userId,
     openModal,
     closeModal,
     openStorage,

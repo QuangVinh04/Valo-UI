@@ -1,92 +1,125 @@
-import { apiRequest, apiRequestWithMeta } from '@/lib/api';
+import { api } from '@/lib/api-client';
+import { AppError } from '@/errors/app-error';
+import { handleServiceError } from './service-error.helper';
+import type { ApiResponse } from '@/types/api.type';
+import type {
+  CreatedGroupDto,
+  CreateGroupPayload,
+  GroupDto,
+  GroupListItemDto,
+  GroupMemberDto,
+  UpdateGroupPayload,
+} from '@/types/group.type';
 
-export type GroupListItemDto = {
-  id: string;
-  name: string;
-  description: string | null;
-  memberCount: number;
-};
+export async function getGroups(page = 1, limit = 100, search?: string): Promise<GroupListItemDto[]> {
+  try {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
 
-export type GroupDto = GroupListItemDto & {
-  permissions: string[];
-  createdAt: string;
-  updatedAt: string;
-};
+    if (search?.trim()) {
+      params.set('search', search.trim());
+    }
 
-export type GroupMemberDto = {
-  id: string;
-  name: string;
-  memberCount: number;
-  members: Array<{
-    id: string;
-    fullName: string;
-    email: string;
-  }>;
-};
+    const response = await api.get<ApiResponse<GroupListItemDto[]>>(`/groups?${params.toString()}`);
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
 
-export type CreatedGroupDto = {
-  id: string;
-};
-
-export type CreateGroupPayload = {
-  name: string;
-  description?: string;
-  permissions?: string[];
-};
-
-export type UpdateGroupPayload = Partial<CreateGroupPayload>;
-
-export async function getGroups(page = 1, limit = 100): Promise<GroupListItemDto[]> {
-  // Lấy danh sách nhóm dùng cho trang Groups và các dropdown chọn nhóm.
-  const result = await apiRequestWithMeta<GroupListItemDto[]>(`/groups?page=${page}&limit=${limit}`);
-  return result.data;
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function getGroupById(groupId: string): Promise<GroupDto> {
-  // Lấy chi tiết nhóm trước khi xem hoặc cập nhật quyền.
-  return apiRequest<GroupDto>(`/groups/${groupId}`);
+  try {
+    const response = await api.get<ApiResponse<GroupDto>>(`/groups/${groupId}`);
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function getGroupMembers(groupId: string): Promise<GroupMemberDto> {
-  // Lấy danh sách thành viên để modal quản lý thành viên hiển thị dữ liệu mới nhất.
-  return apiRequest<GroupMemberDto>(`/groups/${groupId}/users`);
+  try {
+    const response = await api.get<ApiResponse<GroupMemberDto>>(`/groups/${groupId}/users`);
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function createGroup(payload: CreateGroupPayload): Promise<CreatedGroupDto> {
-  // Tạo nhóm mới cùng bộ quyền đã chọn từ UI.
-  return apiRequest<CreatedGroupDto>('/groups', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await api.post<ApiResponse<CreatedGroupDto>>('/groups', payload);
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function updateGroup(groupId: string, payload: UpdateGroupPayload): Promise<GroupDto> {
-  // Cập nhật tên, mô tả hoặc quyền của nhóm.
-  return apiRequest<GroupDto>(`/groups/${groupId}`, {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await api.put<ApiResponse<GroupDto>>(`/groups/${groupId}`, payload);
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function addGroupMembers(groupId: string, userIds: string[]): Promise<GroupMemberDto> {
-  // Thêm nhiều người dùng vào nhóm và nhận lại danh sách thành viên sau cập nhật.
-  return apiRequest<GroupMemberDto>(`/groups/${groupId}/users`, {
-    method: 'POST',
-    body: JSON.stringify({ userIds }),
-  });
+  try {
+    const response = await api.post<ApiResponse<GroupMemberDto>>(`/groups/${groupId}/users`, { userIds });
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function removeGroupMembers(groupId: string, userIds: string[]): Promise<GroupMemberDto> {
-  // Gỡ nhiều người dùng khỏi nhóm và nhận lại danh sách thành viên sau cập nhật.
-  return apiRequest<GroupMemberDto>(`/groups/${groupId}/users`, {
-    method: 'DELETE',
-    body: JSON.stringify({ userIds }),
-  });
+  try {
+    const response = await api.delete<ApiResponse<GroupMemberDto>>(`/groups/${groupId}/users`, {
+      data: { userIds },
+    });
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
 }
 
 export async function deleteGroup(groupId: string): Promise<void> {
-  // Xóa nhóm sau khi UI đã xác nhận tên nhóm cần xóa.
-  await apiRequest<null>(`/groups/${groupId}`, {
-    method: 'DELETE',
-  });
+  try {
+    const response = await api.delete<ApiResponse<null>>(`/groups/${groupId}`);
+    if (!response.data.success) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+  } catch (error) {
+    handleServiceError(error);
+  }
 }

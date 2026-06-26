@@ -1,6 +1,6 @@
 export type StoredAuthUser = {
   fullName: string;
-  email: string;
+  email?: string;
 };
 
 export function getAuthUser(): StoredAuthUser | null {
@@ -11,13 +11,13 @@ export function getAuthUser(): StoredAuthUser | null {
 
   try {
     const user = JSON.parse(storedUser) as Partial<StoredAuthUser>;
-    if (typeof user.fullName !== 'string' || typeof user.email !== 'string') {
+    if (typeof user.fullName !== 'string') {
       return null;
     }
 
     return {
       fullName: user.fullName,
-      email: user.email,
+      ...(typeof user.email === 'string' ? { email: user.email } : {}),
     };
   } catch {
     return null;

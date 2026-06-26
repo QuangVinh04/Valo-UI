@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
-import { updateCurrentUserProfile, type UserProfileDto } from '@/services/user.service';
-import type { SettingsFormModal as SettingsFormModalType } from '@/types/settings.types';
+import { updateCurrentUserProfile } from '@/services/user.service';
+import type { UserProfileDto } from '@/types/user.type';
+import type { SettingsFormModal as SettingsFormModalType } from '@/types/settings.type';
 
 type SettingsFormModalProps = {
   mode: SettingsFormModalType;
+  userId?: string;
   phoneNumber: string;
   address: string;
   onClose: () => void;
@@ -16,6 +18,7 @@ type SettingsFormModalProps = {
 
 function SettingsFormModal({
   mode,
+  userId,
   phoneNumber,
   address,
   onClose,
@@ -54,7 +57,13 @@ function SettingsFormModal({
         return;
       }
 
+      if (!userId) {
+        toast.error(t('settings.profileLoadFailed'));
+        return;
+      }
+
       const updatedUser = await updateCurrentUserProfile(
+        userId,
         mode === 'phone' ? { phoneNumber: value } : { address: value },
       );
       onProfileSaved(updatedUser);

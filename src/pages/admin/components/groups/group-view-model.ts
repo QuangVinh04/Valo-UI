@@ -1,4 +1,4 @@
-import type { GroupDto, GroupListItemDto, GroupMemberDto } from '@/services/group.service';
+import type { GroupDto, GroupListItemDto, GroupMemberDto } from '@/types/group.type';
 
 type GroupViewSource = (GroupDto | GroupListItemDto) & Partial<Pick<GroupMemberDto, 'members'>>;
 

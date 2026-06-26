@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
-import type { GroupListItemDto } from '@/services/group.service';
+import type { GroupListItemDto } from '@/types/group.type';
 import { assignUserGroups } from '@/services/user.service';
 
 type UserAssignGroupModalProps = {
@@ -11,46 +11,53 @@ type UserAssignGroupModalProps = {
   onAssigned: () => void;
 };
 
-function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssignGroupModalProps) {
+function UserAssignGroupModal({
+  groups,
+  userIds,
+  onClose,
+  onAssigned,
+}: UserAssignGroupModalProps) {
   const { t } = useTranslation();
   const toast = useToast();
+
   const [groupIds, setGroupIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const selectedGroupIds = useMemo(() => new Set(groupIds), [groupIds]);
 
-  // Lọc nhóm ngay trên UI để người quản trị tìm nhanh nhóm cần gán.
+  const keyword = search.trim().toLowerCase();
+
   const filteredGroups = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    if (!keyword) {
+      return [];
+    }
 
-    return groups.filter((group) => {
-      if (!keyword) return true;
-      return `${group.name} ${group.description ?? ''}`.toLowerCase().includes(keyword);
-    });
-  }, [groups, search]);
+    return groups.filter((group) =>
+      `${group.name} ${group.description ?? ''}`
+        .toLowerCase()
+        .includes(keyword),
+    );
+  }, [groups, keyword]);
 
-  // Dùng dữ liệu nhóm đầy đủ để hiển thị tag các nhóm đã chọn.
   const selectedGroups = useMemo(
     () => groups.filter((group) => selectedGroupIds.has(group.id)),
-    [groups, selectedGroupIds]
+    [groups, selectedGroupIds],
   );
 
   function toggleGroup(groupId: string) {
-    // Chọn lại cùng một nhóm sẽ bỏ chọn nhóm đó.
-    setGroupIds((current) => (
+    setGroupIds((current) =>
       current.includes(groupId)
         ? current.filter((id) => id !== groupId)
-        : [...current, groupId]
-    ));
+        : [...current, groupId],
+    );
   }
 
   function removeGroup(groupId: string) {
-    // Cho phép bỏ nhóm đã chọn trực tiếp từ danh sách tag.
     setGroupIds((current) => current.filter((id) => id !== groupId));
   }
 
   async function handleSubmit() {
-    // Gán cùng một tập nhóm cho toàn bộ người dùng đang được chọn.
     if (groupIds.length === 0) {
       toast.error(t('admin.users.selectAtLeastOneGroup'));
       return;
@@ -59,16 +66,31 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
     setIsSubmitting(true);
 
     try {
-      await Promise.all(userIds.map((userId) => assignUserGroups(userId, groupIds)));
-      toast.success(t('admin.users.assignedToGroups', { count: userIds.length, users: userIds.length, groups: groupIds.length }));
+      await Promise.all(
+        userIds.map((userId) => assignUserGroups(userId, groupIds)),
+      );
+
+      toast.success(
+        t('admin.users.assignedToGroups', {
+          count: userIds.length,
+          users: userIds.length,
+          groups: groupIds.length,
+        }),
+      );
+
       onAssigned();
       onClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('admin.users.assignFailed'));
+      toast.error(
+        err instanceof Error ? err.message : t('admin.users.assignFailed'),
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
+
+  const shouldShowSearchHint = !keyword;
+  const shouldShowEmptyResult = keyword && filteredGroups.length === 0;
 
   return (
     <div className="modal-backdrop">
@@ -78,7 +100,14 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
             <h2>{t('admin.users.addToGroupsTitle')}</h2>
             <p>{t('admin.users.selectGroupsFor', { count: userIds.length })}</p>
           </div>
-          <button type="button" aria-label={t('admin.users.closeAddToGroup')} onClick={onClose}>x</button>
+
+          <button
+            type="button"
+            aria-label={t('admin.users.closeAddToGroup')}
+            onClick={onClose}
+          >
+            x
+          </button>
         </header>
 
         <div className="modal-body">
@@ -88,6 +117,7 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
               placeholder={t('admin.users.searchGroupPlaceholder')}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
+              disabled={isSubmitting}
             />
           </label>
 
@@ -100,17 +130,37 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
                 onClick={() => toggleGroup(group.id)}
               >
                 <strong>{group.name}</strong>
-                <span>{group.description ?? t('admin.groups.membersCount', { count: group.memberCount })}</span>
+                <span>
+                  {group.description ??
+                    t('admin.groups.membersCount', {
+                      count: group.memberCount,
+                    })}
+                </span>
               </button>
             ))}
-            {filteredGroups.length === 0 && <span className="muted">{t('admin.users.noGroupsFound')}</span>}
+
+            {shouldShowSearchHint && (
+              <span className="muted">
+                {t('admin.users.typeToSearchGroups')}
+              </span>
+            )}
+
+            {shouldShowEmptyResult && (
+              <span className="muted">{t('admin.users.noGroupsFound')}</span>
+            )}
           </div>
 
           <p className="form-kicker">{t('admin.users.selectedGroups')}</p>
+
           <div className="tag-row">
             {selectedGroups.length > 0 ? (
               selectedGroups.map((group) => (
-                <button className="tag tag-button" type="button" key={group.id} onClick={() => removeGroup(group.id)}>
+                <button
+                  className="tag tag-button"
+                  type="button"
+                  key={group.id}
+                  onClick={() => removeGroup(group.id)}
+                >
                   {group.name} x
                 </button>
               ))
@@ -121,9 +171,23 @@ function UserAssignGroupModal({ groups, userIds, onClose, onAssigned }: UserAssi
         </div>
 
         <footer className="modal-footer">
-          <button className="btn-cancel flat" type="button" onClick={onClose}>{t('common.cancel')}</button>
-          <button className="btn-primary btn-xl" type="button" onClick={handleSubmit} disabled={isSubmitting || groupIds.length === 0}>
-            {isSubmitting ? t('admin.users.adding') : t('admin.users.addToGroupsTitle')}
+          <button
+            className="btn-cancel flat"
+            type="button"
+            onClick={onClose}
+          >
+            {t('common.cancel')}
+          </button>
+
+          <button
+            className="btn-primary btn-xl"
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting || groupIds.length === 0}
+          >
+            {isSubmitting
+              ? t('admin.users.adding')
+              : t('admin.users.addToGroupsTitle')}
           </button>
         </footer>
       </section>

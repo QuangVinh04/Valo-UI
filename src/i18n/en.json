@@ -48,6 +48,7 @@
     "secureAccess": "SECURE ACCESS",
     "loginTitle": "Log In",
     "loginSubtitle": "Welcome back to Agent Hub. Enter your credentials to access your dashboard.",
+    "username": "Username",
     "emailAddress": "Email Address",
     "password": "Password",
     "passwordPlaceholder": "Enter your password",
@@ -191,7 +192,8 @@
       "created": "User \"{{name}}\" created successfully.",
       "saveFailed": "Cannot save user",
       "createUser": "Create User",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "typeToSearchGroups": "Type group name to search"
     },
     "groups": {
       "accessDeniedDescription": "You do not have permission to view group data.",
@@ -295,6 +297,7 @@
       "initializeGroup": "Initialize Group",
       "creating": "Creating...",
       "updating": "Updating...",
+      "typeToSearchUsers": "Type a name or email to search users",
       "permissionSummary": "{{scope}}: {{count}}",
       "permissionsRows": {
         "USER_C": { "action": "Create User", "description": "Invite or create users" },

@@ -6,7 +6,7 @@ import { useChat } from '@/hooks/useChat';
 import { clearAuthState } from '@/lib/auth';
 import { getErrorMessage } from '@/lib/error';
 import { clearChatHistory, deleteCurrentAccount } from '@/services/settings.service';
-import type { ConfirmAction } from '@/types/settings.types';
+import type { ConfirmAction } from '@/types/settings.type';
 
 type ConfirmActionModalProps = {
   action: ConfirmAction;

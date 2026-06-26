@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
-import { getGroups, type GroupListItemDto } from '@/services/group.service';
-import { getUserById, getUsers, type UserDto, type UserListItemDto } from '@/services/user.service';
+import { getGroups } from '@/services/group.service';
+import type { GroupListItemDto } from '@/types/group.type';
+import { getUserById, getUsers } from '@/services/user.service';
+import type { UserDto, UserListItemDto } from '@/types/user.type';
 import { usePermissions } from './usePermissions';
 
 export type UserModalAction = 'details' | 'add' | 'update' | 'delete' | 'assignGroup';
