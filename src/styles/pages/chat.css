@@ -240,6 +240,11 @@
   color: var(--text);
 }
 
+.user-message-actions {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 .message-files {
   display: flex;
   flex-wrap: wrap;

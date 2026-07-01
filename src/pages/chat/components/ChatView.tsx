@@ -1,10 +1,11 @@
 import { FormEvent, ReactElement, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bot, Copy, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
+import { Bot, Check, ChevronDown, Copy, Download, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
 import { useToast } from '@/context/ToastContext';
 import { chatModelOptions, type ChatModelKey, type SelectedChatFile, useChat } from '@/hooks/useChat';
 import type { ChatMessage } from '@/types/chat.type';
+import { exportMessageDocx } from '@/services/chat.service';
 
 function ChatView() {
   const { t } = useTranslation();
@@ -40,6 +41,8 @@ function ChatView() {
     event.preventDefault();
     void chat.sendPrompt();
   };
+
+
 
   return (
     <div className="chat-page">
@@ -160,6 +163,17 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
   const { t } = useTranslation();
   const [copyLabelKey, setCopyLabelKey] = useState('chat.copyResponse');
 
+  const toast = useToast();
+
+  const handleExportDocx = async () => {
+    try {
+      await exportMessageDocx(message.id);
+      toast.success('Export message successfully');
+    } catch {
+      toast.error('Export message failed');
+    }
+  };
+
   // Sao chép nội dung phản hồi và đổi nhãn nút trong thời gian ngắn để báo trạng thái.
   const copyMessage = async () => {
     try {
@@ -209,6 +223,13 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
             </div>
             <div className="message-actions">
               <IconButton icon={Copy} label={t(copyLabelKey)} onClick={() => void copyMessage()} />
+              {message.senderType === 'assistant' && (
+                <IconButton
+                  icon={Download}
+                  label="Export DOCX"
+                  onClick={() => void handleExportDocx()}
+                />
+              )}
             </div>
           </>
         )}

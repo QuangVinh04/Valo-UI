@@ -53,6 +53,33 @@ export async function deleteConversation(id: string): Promise<void> {
     handleServiceError(error);
   }
 }
+export async function exportMessageDocx(messageId: string): Promise<void> {
+  const token = localStorage.getItem('accessToken');
+
+  const response = await fetch(`${API_BASE_URL}/messages/${messageId}/export/docx`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Cannot export message');
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `message-${messageId}.docx`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  window.URL.revokeObjectURL(url);
+}
 
 export async function sendMessageStream(
   input: {
