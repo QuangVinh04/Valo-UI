@@ -4,11 +4,13 @@ import { UserPlus, UserRound, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
 import { useToast } from '@/context/ToastContext';
 import { createUser, updateUser } from '@/services/user.service';
+import type { GroupListItemDto } from '@/types/group.type';
 import type { UserDto } from '@/types/user.type';
 
 type UserFormModalProps = {
   mode: 'add' | 'update';
   user?: UserDto;
+  groups?: GroupListItemDto[];
   onClose: () => void;
   onSaved: () => void;
 };

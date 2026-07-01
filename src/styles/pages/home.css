@@ -3,7 +3,7 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
   overflow-x: hidden;
-  padding: 2rem 2.25rem;
+  padding: 1.5rem;
 }
 
 .auth-header,
@@ -22,14 +22,14 @@
 
 .auth-brand {
   flex: 0 0 auto;
-  font-size: 1.45rem;
-  font-weight: 800;
+  font-size: 1.15rem;
+  font-weight: 600;
 }
 
 .auth-back-link {
   min-width: 0;
   color: #d8dce4;
-  font-size: 1rem;
+  font-size: 0.92rem;
   line-height: 1.35;
   text-align: right;
   overflow-wrap: anywhere;
@@ -38,7 +38,7 @@
 .home-main {
   display: grid;
   place-items: center;
-  padding: 5rem 0 2rem;
+  padding: 3rem 0 1.5rem;
 }
 
 .auth-card-wrap {
@@ -50,11 +50,11 @@
 
 .auth-card {
   min-width: 0;
-  width: min(560px, calc(100vw - 2rem));
+  width: min(460px, calc(100vw - 2rem));
   background: var(--panel);
   border: 1px solid rgba(153, 169, 194, 0.35);
   border-radius: 10px;
-  padding: 3rem;
+  padding: 2rem;
   box-shadow: var(--panel-shadow);
 }
 
@@ -69,15 +69,16 @@
 
 .auth-card h1 {
   margin: 0;
-  font-size: 2.2rem;
-  line-height: 1.1;
+  font-size: 1.65rem;
+  line-height: 1.18;
+  font-weight: 600;
 }
 
 .auth-subtitle {
-  margin: 1.5rem 0 2.2rem;
+  margin: 1rem 0 1.5rem;
   color: #d6dae3;
   line-height: 1.65;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
 }
 
 .auth-form {
@@ -87,12 +88,12 @@
 
 .auth-form label {
   margin-top: 0.85rem;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .auth-form input {
   width: 100%;
-  min-height: 54px;
+  min-height: 42px;
   background: var(--modal-input-bg);
   color: var(--text);
   border: 1px solid var(--modal-input-border);
@@ -121,7 +122,7 @@
 .auth-submit {
   display: grid;
   place-items: center;
-  min-height: 54px;
+  min-height: 42px;
   margin-top: 1.05rem;
   border-radius: 8px;
 }
@@ -139,7 +140,7 @@
 
 .auth-switch a {
   color: var(--blue-2);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .auth-footer {
@@ -176,11 +177,11 @@
     width: 100%;
     max-width: calc(100vw - 2rem);
     padding: 1.6rem;
-    border-radius: 20px;
+    border-radius: 10px;
   }
 
   .auth-card h1 {
-    font-size: 2.2rem;
+    font-size: 1.65rem;
   }
 
   .auth-footer {
