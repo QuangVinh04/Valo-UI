@@ -13,7 +13,7 @@ function ChatView() {
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
-  const threadRef = useRef<HTMLElement | null>(null);
+  const bottomAnchorRef = useRef<HTMLDivElement | null>(null);
   const modelMenuRef = useRef<HTMLDivElement | null>(null);
   const isEmptyChat = !chat.messages.length && !chat.isLoading && !chat.isOpeningConversation;
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
@@ -26,8 +26,8 @@ function ChatView() {
   }, [chat.error, toast]);
 
   useEffect(() => {
-    threadRef.current?.scrollTo({
-      top: threadRef.current.scrollHeight,
+    bottomAnchorRef.current?.scrollIntoView({
+      block: 'end',
       behavior: chat.isStreaming ? 'smooth' : 'auto',
     });
   }, [chat.messages, chat.isStreaming]);
@@ -75,7 +75,7 @@ function ChatView() {
   return (
     <div className="chat-page">
       <main className={`chat-main ${isEmptyChat ? 'chat-main-empty' : ''}`}>
-        <section className="chat-thread" ref={threadRef}>
+        <section className="chat-thread">
           {chat.isOpeningConversation && (
             <div className="chat-loading-state panel-dark">
               <Loader2 size={18} aria-hidden="true" />
@@ -211,6 +211,7 @@ function ChatView() {
             {t('chat.disclaimer')}
           </p>
         </footer>
+        <div className="chat-scroll-anchor" ref={bottomAnchorRef} aria-hidden="true" />
       </main>
     </div>
   );
@@ -308,6 +309,7 @@ function SelectedFilePreview({
   const [objectUrl, setObjectUrl] = useState('');
   const { file } = selectedFile;
   const isImage = file.type.startsWith('image/');
+  const statusLabel = getSelectedFileStatusLabel(selectedFile, t);
 
   useEffect(() => {
     const nextUrl = URL.createObjectURL(file);
@@ -339,15 +341,45 @@ function SelectedFilePreview({
         <X size={14} aria-hidden="true" />
       </button>
       <span title={file.name}>{file.name}</span>
-      <small className={`selected-file-status ${selectedFile.status}`}>
-        {selectedFile.status === 'uploading'
-          ? t('chat.uploading')
-          : selectedFile.status === 'error'
-            ? t('chat.uploadFailed')
-            : t('chat.ready')}
+      <small
+        className={`selected-file-status ${selectedFile.status} ${selectedFile.uploadTarget === 'local-fallback' ? 'fallback' : ''}`}
+        title={selectedFile.error}
+      >
+        {statusLabel}
       </small>
     </div>
   );
+}
+
+function getSelectedFileStatusLabel(
+  selectedFile: SelectedChatFile,
+  t: ReturnType<typeof useTranslation>['t']
+) {
+  if (selectedFile.status === 'error') {
+    return t('chat.uploadFailed');
+  }
+
+  if (selectedFile.status === 'ready') {
+    if (selectedFile.uploadTarget === 'local' || selectedFile.uploadTarget === 'local-fallback') {
+      return t('chat.readyLocal');
+    }
+
+    return t('chat.ready');
+  }
+
+  if (selectedFile.uploadTarget === 'cloudinary') {
+    return t('chat.uploadingCloudinary');
+  }
+
+  if (selectedFile.uploadTarget === 'local-fallback') {
+    return t('chat.uploadingLocalFallback');
+  }
+
+  if (selectedFile.uploadTarget === 'local') {
+    return t('chat.uploadingLocal');
+  }
+
+  return t('chat.uploading');
 }
 
 function FileUploadList({ fileUploads }: { fileUploads?: ChatMessage['fileUploads'] }) {

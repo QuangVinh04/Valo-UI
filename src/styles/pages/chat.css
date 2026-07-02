@@ -1,20 +1,34 @@
 .chat-page {
-  height: calc(100vh - 3.5rem);
-  min-height: 0;
+  min-height: 100vh;
 }
 
 .chat-main {
-  width: min(100%, 980px);
-  height: 100%;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  margin-inline: auto;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-main-empty {
   position: relative;
-  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  justify-content: center;
+}
+
+.chat-main-empty .chat-thread {
+  flex: 0 0 auto;
+  padding-bottom: 1.4rem;
+}
+
+.chat-thread {
+  flex: 1 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding:
+    clamp(1.3rem, 4vh, 3rem)
+    max(clamp(1rem, 2.4vw, 2rem), calc((100% - 980px) / 2 + 1rem))
+    1.4rem;
 }
 
 .chat-main-empty::before {
@@ -34,20 +48,14 @@
   transform: translate(-50%, -50%);
 }
 
-.chat-thread {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  overflow-y: auto;
-  padding: clamp(1.3rem, 4vh, 3rem) clamp(0.25rem, 2vw, 1rem) 1.4rem;
-  scrollbar-width: thin;
+.chat-scroll-anchor {
+  height: 1px;
 }
 
 .empty-chat {
   z-index: 1;
   width: min(780px, 100%);
-  margin: auto auto 1.4rem;
+  margin: 0 auto;
   padding: 0;
   text-align: center;
 }
@@ -272,14 +280,16 @@
   position: sticky;
   bottom: 0;
   z-index: 1;
-  padding: 0.75rem clamp(0.25rem, 2vw, 1rem) 0.9rem;
+  padding:
+    0.75rem
+    max(clamp(1rem, 2.4vw, 2rem), calc((100% - 980px) / 2 + 1rem))
+    0.9rem;
   background:
     linear-gradient(to top, var(--bg) 74%, color-mix(in srgb, var(--bg) 78%, transparent));
 }
 
 .chat-composer-empty {
   position: relative;
-  grid-row: 2;
   padding-top: 0;
   background: transparent;
 }
@@ -548,6 +558,10 @@
   color: var(--blue-2);
 }
 
+.selected-file-status.fallback {
+  color: #f0c36a;
+}
+
 .selected-file-status.error {
   color: var(--danger, #ff7b7b);
 }
@@ -641,13 +655,12 @@
 
 @media (max-width: 1100px) {
   .chat-page {
-    height: calc(100vh - 14rem);
+    min-height: calc(100vh - 14rem);
   }
 }
 
 @media (max-width: 760px) {
   .chat-page {
-    height: auto;
     min-height: calc(100vh - 12rem);
   }
 

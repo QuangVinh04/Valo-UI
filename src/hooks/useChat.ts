@@ -1,6 +1,6 @@
 import { createContext, createElement, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useMatch, useNavigate } from 'react-router-dom';
-import { uploadChatFile } from '@/services/file-upload.service';
+import { deleteUploadedFile, uploadChatFile, type UploadTarget } from '@/services/file-upload.service';
 import { deleteConversation, getConversation, getConversations, renameConversation, sendMessageStream } from '@/services/chat.service';
 import type { ChatMessage, Conversation, FileUpload, StreamDoneEvent, StreamReadyEvent } from '@/types/chat.type';
 
@@ -59,6 +59,7 @@ export type SelectedChatFile = {
   id: string;
   file: File;
   status: 'uploading' | 'ready' | 'error';
+  uploadTarget?: UploadTarget;
   fileUpload?: FileUpload;
   error?: string;
 };
@@ -79,6 +80,7 @@ function useChatState() {
   const [error, setError] = useState('');
   const streamAbortControllerRef = useRef<AbortController | null>(null);
   const historyResetVersionRef = useRef(0);
+  const removedUploadIdsRef = useRef(new Set<string>());
 
   useEffect(() => {
     let ignore = false;
@@ -207,13 +209,33 @@ function useChatState() {
     setSelectedFiles((current) => [...current, ...nextSelectedFiles]);
 
     nextSelectedFiles.forEach((selectedFile) => {
-      void uploadChatFile(selectedFile.file)
+      void uploadChatFile(selectedFile.file, {
+        onUploadTargetChange: (uploadTarget) => {
+          setSelectedFiles((current) => current.map((item) => (
+            item.id === selectedFile.id
+              ? {
+                ...item,
+                uploadTarget,
+              }
+              : item
+          )));
+        },
+      })
         .then((uploaded) => {
+          if (removedUploadIdsRef.current.has(selectedFile.id)) {
+            removedUploadIdsRef.current.delete(selectedFile.id);
+            void deleteUploadedFile(uploaded.fileUpload).catch((err) => {
+              setError(err instanceof Error ? err.message : 'Cannot delete uploaded file');
+            });
+            return;
+          }
+
           setSelectedFiles((current) => current.map((item) => (
             item.id === selectedFile.id
               ? {
                 ...item,
                 status: 'ready',
+                uploadTarget: item.uploadTarget,
                 fileUpload: uploaded.fileUpload,
                 error: undefined,
               }
@@ -221,6 +243,11 @@ function useChatState() {
           )));
         })
         .catch((err) => {
+          if (removedUploadIdsRef.current.has(selectedFile.id)) {
+            removedUploadIdsRef.current.delete(selectedFile.id);
+            return;
+          }
+
           setSelectedFiles((current) => current.map((item) => (
             item.id === selectedFile.id
               ? {
@@ -236,7 +263,22 @@ function useChatState() {
 
   // Xóa tệp đã chọn khỏi composer theo vị trí hiển thị.
   const removeFile = (index: number) => {
-    setSelectedFiles((current) => current.filter((_, fileIndex) => fileIndex !== index));
+    const selectedFile = selectedFiles[index];
+    if (!selectedFile) return;
+
+    removedUploadIdsRef.current.add(selectedFile.id);
+
+    if (selectedFile.fileUpload) {
+      void deleteUploadedFile(selectedFile.fileUpload)
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Cannot delete uploaded file');
+        })
+        .finally(() => {
+          removedUploadIdsRef.current.delete(selectedFile.id);
+        });
+    }
+
+    setSelectedFiles((current) => current.filter((item) => item.id !== selectedFile.id));
   };
 
   // Đổi tên hội thoại và đồng bộ lại cả sidebar lẫn hội thoại đang mở.
