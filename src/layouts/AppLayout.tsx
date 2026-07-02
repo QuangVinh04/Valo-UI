@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, PanelLeft, Settings, Shield, Users } from 'lucide-react';
+import { LogOut, MessageSquare, PanelLeft, Settings, Shield, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { ChatProvider, useChat } from '@/hooks/useChat';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -28,7 +28,7 @@ function AppLayout() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -40,14 +40,18 @@ function AppLayout() {
 
 function AppLayoutContent() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { logout, user } = useAuth();
   const permissions = usePermissions();
   const location = useLocation();
   const chat = useChat();
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isChatRoute = location.pathname.startsWith('/chat');
-  const loginUsername = user?.fullName || user?.email || t('layout.role');
-  const avatarInitial = loginUsername.trim().charAt(0).toUpperCase() || 'U';
+  const accountDisplayName = user?.fullName || user?.email || t('common.user');
+  const accountEmail = user?.email || t('common.email');
+  const avatarInitial = accountDisplayName.trim().charAt(0).toUpperCase() || 'U';
   const visibleNavItems = navItems.filter((item) => {
     if (item.to === '/users') {
       return permissions.any(['USER_R']);
@@ -59,6 +63,35 @@ function AppLayoutContent() {
 
     return true;
   });
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logout();
+  };
+
+  useEffect(() => {
+    if (!isAccountMenuOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isAccountMenuOpen]);
 
   return (
     <div className={`app-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -104,12 +137,34 @@ function AppLayoutContent() {
           ))}
         </nav>
         <ChatSidebarRecents />
-        <div className="sidebar-user">
-          <div className="sidebar-avatar">{avatarInitial}</div>
-          <div>
-            <strong>{loginUsername}</strong>
-            <span>{t('layout.role')}</span>
-          </div>
+        <div className="sidebar-account" ref={accountMenuRef}>
+          {isAccountMenuOpen && (
+            <div className="account-menu" role="menu">
+              <p className="account-menu-email">{accountEmail}</p>
+              <button
+                type="button"
+                className="account-menu-action"
+                role="menuitem"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <LogOut size={16} aria-hidden="true" />
+                <span>{t('settings.signOut')}</span>
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            className="sidebar-user"
+            aria-haspopup="menu"
+            aria-expanded={isAccountMenuOpen}
+            onClick={() => setIsAccountMenuOpen((current) => !current)}
+          >
+            <span className="sidebar-avatar" aria-hidden="true">{avatarInitial}</span>
+            <span className="sidebar-user-copy">
+              <strong>{accountDisplayName}</strong>
+            </span>
+          </button>
         </div>
       </aside>
       <section className={isChatRoute ? 'content content-chat' : 'content'}>

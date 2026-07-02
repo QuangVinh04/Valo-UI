@@ -60,7 +60,7 @@
 
 .sidebar-collapsed .sidebar-brand,
 .sidebar-collapsed .sidebar-chat-recents,
-.sidebar-collapsed .sidebar-user {
+.sidebar-collapsed .sidebar-account {
   display: none;
 }
 
@@ -144,14 +144,83 @@
   color: inherit;
 }
 
+.sidebar-account {
+  position: relative;
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
+.account-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 0.75rem);
+  z-index: 10;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid rgba(153, 169, 194, 0.28);
+  border-radius: 12px;
+  box-shadow: var(--panel-shadow);
+}
+
+.account-menu-email {
+  margin: 0;
+  padding: 1rem 1rem 0.85rem;
+  color: #d8dce4;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.account-menu-action {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  gap: 0.65rem;
+  border: 0;
+  background: transparent;
+  color: var(--sidebar-text);
+  padding: 0 1rem;
+  text-align: left;
+}
+
+.account-menu-action:hover,
+.account-menu-action:focus-visible {
+  background: var(--panel-3);
+  color: var(--blue-2);
+}
+
+.account-menu-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
 .sidebar-user {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 0.85rem;
   min-height: 58px;
-  margin-top: auto;
-  border-top: 1px solid var(--line);
-  padding-top: 1rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  padding: 0 0.45rem;
+  text-align: left;
+  transition: background 160ms ease, box-shadow 160ms ease;
+}
+
+.sidebar-user:hover,
+.sidebar-user:focus-visible,
+.sidebar-user[aria-expanded='true'] {
+  background: rgba(169, 197, 255, 0.08);
+}
+
+.sidebar-user:focus-visible {
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .sidebar-collapsed .sidebar-nav a.active::before {
@@ -160,6 +229,7 @@
 }
 
 .sidebar-avatar {
+  flex: 0 0 auto;
   width: 38px;
   height: 38px;
   display: grid;
@@ -170,17 +240,22 @@
   font-weight: 600;
 }
 
-.sidebar-user strong {
-  display: block;
+.sidebar-user-copy {
+  min-width: 0;
   color: var(--text);
-  font-weight: 600;
 }
 
-.sidebar-user span {
-  color: var(--blue-2);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
+.sidebar-user strong {
+  display: block;
+  overflow: hidden;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .content {
@@ -230,7 +305,7 @@
   }
 
   .sidebar-brand p,
-  .sidebar-user,
+  .sidebar-account,
   .sidebar-chat-recents {
     display: none;
   }

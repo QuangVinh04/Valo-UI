@@ -7,6 +7,7 @@ export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4001/api/v1';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
+const DEFAULT_LANGUAGE = 'vi';
 
 type RetryRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -38,11 +39,22 @@ function clearAuth() {
   window.dispatchEvent(new Event('auth:changed'));
 }
 
+function getRequestLanguage() {
+  const language = localStorage.getItem('language');
+
+  return language === 'en' ? 'en-US' : 'vi-VN';
+}
+
 async function refreshAccessToken(): Promise<string> {
   const response = await Axios.post(
     `${API_BASE_URL}/auth/refresh-token`,
     undefined,
-    { withCredentials: true }
+    {
+      withCredentials: true,
+      headers: {
+        'Accept-Language': getRequestLanguage(),
+      },
+    }
   );
 
   const accessToken = response.data?.data?.accessToken;
@@ -60,6 +72,8 @@ async function refreshAccessToken(): Promise<string> {
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const request = config as RetryRequestConfig;
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+
+  request.headers['Accept-Language'] = getRequestLanguage() || DEFAULT_LANGUAGE;
 
   if (!request.skipAuth && token) {
     request.headers.Authorization = `Bearer ${token}`;

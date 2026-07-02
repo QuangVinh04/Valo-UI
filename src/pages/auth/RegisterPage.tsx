@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +12,7 @@ function RegisterPage() {
   const { t } = useTranslation();
   const { authLoading, isAuthenticated, register } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,8 +25,7 @@ function RegisterPage() {
     try {
       await register(fullName, email);
       toast.success(t('auth.registerSuccess'));
-      setFullName('');
-      setEmail('');
+      navigate('/login', { replace: true });
     } catch (err) {
       toast.error(getErrorMessage(err, t('auth.registrationFailed')));
     } finally {
@@ -47,7 +47,6 @@ function RegisterPage() {
       <main className="home-main">
         <section className="auth-card-wrap">
           <div className="auth-card">
-            <p className="auth-kicker">{t('auth.requestAccess')}</p>
             <h1>{t('auth.createAccount')}</h1>
             <p className="auth-subtitle">
               {t('auth.registerSubtitle')}
@@ -82,7 +81,7 @@ function RegisterPage() {
             </form>
 
             <p className="auth-switch">
-              {t('auth.alreadyHaveTemporaryPassword')} <Link to="/">{t('auth.signIn')}</Link>
+              {t('auth.alreadyHaveTemporaryPassword')} <Link to="/login">{t('auth.signIn')}</Link>
             </p>
           </div>
         </section>

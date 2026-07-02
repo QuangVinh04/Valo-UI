@@ -16,7 +16,7 @@ type ConfirmActionModalProps = {
 
 function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModalProps) {
   const { t } = useTranslation();
-  const { logout, refreshAuth } = useAuth();
+  const { refreshAuth } = useAuth();
   const chat = useChat();
   const toast = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -33,12 +33,6 @@ function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModal
       description: t('settings.confirmDeleteDescription'),
       confirmLabel: t('settings.delete'),
       danger: true,
-    },
-    signOut: {
-      title: t('settings.confirmSignOutTitle'),
-      description: t('settings.confirmSignOutDescription'),
-      confirmLabel: t('settings.signOut'),
-      danger: false,
     },
   }[action];
 
@@ -62,8 +56,6 @@ function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModal
         return;
       }
 
-      await logout();
-      onSignedOut();
     } catch (err) {
       toast.error(getErrorMessage(err, t('settings.actionFailed')));
     } finally {

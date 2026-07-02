@@ -5,8 +5,6 @@ function Footer() {
 
   return (
     <footer className="auth-footer">
-      <small>{t('auth.encrypted')}</small>
-      <small>{t('auth.certified')}</small>
     </footer>
   );
 }

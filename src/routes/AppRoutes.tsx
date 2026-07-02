@@ -4,7 +4,7 @@ import ChatPage from '@/pages/chat/ChatPage';
 import ChangePasswordPage from '@/pages/auth/ChangePasswordPage';
 import DashboardPage from '@/pages/admin/DashboardPage';
 import GroupsPage from '@/pages/admin/GroupsPage';
-import HomePage from '@/pages/home/HomePage';
+import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import UsersPage from '@/pages/admin/UsersPage';
@@ -12,7 +12,8 @@ import UsersPage from '@/pages/admin/UsersPage';
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
       <Route element={<AppLayout />}>

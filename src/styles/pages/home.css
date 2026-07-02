@@ -119,6 +119,39 @@
   box-shadow: 0 0 0 3px rgba(36, 120, 230, 0.22);
 }
 
+.password-rules {
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.password-rules p {
+  margin: 0 0 0.45rem;
+  color: #d6dae3;
+}
+
+.password-rules ul {
+  display: grid;
+  gap: 0.28rem;
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.password-rules li {
+  color: #a9b0bd;
+}
+
+.password-rules li.is-valid {
+  color: #77d190;
+}
+
+.auth-field-error {
+  margin: 0.1rem 0 0;
+  color: #ff9a9a;
+  font-size: 0.82rem;
+}
+
 .auth-submit {
   display: grid;
   place-items: center;

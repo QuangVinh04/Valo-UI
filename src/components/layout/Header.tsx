@@ -7,9 +7,6 @@ function Header() {
   return (
     <header className="auth-header">
       <div className="auth-brand">{t('layout.brand')}</div>
-      <Link to="/" className="auth-back-link" aria-label={t('auth.backToSite')}>
-        ← {t('auth.backToSite')}
-      </Link>
     </header>
   );
 }

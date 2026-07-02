@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { HardDrive, Languages, LogOut, MapPin, Moon, Palette, Phone, ShieldCheck, Sun, Trash2, User, UserX } from 'lucide-react';
+import { HardDrive, Languages, MapPin, Moon, Palette, Phone, ShieldCheck, Sun, Trash2, User, UserX } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import ConfirmActionModal from './ConfirmActionModal';
 import SettingRow from './SettingRow';
@@ -133,14 +133,6 @@ function SettingsView() {
           buttonClassName="btn-solid-danger"
           danger
           onClick={() => openConfirmAction('deleteAccount')}
-        />
-        <SettingRow
-          icon={LogOut}
-          title={t('settings.signOut')}
-          description={t('settings.signOutDescription')}
-          buttonLabel={t('settings.signOut')}
-          buttonClassName="btn-muted"
-          onClick={() => openConfirmAction('signOut')}
         />
       </section>
 

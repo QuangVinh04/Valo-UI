@@ -28,7 +28,7 @@ function RequirePermission({ permission, anyOf, children }: RequirePermissionPro
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   const canAccess = anyOf?.length
