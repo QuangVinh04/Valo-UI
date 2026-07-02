@@ -180,10 +180,9 @@
   align-items: center;
   gap: 0.38rem;
   width: fit-content;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--panel) 84%, transparent);
-  padding: 0.55rem 0.75rem;
+  border: 0;
+  background: transparent;
+  padding: 0.55rem 0;
 }
 
 .thinking-indicator span {
@@ -216,10 +215,10 @@
 .assistant-meta {
   margin-top: 0.85rem;
   color: var(--soft);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-family: inherit;
+  font-size: 0.86rem;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .message-actions {
@@ -431,7 +430,7 @@
   height: 20px;
   display: grid;
   place-items: center;
-  color: var(--blue-2);
+  color: #081d42;
 }
 
 .model-menu-item strong,

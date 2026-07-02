@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, Filter, Pencil, Plus, RotateCcw, Search, Trash2, UserPlus } from 'lucide-react';
+import ActionIconButton from '@/components/common/ActionIconButton';
+import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import IconButton from '@/components/common/IconButton';
 import { type UserFilters, useUsers } from '@/hooks/useUsers';
 import '@/styles/pages/management.css';
@@ -8,11 +10,13 @@ import UserAssignGroupModal from './users/UserAssignGroupModal';
 import UserDeleteModal from './users/UserDeleteModal';
 import UserDetailsModal from './users/UserDetailsModal';
 import UserFormModal from './users/UserFormModal';
-import { toUserTableItem } from './users/user-view-model';
+import { toUserTableItem, type UserTableItem } from './users/user-view-model';
 
 function UsersView() {
   const { t } = useTranslation();
   const usersState = useUsers();
+  const selectAllRef = useRef<HTMLInputElement | null>(null);
+  const [isConfirmingDeleteSelected, setIsConfirmingDeleteSelected] = useState(false);
   const {
     modal,
     selectedUser,
@@ -25,6 +29,7 @@ function UsersView() {
     isLoading,
     selectedUserIds,
     openingUserId,
+    isDeletingSelectedUsers,
     isFilterPanelOpen,
     filterDraft,
     activeFilters,
@@ -39,6 +44,7 @@ function UsersView() {
     goToPage,
     toggleSelectedUser,
     toggleAllUsers: toggleAllUsersSelection,
+    deleteSelectedUsers,
     applyFilters,
     clearFilters,
   } = usersState;
@@ -59,11 +65,85 @@ function UsersView() {
   const showingFrom = totalItems === 0 ? 0 : (page - 1) * limit + 1;
   const showingTo = totalItems === 0 ? 0 : Math.min(page * limit, totalItems);
   const isAllUsersSelected = tableUsers.length > 0 && selectedUserIds.length === tableUsers.length;
+  const hasSelectedUsers = selectedUserIds.length > 0;
   const activeFilterCount = [
     activeFilters.search.trim(),
     activeFilters.groupId,
-    activeFilters.mustChangePassword !== 'all' ? activeFilters.mustChangePassword : '',
+    activeFilters.status !== 'all' ? activeFilters.status : '',
   ].filter(Boolean).length;
+
+  useEffect(() => {
+    if (!selectAllRef.current) return;
+
+    selectAllRef.current.indeterminate = hasSelectedUsers && !isAllUsersSelected;
+  }, [hasSelectedUsers, isAllUsersSelected]);
+
+  async function handleConfirmDeleteSelected() {
+    await deleteSelectedUsers();
+    setIsConfirmingDeleteSelected(false);
+  }
+
+  const userTableColumns: Array<DataTableColumn<UserTableItem>> = [
+    {
+      key: 'select',
+      header: (
+        <label className="table-select-check">
+          <input
+            ref={selectAllRef}
+            type="checkbox"
+            checked={isAllUsersSelected}
+            onChange={toggleAllUsers}
+            disabled={tableUsers.length === 0}
+          />
+          <span className="sr-only">{t('admin.users.usersSelected', { count: selectedUserIds.length })}</span>
+        </label>
+      ),
+      className: 'select-column',
+      render: (user) => (
+        <label className="table-select-check">
+          <input
+            type="checkbox"
+            checked={selectedUserIds.includes(user.id)}
+            onChange={() => toggleSelectedUser(user.id)}
+          />
+          <span className="sr-only">{user.fullName}</span>
+        </label>
+      ),
+    },
+    {
+      key: 'name',
+      header: t('common.name'),
+      render: (user) => (
+        <div className="user-cell">
+          <span className={`avatar avatar-${user.initials.toLowerCase()}`}>{user.initials}</span>
+          <strong>{user.fullName}</strong>
+        </div>
+      ),
+    },
+    {
+      key: 'email',
+      header: t('common.email'),
+      render: (user) => user.email,
+    },
+    {
+      key: 'role',
+      header: t('admin.users.role'),
+      render: (user) => (
+        user.groups.length > 0 ? <span className="role-pill">{user.role}</span> : null
+      ),
+    },
+    {
+      key: 'actions',
+      header: t('common.actions'),
+      render: (user) => (
+        <div className="row-actions">
+          <IconButton icon={Eye} label={t('admin.users.viewUser', { name: user.fullName })} onClick={() => openUserModal('details', user)} disabled={openingUserId === user.id} />
+          <IconButton icon={Trash2} label={t('admin.users.deleteUser', { name: user.fullName })} onClick={() => openUserModal('delete', user)} disabled={openingUserId === user.id} />
+          <IconButton icon={Pencil} label={t('admin.users.updateUser', { name: user.fullName })} onClick={() => openUserModal('update', user)} disabled={openingUserId === user.id} />
+        </div>
+      ),
+    },
+  ];
 
   if (!canReadUsers) {
     return (
@@ -85,45 +165,44 @@ function UsersView() {
             {t('admin.users.pageDescription')}
           </p>
         </div>
-        <div className="hero-actions">
-          <button className="btn-ghost" type="button" onClick={() => setIsFilterPanelOpen((current) => !current)}>
-            <Filter size={17} aria-hidden="true" />
-            {t('admin.users.filter')}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-          </button>
-          <button className="btn-primary" type="button" onClick={openAddModal}>
-            <Plus size={17} aria-hidden="true" />
-            {t('admin.users.addUser')}
-          </button>
-        </div>
       </header>
 
       <div className="data-card">
-        <div className="bulk-row">
-          <label className="check-wrap">
-            <input type="checkbox" checked={isAllUsersSelected} onChange={toggleAllUsers} disabled={tableUsers.length === 0} />
-            <span>{t('admin.users.usersSelected', { count: selectedUserIds.length })}</span>
-          </label>
-          <div>
-            <button
-              className="btn-ghost"
-              type="button"
-              onClick={openAssignGroupModal}
-              disabled={selectedUserIds.length === 0}
-            >
-              <UserPlus size={16} aria-hidden="true" />
-              {t('admin.users.addToGroup')}
-            </button>
-          </div>
-          {/* <div>
-            <button
-              className="btn-danger-link"
-              type="button"
-              onClick={() => showPermissionNotice('USER_D')}
-              disabled={selectedUserIds.length === 0}
-            >
-              Delete Selected
-            </button>
-          </div> */}
+        <div className={`bulk-row table-action-bar ${hasSelectedUsers ? 'selection-actions' : ''}`}>
+          {hasSelectedUsers ? (
+            <>
+              <span>{t('admin.users.usersSelected', { count: selectedUserIds.length })}</span>
+              <ActionIconButton
+                icon={Trash2}
+                label={t('admin.users.deleteSelected')}
+                variant="danger"
+                onClick={() => setIsConfirmingDeleteSelected(true)}
+                disabled={isDeletingSelectedUsers}
+                isLoading={isDeletingSelectedUsers}
+              />
+              <ActionIconButton
+                icon={UserPlus}
+                label={t('admin.users.addToGroup')}
+                onClick={openAssignGroupModal}
+                disabled={isDeletingSelectedUsers}
+              />
+            </>
+          ) : (
+            <div className="table-action-buttons">
+              <ActionIconButton
+                icon={Filter}
+                label={t('admin.users.filter')}
+                onClick={() => setIsFilterPanelOpen((current) => !current)}
+                badge={activeFilterCount > 0 ? activeFilterCount : undefined}
+              />
+              <ActionIconButton
+                icon={Plus}
+                label={t('admin.users.addUser')}
+                variant="primary"
+                onClick={openAddModal}
+              />
+            </div>
+          )}
         </div>
 
         {isFilterPanelOpen && (
@@ -152,17 +231,17 @@ function UsersView() {
               </select>
             </label>
             <label>
-              {t('admin.users.passwordState')}
+              {t('admin.users.status')}
               <select
-                value={filterDraft.mustChangePassword}
+                value={filterDraft.status}
                 onChange={(event) => setFilterDraft((current) => ({
                   ...current,
-                  mustChangePassword: event.target.value as UserFilters['mustChangePassword'],
+                  status: event.target.value as UserFilters['status'],
                 }))}
               >
                 <option value="all">{t('admin.users.allUsers')}</option>
-                <option value="true">{t('admin.users.mustChangePassword')}</option>
-                <option value="false">{t('admin.users.passwordChanged')}</option>
+                <option value="active">{t('admin.users.active')}</option>
+                <option value="inactive">{t('admin.users.inactive')}</option>
               </select>
             </label>
             <div className="filter-actions">
@@ -180,37 +259,13 @@ function UsersView() {
 
         {isLoading && <div className="state-row">{t('admin.users.loadingUsers')}</div>}
 
-        <table className="data-table users-table">
-          <thead>
-            <tr><th>{t('common.name')}</th><th>{t('common.email')}</th><th>{t('admin.users.role')}</th><th>{t('common.actions')}</th></tr>
-          </thead>
-          <tbody>
-            {tableUsers.map((user) => (
-              <tr className={selectedUserIds.includes(user.id) ? 'selected' : undefined} key={user.id}>
-                <td>
-                  <div className="user-cell">
-                    <input
-                      type="checkbox"
-                      checked={selectedUserIds.includes(user.id)}
-                      onChange={() => toggleSelectedUser(user.id)}
-                    />
-                    <span className={`avatar avatar-${user.initials.toLowerCase()}`}>{user.initials}</span>
-                    <strong>{user.fullName}</strong>
-                  </div>
-                </td>
-                <td>{user.email}</td>
-                <td><span className="role-pill">{user.groups.length ? user.role : t('admin.users.noGroup')}</span></td>
-                <td>
-                  <div className="row-actions">
-                    <IconButton icon={Eye} label={t('admin.users.viewUser', { name: user.fullName })} onClick={() => openUserModal('details', user)} disabled={openingUserId === user.id} />
-                    <IconButton icon={Trash2} label={t('admin.users.deleteUser', { name: user.fullName })} onClick={() => openUserModal('delete', user)} disabled={openingUserId === user.id} />
-                    <IconButton icon={Pencil} label={t('admin.users.updateUser', { name: user.fullName })} onClick={() => openUserModal('update', user)} disabled={openingUserId === user.id} />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable
+          className="users-table"
+          columns={userTableColumns}
+          data={tableUsers}
+          getRowKey={(user) => user.id}
+          getRowClassName={(user) => (selectedUserIds.includes(user.id) ? 'selected' : undefined)}
+        />
         {!isLoading && tableUsers.length === 0 && (
           <div className="empty-state">
             <Plus size={28} aria-hidden="true" />
@@ -248,6 +303,53 @@ function UsersView() {
       )}
       {modal === 'delete' && selectedUser && (
         <UserDeleteModal user={selectedUser} onClose={closeModal} onDeleted={() => loadUsers(page)} />
+      )}
+      {isConfirmingDeleteSelected && (
+        <div
+          className="modal-backdrop"
+          onClick={() => {
+            if (!isDeletingSelectedUsers) {
+              setIsConfirmingDeleteSelected(false);
+            }
+          }}
+        >
+          <section className="modal-card compact-modal" onClick={(event) => event.stopPropagation()}>
+            <header className="modal-header">
+              <h2>{t('admin.users.deleteSelectedTitle')}</h2>
+              <button
+                type="button"
+                aria-label={t('admin.users.closeDeleteSelected')}
+                onClick={() => setIsConfirmingDeleteSelected(false)}
+                disabled={isDeletingSelectedUsers}
+              >
+                ×
+              </button>
+            </header>
+            <div className="modal-body">
+              <p className="confirm-description">
+                {t('admin.users.deleteSelectedDescription', { count: selectedUserIds.length })}
+              </p>
+            </div>
+            <footer className="modal-footer">
+              <button
+                className="btn-muted"
+                type="button"
+                onClick={() => setIsConfirmingDeleteSelected(false)}
+                disabled={isDeletingSelectedUsers}
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                className="btn-solid-danger"
+                type="button"
+                onClick={() => void handleConfirmDeleteSelected()}
+                disabled={isDeletingSelectedUsers}
+              >
+                {isDeletingSelectedUsers ? t('common.deleting') : t('admin.users.deleteSelected')}
+              </button>
+            </footer>
+          </section>
+        </div>
       )}
       {modal === 'assignGroup' && (
         <UserAssignGroupModal

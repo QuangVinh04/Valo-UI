@@ -13,17 +13,9 @@ type GroupDeleteModalProps = {
 function GroupDeleteModal({ group, onClose, onDeleted }: GroupDeleteModalProps) {
   const { t } = useTranslation();
   const toast = useToast();
-  const [confirmName, setConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const canDelete = confirmName.trim() === group.name;
 
   async function handleDelete() {
-    // Chỉ xóa khi tên xác nhận khớp để tránh xóa nhầm nhóm.
-    if (!canDelete) {
-      toast.error(t('admin.groups.confirmGroupNameRequired'));
-      return;
-    }
-
     setIsDeleting(true);
 
     try {
@@ -40,8 +32,8 @@ function GroupDeleteModal({ group, onClose, onDeleted }: GroupDeleteModalProps) 
   }
 
   return (
-    <div className="modal-backdrop">
-      <section className="modal-card group-modal compact-modal">
+    <div className="modal-backdrop" onClick={() => { if (!isDeleting) onClose(); }}>
+      <section className="modal-card group-modal compact-modal" onClick={(event) => event.stopPropagation()}>
         <header className="modal-header stacked">
           <div>
             <h2>{t('admin.groups.deleteGroupTitle')}</h2>
@@ -51,24 +43,14 @@ function GroupDeleteModal({ group, onClose, onDeleted }: GroupDeleteModalProps) 
         </header>
 
         <div className="modal-body">
-          <div className="danger-panel">
-            <span className="form-kicker">{t('common.group')}</span>
-            <strong>{group.name}</strong>
-            <p>{t('admin.groups.deleteDetachDescription', { count: group.memberCount })}</p>
-          </div>
-          <label>
-            {t('admin.groups.confirmGroupName')}
-            <input
-              placeholder={group.name}
-              value={confirmName}
-              onChange={(event) => setConfirmName(event.target.value)}
-            />
-          </label>
+          <p className="confirm-description">
+            {t('admin.groups.deleteDetachDescription', { count: group.memberCount, name: group.name })}
+          </p>
         </div>
 
         <footer className="modal-footer">
-          <button className="btn-cancel flat" type="button" onClick={onClose}>{t('common.cancel')}</button>
-          <button className="btn-danger-solid" type="button" onClick={handleDelete} disabled={!canDelete || isDeleting}>
+          <button className="btn-muted" type="button" onClick={onClose}>{t('common.cancel')}</button>
+          <button className="btn-solid-danger" type="button" onClick={handleDelete} disabled={isDeleting}>
             {isDeleting ? t('common.deleting') : t('admin.groups.deleteGroupTitle')}
           </button>
         </footer>

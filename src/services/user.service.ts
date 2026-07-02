@@ -149,3 +149,25 @@ export async function deleteUser(userId: string): Promise<void> {
     handleServiceError(error);
   }
 }
+
+export async function deleteUsers(userIds: string[]): Promise<{
+  deletedCount: number;
+  notFoundIds: string[];
+}> {
+  try {
+    const response = await api.delete<ApiResponse<{
+      deletedCount: number;
+      notFoundIds: string[];
+    }>>('/users/bulk', {
+      data: { ids: userIds },
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
+}

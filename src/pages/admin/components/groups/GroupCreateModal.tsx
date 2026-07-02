@@ -57,9 +57,13 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
   const [permissionScope, setPermissionScope] = useState<PermissionScope>('users');
   const [permissions, setPermissions] =
     useState<Record<PermissionScope, string[]>>(defaultPermissions);
+  const [isGroupNameTouched, setIsGroupNameTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activeRows = permissionRows[permissionScope];
+  const groupNameError = isGroupNameTouched && !groupName.trim()
+    ? t('admin.groups.groupNameRequired')
+    : '';
 
   function handlePermissionToggle(permission: string) {
     setPermissions((current) => ({
@@ -72,6 +76,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
     const name = groupName.trim();
 
     if (!name) {
+      setIsGroupNameTouched(true);
       toast.error(t('admin.groups.groupNameRequired'));
       return;
     }
@@ -99,8 +104,8 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
   }
 
   return (
-    <div className="modal-backdrop">
-      <section className="modal-card group-modal">
+    <div className="modal-backdrop" onClick={() => { if (!isSubmitting) onClose(); }}>
+      <section className="modal-card group-modal" onClick={(event) => event.stopPropagation()}>
         <header className="modal-header stacked">
           <div>
             <h2>{t('admin.groups.createGroupTitle')}</h2>
@@ -121,21 +126,32 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
 
           <div className="two-col">
             <label>
-              {t('admin.groups.groupName')}
+              <span className="form-label-text">
+                {t('admin.groups.groupName')}
+                <span className="required-mark" aria-hidden="true">*</span>
+              </span>
               <input
+                className={groupNameError ? 'field-invalid' : undefined}
                 placeholder={t('admin.groups.groupNamePlaceholder')}
                 value={groupName}
                 onChange={(event) => setGroupName(event.target.value)}
+                onBlur={() => setIsGroupNameTouched(true)}
+                aria-invalid={Boolean(groupNameError)}
+                aria-describedby="group-name-error"
               />
+              <span className="field-error" id="group-name-error" aria-live="polite">
+                {groupNameError}
+              </span>
             </label>
 
             <label>
-              {t('admin.groups.description')}
+              <span className="form-label-text">{t('admin.groups.description')}</span>
               <input
                 placeholder={t('admin.groups.describeGroup')}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
               />
+              <span className="field-error" aria-hidden="true" />
             </label>
           </div>
 

@@ -70,15 +70,33 @@ export async function exportMessageDocx(messageId: string): Promise<void> {
 
   const blob = await response.blob();
   const url = window.URL.createObjectURL(blob);
+  const fileName = getDownloadFileName(response.headers.get('content-disposition'))
+    ?? `message-${messageId}.docx`;
 
   const link = document.createElement('a');
   link.href = url;
-  link.download = `message-${messageId}.docx`;
+  link.download = fileName;
   document.body.appendChild(link);
   link.click();
   link.remove();
 
   window.URL.revokeObjectURL(url);
+}
+
+function getDownloadFileName(contentDisposition: string | null): string | null {
+  if (!contentDisposition) return null;
+
+  const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (encodedMatch?.[1]) {
+    try {
+      return decodeURIComponent(encodedMatch[1]);
+    } catch {
+      return encodedMatch[1];
+    }
+  }
+
+  const plainMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+  return plainMatch?.[1] ?? null;
 }
 
 export async function sendMessageStream(

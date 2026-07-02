@@ -204,10 +204,10 @@
 .storage-modal-kicker {
   margin: 0 0 0.35rem;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .storage-modal-description {
@@ -226,7 +226,6 @@
   color: var(--muted);
 }
 
-.storage-delete-btn,
 .storage-load-more {
   display: inline-flex;
   align-items: center;
@@ -242,8 +241,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border-radius: 8px;
+  background: var(--panel);
 }
 
 .storage-row {
@@ -251,9 +250,11 @@
   grid-template-columns: 44px minmax(220px, 1fr) 160px 120px 44px;
   align-items: center;
   gap: 0.75rem;
-  min-height: 48px;
-  padding: 0 0.9rem;
-  border-bottom: 1px solid var(--line);
+  min-height: 64px;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--table-row-line);
+  color: var(--text);
+  font-size: 14px;
 }
 
 .storage-row:last-child {
@@ -264,11 +265,18 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  min-height: 40px;
+  min-height: 48px;
   background: var(--panel);
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
+  color: var(--blue-2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.storage-row:not(.storage-head):has(input:checked) {
+  background: color-mix(in srgb, var(--blue-2) 7%, transparent);
 }
 
 .storage-check {
@@ -277,8 +285,8 @@
 }
 
 .storage-check input {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 .storage-file {
@@ -286,7 +294,7 @@
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .storage-file > span:last-child {

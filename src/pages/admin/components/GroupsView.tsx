@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, Pencil, Plus, Shield, Trash2, UserPlus } from 'lucide-react';
+import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import IconButton from '@/components/common/IconButton';
 import { useGroups } from '@/hooks/useGroups';
 import '@/styles/pages/management.css';
@@ -9,7 +10,7 @@ import GroupDeleteModal from './groups/GroupDeleteModal';
 import GroupDetailsModal from './groups/GroupDetailsModal';
 import GroupMembersModal from './groups/GroupMembersModal';
 import GroupUpdateModal from './groups/GroupUpdateModal';
-import { toGroupViewModel } from './groups/group-view-model';
+import { toGroupViewModel, type GroupViewModel } from './groups/group-view-model';
 
 function GroupsView() {
   const { t } = useTranslation();
@@ -33,6 +34,36 @@ function GroupsView() {
 
     return groups.map(toGroupViewModel);
   }, [canReadGroups, groups]);
+
+  const groupTableColumns: Array<DataTableColumn<GroupViewModel>> = [
+    {
+      key: 'name',
+      header: t('admin.groups.groupName'),
+      render: (group) => (
+        <div className="user-cell">
+          <span className="avatar"><Shield size={18} aria-hidden="true" /></span>
+          <strong>{group.name}</strong>
+        </div>
+      ),
+    },
+    {
+      key: 'members',
+      header: t('admin.groups.memberCount'),
+      render: (group) => t('admin.groups.membersCount', { count: group.memberCount }),
+    },
+    {
+      key: 'actions',
+      header: t('common.actions'),
+      render: (group) => (
+        <div className="row-actions">
+          <IconButton icon={Eye} label={t('admin.groups.viewGroup', { name: group.name })} onClick={() => openGroupModal('details', group)} disabled={openingGroupId === group.id} />
+          <IconButton icon={UserPlus} label={t('admin.groups.manageMembersFor', { name: group.name })} onClick={() => openGroupModal('members', group)} disabled={openingGroupId === group.id} />
+          <IconButton icon={Pencil} label={t('admin.groups.updateGroup', { name: group.name })} onClick={() => openGroupModal('update', group)} disabled={openingGroupId === group.id} />
+          <IconButton icon={Trash2} label={t('admin.groups.deleteGroup', { name: group.name })} onClick={() => openGroupModal('delete', group)} />
+        </div>
+      ),
+    },
+  ];
 
   if (!canReadGroups) {
     return (
@@ -66,32 +97,12 @@ function GroupsView() {
           <span className="count-badge">{t('admin.groups.total', { count: tableGroups.length })}</span>
         </div>
         {isLoading && <div className="state-row">{t('admin.groups.loadingGroups')}</div>}
-        <table className="data-table group-table">
-          <thead>
-            <tr><th>{t('admin.groups.groupName')}</th><th>{t('admin.groups.memberCount')}</th><th>{t('common.actions')}</th></tr>
-          </thead>
-          <tbody>
-            {tableGroups.map((group) => (
-              <tr key={group.id}>
-                <td>
-                  <div className="user-cell">
-                    <span className="avatar"><Shield size={18} aria-hidden="true" /></span>
-                    <strong>{group.name}</strong>
-                  </div>
-                </td>
-                <td>{t('admin.groups.membersCount', { count: group.memberCount })}</td>
-                <td>
-                  <div className="row-actions">
-                    <IconButton icon={Eye} label={t('admin.groups.viewGroup', { name: group.name })} onClick={() => openGroupModal('details', group)} disabled={openingGroupId === group.id} />
-                    <IconButton icon={UserPlus} label={t('admin.groups.manageMembersFor', { name: group.name })} onClick={() => openGroupModal('members', group)} disabled={openingGroupId === group.id} />
-                    <IconButton icon={Pencil} label={t('admin.groups.updateGroup', { name: group.name })} onClick={() => openGroupModal('update', group)} disabled={openingGroupId === group.id} />
-                    <IconButton icon={Trash2} label={t('admin.groups.deleteGroup', { name: group.name })} onClick={() => openGroupModal('delete', group)} />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable
+          className="group-table"
+          columns={groupTableColumns}
+          data={tableGroups}
+          getRowKey={(group) => group.id}
+        />
         {!isLoading && tableGroups.length === 0 && (
           <div className="empty-state">
             <Shield size={28} aria-hidden="true" />

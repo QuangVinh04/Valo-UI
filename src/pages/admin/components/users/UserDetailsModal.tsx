@@ -13,19 +13,19 @@ function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="modal-backdrop">
-      <section className="modal-card user-modal">
+    <div className="modal-backdrop" onClick={onClose}>
+      <section className="modal-card user-modal" onClick={(event) => event.stopPropagation()}>
         <header className="modal-header">
           <h2 className="modal-title"><UserRound size={21} aria-hidden="true" /> {t('admin.users.userDetails')}</h2>
           <IconButton icon={X} label={t('admin.users.closeUserDetails')} onClick={onClose} />
         </header>
         <div className="modal-body">
           <div className="detail-grid">
-            <div><span className="label-text">{t('admin.users.fullName')}</span><strong>{user.fullName}</strong></div>
-            <div><span className="label-text">{t('common.email')}</span><strong>{user.email}</strong></div>
-            <div><span className="label-text">{t('admin.users.phone')}</span><strong>{user.phoneNumber ?? t('admin.users.noPhone')}</strong></div>
-            <div><span className="label-text">{t('admin.users.address')}</span><strong>{user.address ?? t('admin.users.noAddress')}</strong></div>
-            <div><span className="label-text">{t('admin.users.joined')}</span><strong>{formatUserDate(user.createdAt)}</strong></div>
+            <div className="detail-field detail-field-wide detail-field-primary"><span className="label-text">{t('admin.users.fullName')}</span><strong>{user.fullName}</strong></div>
+            <div className="detail-field"><span className="label-text">{t('common.email')}</span><strong>{user.email}</strong></div>
+            <div className="detail-field"><span className="label-text">{t('admin.users.phone')}</span><strong>{user.phoneNumber ?? t('admin.users.noPhone')}</strong></div>
+            <div className="detail-field"><span className="label-text">{t('admin.users.address')}</span><strong>{user.address ?? t('admin.users.noAddress')}</strong></div>
+            <div className="detail-field"><span className="label-text">{t('admin.users.joined')}</span><strong>{formatUserDate(user.createdAt)}</strong></div>
           </div>
           <section className="detail-section">
             <p className="form-kicker">{t('common.groups')}</p>

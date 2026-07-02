@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, FileText, Loader2, Trash2 } from 'lucide-react';
+import ActionIconButton from '@/components/common/ActionIconButton';
 import { useToast } from '@/context/ToastContext';
 import { deleteAttachments, getAttachments } from '@/services/attachment.service';
 import type { AttachmentItem } from '@/types/attachment.type';
@@ -103,8 +104,12 @@ function StorageModal({ onClose }: StorageModalProps) {
   };
 
   return (
-    <div className="settings-modal-backdrop">
-      <section className="settings-modal storage-modal panel-dark" aria-labelledby="storage-modal-title">
+    <div className="settings-modal-backdrop" onClick={() => { if (!isDeleting) onClose(); }}>
+      <section
+        className="settings-modal storage-modal panel-dark"
+        aria-labelledby="storage-modal-title"
+        onClick={(event) => event.stopPropagation()}
+      >
         <header>
           <div>
             <p className="storage-modal-kicker">{t('settings.storage')}</p>
@@ -116,15 +121,14 @@ function StorageModal({ onClose }: StorageModalProps) {
 
         <div className="storage-toolbar">
           <span>{t('settings.selectedCount', { count: selectedCount })}</span>
-          <button
-            type="button"
-            className="btn-outline-danger storage-delete-btn"
+          <ActionIconButton
+            icon={Trash2}
+            label={t('settings.deleteSelected')}
+            variant="danger"
             disabled={!selectedCount || isDeleting}
             onClick={handleDeleteSelected}
-          >
-            {isDeleting ? <Loader2 size={16} aria-hidden="true" /> : <Trash2 size={16} aria-hidden="true" />}
-            {t('settings.deleteSelected')}
-          </button>
+            isLoading={isDeleting}
+          />
         </div>
 
         <div className="storage-table" role="table" aria-label={t('settings.uploadedFiles')}>

@@ -10,8 +10,8 @@ function GroupDetailsModal({ group, onClose }: GroupDetailsModalProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="modal-backdrop">
-      <section className="modal-card group-modal">
+    <div className="modal-backdrop" onClick={onClose}>
+      <section className="modal-card group-modal" onClick={(event) => event.stopPropagation()}>
         <header className="modal-header stacked">
           <div>
             <h2>{t('admin.groups.groupDetails')}</h2>
@@ -22,7 +22,7 @@ function GroupDetailsModal({ group, onClose }: GroupDetailsModalProps) {
 
         <div className="modal-body">
           <div className="detail-grid">
-            <div>
+            <div className="detail-field-primary">
               <span className="label-text">{t('admin.groups.groupName')}</span>
               <strong>{group.name}</strong>
             </div>

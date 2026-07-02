@@ -173,7 +173,7 @@ function ChatView() {
                           setIsModelMenuOpen(false);
                         }}
                       >
-                        <span className="model-menu-check">
+                        <span className={`model-menu-check ${isSelected ? 'ui-checkmark' : ''}`}>
                           {isSelected && <Check size={16} aria-hidden="true" />}
                         </span>
                         <span>

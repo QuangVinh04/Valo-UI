@@ -15,6 +15,8 @@ type UserFormModalProps = {
   onSaved: () => void;
 };
 
+type RequiredField = 'fullName' | 'email';
+
 function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
   const { t } = useTranslation();
   const toast = useToast();
@@ -25,7 +27,22 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
   const [email, setEmail] = useState(user?.email ?? '');
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber ?? '');
   const [address, setAddress] = useState(user?.address ?? '');
+  const [touchedFields, setTouchedFields] = useState<Record<RequiredField, boolean>>({
+    fullName: false,
+    email: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fullNameError = touchedFields.fullName && !fullName.trim()
+    ? t('admin.users.fullNameRequired')
+    : '';
+  const emailError = !isUpdate && touchedFields.email && !email.trim()
+    ? t('admin.users.emailRequired')
+    : '';
+
+  function markFieldTouched(field: RequiredField) {
+    setTouchedFields((current) => ({ ...current, [field]: true }));
+  }
 
   async function handleSubmit() {
     const name = fullName.trim();
@@ -34,6 +51,7 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
     const normalizedAddress = address.trim();
 
     if (!name || (!isUpdate && !normalizedEmail)) {
+      setTouchedFields({ fullName: true, email: true });
       toast.error(t('admin.users.nameEmailRequired'));
       return;
     }
@@ -73,8 +91,8 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
   }
 
   return (
-    <div className="modal-backdrop">
-      <section className="modal-card user-modal">
+    <div className="modal-backdrop" onClick={() => { if (!isSubmitting) onClose(); }}>
+      <section className="modal-card user-modal" onClick={(event) => event.stopPropagation()}>
         <header className="modal-header">
           <h2 className="modal-title">
             {isUpdate ? (
@@ -97,40 +115,66 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
 
         <div className="modal-body">
           <label>
-            {t('admin.users.fullName')}
+            <span className="form-label-text">
+              {t('admin.users.fullName')}
+              <span className="required-mark" aria-hidden="true">*</span>
+            </span>
             <input
+              className={fullNameError ? 'field-invalid' : undefined}
               value={fullName}
               placeholder={t('admin.users.enterFullName')}
               onChange={(event) => setFullName(event.target.value)}
+              onBlur={() => markFieldTouched('fullName')}
+              aria-invalid={Boolean(fullNameError)}
+              aria-describedby="user-full-name-error"
             />
+            <span className="field-error" id="user-full-name-error" aria-live="polite">
+              {fullNameError}
+            </span>
           </label>
 
           <label>
-            {t('auth.emailAddress')}
+            <span className="form-label-text">
+              {t('auth.emailAddress')}
+              {!isUpdate && <span className="required-mark" aria-hidden="true">*</span>}
+            </span>
             <input
+              className={[
+                isUpdate ? 'locked-input' : undefined,
+                emailError ? 'field-invalid' : undefined,
+              ].filter(Boolean).join(' ') || undefined}
               value={email}
               placeholder="name@company.com"
               onChange={(event) => setEmail(event.target.value)}
+              onBlur={() => markFieldTouched('email')}
               readOnly={isUpdate}
+              aria-readonly={isUpdate}
+              aria-invalid={Boolean(emailError)}
+              aria-describedby="user-email-error"
             />
+            <span className="field-error" id="user-email-error" aria-live="polite">
+              {emailError}
+            </span>
           </label>
 
           <label>
-            {t('admin.users.phoneNumber')}
+            <span className="form-label-text">{t('admin.users.phoneNumber')}</span>
             <input
               value={phoneNumber}
               placeholder="+84 901 234 567"
               onChange={(event) => setPhoneNumber(event.target.value)}
             />
+            <span className="field-error" aria-hidden="true" />
           </label>
 
           <label>
-            {t('admin.users.address')}
+            <span className="form-label-text">{t('admin.users.address')}</span>
             <input
               value={address}
               placeholder={t('admin.users.enterAddress')}
               onChange={(event) => setAddress(event.target.value)}
             />
+            <span className="field-error" aria-hidden="true" />
           </label>
         </div>
 

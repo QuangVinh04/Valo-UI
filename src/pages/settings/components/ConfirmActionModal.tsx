@@ -64,8 +64,8 @@ function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModal
   };
 
   return (
-    <div className="settings-modal-backdrop">
-      <section className="settings-modal panel-dark">
+    <div className="settings-modal-backdrop" onClick={() => { if (!isSaving) onClose(); }}>
+      <section className="settings-modal panel-dark" onClick={(event) => event.stopPropagation()}>
         <header>
           <h3>{copy.title}</h3>
           <button type="button" onClick={onClose}>x</button>

@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import { useToast } from '@/context/ToastContext';
 import { removeGroupMembers } from '@/services/group.service';
 import type { GroupMemberDto } from '@/types/group.type';
 import GroupAddMembersPanel from './GroupAddMembersPanel';
 import type { GroupViewModel } from './group-view-model';
+
+type CurrentMember = GroupViewModel['members'][number];
 
 type GroupMembersModalProps = {
   group: GroupViewModel;
@@ -99,10 +102,54 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
     ? t('common.selected', { count: selectedMemberIds.length })
     : t('admin.groups.noneSelected');
   const isAddPage = memberPage === 'add';
+  const memberTableColumns: Array<DataTableColumn<CurrentMember>> = [
+    {
+      key: 'select',
+      header: (
+        <label className="member-check-cell">
+          <input
+            className="member-checkbox-input"
+            type="checkbox"
+            checked={isAllMembersSelected}
+            onChange={toggleAllMembers}
+          />
+          <span className="member-checkbox-box" aria-hidden="true" />
+          <span className="sr-only">{t('admin.groups.selectAllMembers')}</span>
+        </label>
+      ),
+      render: (member) => (
+        <label className="member-check-cell">
+          <input
+            className="member-checkbox-input"
+            type="checkbox"
+            checked={selectedMemberIds.includes(member.id)}
+            onChange={() => toggleSelectedMember(member.id)}
+          />
+          <span className="member-checkbox-box" aria-hidden="true" />
+          <span className="sr-only">{t('admin.groups.selectMember', { name: member.fullName })}</span>
+        </label>
+      ),
+    },
+    {
+      key: 'name',
+      header: t('common.name'),
+      render: (member) => (
+        <div className="user-cell">
+          <span className="member-avatar-small" aria-hidden="true">{getMemberInitials(member.fullName)}</span>
+          <strong>{member.fullName}</strong>
+        </div>
+      ),
+    },
+    {
+      key: 'email',
+      header: t('common.email'),
+      render: (member) => member.email,
+    },
+  ];
 
   return (
-    <div className="modal-backdrop">
-      <section className="modal-card group-modal">
+    <div className="modal-backdrop" onClick={() => { if (!isRemoving) onClose(); }}>
+      <section className="modal-card group-modal" onClick={(event) => event.stopPropagation()}>
         <header className="modal-header stacked">
           <div>
             <h2>{isAddPage ? t('admin.groups.addMembers') : t('admin.groups.manageMembers')}</h2>
@@ -152,51 +199,15 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
               </div>
               <div className="member-table-wrap">
                 {currentMembers.length > 0 ? (
-                  <table className="data-table member-management-table">
-                    <thead>
-                      <tr>
-                        <th>
-                          <label className="member-check-cell">
-                            <input
-                              className="member-checkbox-input"
-                              type="checkbox"
-                              checked={isAllMembersSelected}
-                              onChange={toggleAllMembers}
-                            />
-                            <span className="member-checkbox-box" aria-hidden="true" />
-                            <span className="sr-only">{t('admin.groups.selectAllMembers')}</span>
-                          </label>
-                        </th>
-                        <th>Name</th>
-                        <th>Email</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentMembers.map((member) => (
-                        <tr className={selectedMemberIds.includes(member.id) ? 'selected' : undefined} key={member.id}>
-                          <td>
-                            <label className="member-check-cell">
-                              <input
-                                className="member-checkbox-input"
-                                type="checkbox"
-                                checked={selectedMemberIds.includes(member.id)}
-                                onChange={() => toggleSelectedMember(member.id)}
-                              />
-                              <span className="member-checkbox-box" aria-hidden="true" />
-                              <span className="sr-only">{t('admin.groups.selectMember', { name: member.fullName })}</span>
-                            </label>
-                          </td>
-                          <td>
-                            <div className="user-cell">
-                              <span className="member-avatar-small" aria-hidden="true">{getMemberInitials(member.fullName)}</span>
-                              <strong>{member.fullName}</strong>
-                            </div>
-                          </td>
-                          <td>{member.email}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <DataTable
+                    className="member-management-table"
+                    columns={memberTableColumns}
+                    data={currentMembers}
+                    getRowKey={(member) => member.id}
+                    getRowClassName={(member) => (
+                      selectedMemberIds.includes(member.id) ? 'selected' : undefined
+                    )}
+                  />
                 ) : (
                   <div className="member-row muted">{t('admin.groups.noMembersInGroup')}</div>
                 )}
@@ -226,10 +237,10 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
             <span>{t('admin.groups.removeConfirmHelp')}</span>
           </div>
           <footer className="confirm-popover-actions">
-            <button className="btn-cancel flat" type="button" onClick={() => setIsConfirmingRemove(false)} disabled={isRemoving}>
+            <button className="btn-muted" type="button" onClick={() => setIsConfirmingRemove(false)} disabled={isRemoving}>
               {t('common.cancel')}
             </button>
-            <button className="btn-danger-solid" type="button" onClick={handleRemoveMembers} disabled={isRemoving}>
+            <button className="btn-solid-danger" type="button" onClick={handleRemoveMembers} disabled={isRemoving}>
               {isRemoving ? t('admin.groups.removing') : t('admin.groups.removeMembers')}
             </button>
           </footer>

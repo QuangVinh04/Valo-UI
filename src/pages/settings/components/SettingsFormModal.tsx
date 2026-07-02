@@ -75,8 +75,8 @@ function SettingsFormModal({
   };
 
   return (
-    <div className="settings-modal-backdrop">
-      <form className="settings-modal panel-dark" onSubmit={handleSubmit}>
+    <div className="settings-modal-backdrop" onClick={() => { if (!isSaving) onClose(); }}>
+      <form className="settings-modal panel-dark" onSubmit={handleSubmit} onClick={(event) => event.stopPropagation()}>
         <header>
           <h3>{title}</h3>
           <button type="button" onClick={onClose}>x</button>

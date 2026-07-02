@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
 import { getGroups } from '@/services/group.service';
 import type { GroupListItemDto } from '@/types/group.type';
-import { getUserById, getUsers } from '@/services/user.service';
+import { deleteUsers, getUserById, getUsers } from '@/services/user.service';
 import type { UserDto, UserListItemDto } from '@/types/user.type';
 import { usePermissions } from './usePermissions';
 
@@ -12,13 +12,13 @@ export type UserModalAction = 'details' | 'add' | 'update' | 'delete' | 'assignG
 export type UserFilters = {
   search: string;
   groupId: string;
-  mustChangePassword: 'all' | 'true' | 'false';
+  status: 'all' | 'active' | 'inactive';
 };
 
 export const defaultUserFilters: UserFilters = {
   search: '',
   groupId: '',
-  mustChangePassword: 'all',
+  status: 'all',
 };
 
 const userActionPermissions: Record<Exclude<UserModalAction, 'details'>, string> = {
@@ -51,6 +51,7 @@ export function useUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [openingUserId, setOpeningUserId] = useState<string | null>(null);
+  const [isDeletingSelectedUsers, setIsDeletingSelectedUsers] = useState(false);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [filterDraft, setFilterDraft] = useState<UserFilters>(defaultUserFilters);
   const [activeFilters, setActiveFilters] = useState<UserFilters>(defaultUserFilters);
@@ -59,9 +60,9 @@ export function useUsers() {
   const userQueryFilters = useMemo(() => ({
     search: activeFilters.search.trim() || undefined,
     groupId: activeFilters.groupId || undefined,
-    mustChangePassword: activeFilters.mustChangePassword === 'all'
+    mustChangePassword: activeFilters.status === 'all'
       ? undefined
-      : activeFilters.mustChangePassword === 'true',
+      : activeFilters.status === 'inactive',
   }), [activeFilters]);
 
   const showPermissionNotice = useCallback((permission: string) => {
@@ -227,6 +228,31 @@ export function useUsers() {
     ));
   }
 
+  async function deleteSelectedUsers() {
+    const requiredPermission = userActionPermissions.delete;
+    if (permissions.cannot(requiredPermission)) {
+      showPermissionNotice(requiredPermission);
+      return;
+    }
+
+    if (selectedUserIds.length === 0) {
+      toast.warning(t('admin.users.selectUserFirst'));
+      return;
+    }
+
+    setIsDeletingSelectedUsers(true);
+
+    try {
+      const result = await deleteUsers(selectedUserIds);
+      toast.success(t('admin.users.deletedSelected', { count: result.deletedCount }));
+      await loadUsers(page);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('admin.users.deleteFailed'));
+    } finally {
+      setIsDeletingSelectedUsers(false);
+    }
+  }
+
   function applyFilters() {
     // Chỉ áp dụng bộ lọc khi người dùng bấm nút, sau đó quay về trang đầu.
     setActiveFilters(filterDraft);
@@ -252,6 +278,7 @@ export function useUsers() {
     isLoading,
     selectedUserIds,
     openingUserId,
+    isDeletingSelectedUsers,
     isFilterPanelOpen,
     filterDraft,
     activeFilters,
@@ -266,6 +293,7 @@ export function useUsers() {
     goToPage,
     toggleSelectedUser,
     toggleAllUsers,
+    deleteSelectedUsers,
     applyFilters,
     clearFilters,
   };

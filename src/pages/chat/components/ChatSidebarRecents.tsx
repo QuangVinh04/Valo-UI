@@ -147,7 +147,9 @@ function ChatSidebarRecents() {
                   onClick={() => void saveRename()}
                   disabled={!draftTitle.trim()}
                 >
-                  <Check size={15} aria-hidden="true" />
+                  <span className="ui-checkmark">
+                    <Check size={14} aria-hidden="true" />
+                  </span>
                 </button>
                 <button type="button" aria-label={t('chat.cancelRename')} onClick={cancelRename}>
                   <X size={15} aria-hidden="true" />
@@ -194,8 +196,8 @@ function ChatSidebarRecents() {
         ))}
       </div>
       {deleteTarget && (
-        <div className="settings-modal-backdrop">
-          <section className="settings-modal panel-dark">
+        <div className="settings-modal-backdrop" onClick={() => { if (!isDeleting) setDeleteTarget(null); }}>
+          <section className="settings-modal panel-dark" onClick={(event) => event.stopPropagation()}>
             <header>
               <h3>{t('chat.deleteConversation')}</h3>
               <button type="button" onClick={() => setDeleteTarget(null)}>x</button>

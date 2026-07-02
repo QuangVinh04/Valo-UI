@@ -13,17 +13,9 @@ type UserDeleteModalProps = {
 function UserDeleteModal({ user, onClose, onDeleted }: UserDeleteModalProps) {
   const { t } = useTranslation();
   const toast = useToast();
-  const [confirmEmail, setConfirmEmail] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const canDelete = confirmEmail.trim().toLowerCase() === user.email.toLowerCase();
 
   async function handleDelete() {
-    // Chỉ xóa khi email xác nhận khớp để tránh thao tác nhầm người dùng.
-    if (!canDelete) {
-      toast.error(t('admin.users.confirmEmailRequired'));
-      return;
-    }
-
     setIsDeleting(true);
 
     try {
@@ -40,26 +32,20 @@ function UserDeleteModal({ user, onClose, onDeleted }: UserDeleteModalProps) {
   }
 
   return (
-    <div className="modal-backdrop">
-      <section className="modal-card user-modal compact-modal">
+    <div className="modal-backdrop" onClick={() => { if (!isDeleting) onClose(); }}>
+      <section className="modal-card user-modal compact-modal" onClick={(event) => event.stopPropagation()}>
         <header className="modal-header">
           <h2>{t('admin.users.deleteUserTitle')}</h2>
           <button type="button" aria-label={t('admin.users.closeDeleteUser')} onClick={onClose}>×</button>
         </header>
         <div className="modal-body">
-          <div className="danger-panel">
-            <span className="form-kicker">{t('common.user')}</span>
-            <strong>{user.fullName}</strong>
-            <p>{t('admin.users.deleteUserDescription', { email: user.email })}</p>
-          </div>
-          <label>
-            {t('admin.users.confirmEmail')}
-            <input value={confirmEmail} placeholder={user.email} onChange={(event) => setConfirmEmail(event.target.value)} />
-          </label>
+          <p className="confirm-description">
+            {t('admin.users.deleteUserDescription', { email: user.email, name: user.fullName })}
+          </p>
         </div>
         <footer className="modal-footer">
-          <button className="btn-cancel flat" type="button" onClick={onClose}>{t('common.cancel')}</button>
-          <button className="btn-danger-solid" type="button" onClick={handleDelete} disabled={!canDelete || isDeleting}>
+          <button className="btn-muted" type="button" onClick={onClose}>{t('common.cancel')}</button>
+          <button className="btn-solid-danger" type="button" onClick={handleDelete} disabled={isDeleting}>
             {isDeleting ? t('common.deleting') : t('admin.users.deleteUserTitle')}
           </button>
         </footer>

@@ -93,8 +93,8 @@ function UserAssignGroupModal({
   const shouldShowEmptyResult = keyword && filteredGroups.length === 0;
 
   return (
-    <div className="modal-backdrop">
-      <section className="modal-card user-modal compact-modal">
+    <div className="modal-backdrop" onClick={() => { if (!isSubmitting) onClose(); }}>
+      <section className="modal-card user-modal compact-modal" onClick={(event) => event.stopPropagation()}>
         <header className="modal-header stacked">
           <div>
             <h2>{t('admin.users.addToGroupsTitle')}</h2>
