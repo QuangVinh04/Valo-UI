@@ -33,20 +33,6 @@ const permissionRows: Record<PermissionScope, PermissionRow[]> = {
 
 const permissionScopes: PermissionScope[] = ['users', 'groups'];
 
-const permissionLabels: Record<PermissionScope, string> = {
-  users: 'User Permissions',
-  groups: 'Group Permissions',
-};
-
-const permissionDescriptions: Record<PermissionScope, string> = {
-  users: 'Permissions this group has over users.',
-  groups: 'Permissions this group has over other groups.',
-};
-
-function formatScopeLabel(scope: PermissionScope): string {
-  return scope === 'users' ? 'Users' : 'Groups';
-}
-
 function getInitialPermissions(group: GroupViewModel): Record<PermissionScope, string[]> {
   return {
     users: permissionRows.users
@@ -59,7 +45,6 @@ function getInitialPermissions(group: GroupViewModel): Record<PermissionScope, s
 }
 
 function togglePermission(permissions: string[], permission: string): string[] {
-  // Bật/tắt một quyền trong nhóm quyền hiện tại.
   if (permissions.includes(permission)) {
     return permissions.filter((item) => item !== permission);
   }
@@ -69,12 +54,6 @@ function togglePermission(permissions: string[], permission: string): string[] {
 
 function getGrantedCount(permissions: string[], scope: PermissionScope): number {
   return permissionRows[scope].filter((row) => permissions.includes(row.key)).length;
-}
-
-function getPermissionSummary(permissions: Record<PermissionScope, string[]>): string {
-  return permissionScopes
-    .map((scope) => `${formatScopeLabel(scope)}: ${getGrantedCount(permissions[scope], scope)}`)
-    .join(' / ');
 }
 
 function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) {
@@ -92,7 +71,6 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
     : '';
 
   function handlePermissionToggle(permission: string) {
-    // Cập nhật quyền theo scope đang được chọn trong segmented control.
     setPermissions((current) => ({
       ...current,
       [permissionScope]: togglePermission(current[permissionScope], permission),
@@ -100,7 +78,6 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
   }
 
   async function handleSubmit() {
-    // Lưu tên, mô tả và toàn bộ quyền đã chọn cho nhóm hiện tại.
     const name = groupName.trim();
     if (!name) {
       setIsGroupNameTouched(true);
@@ -138,84 +115,101 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
           <button type="button" aria-label={t('admin.groups.closeUpdateGroup')} onClick={onClose}>×</button>
         </header>
 
-        <div className="modal-body">
-          <p className="form-kicker">{t('admin.groups.identity')}</p>
-          <div className="two-col">
-            <label>
-              <span className="form-label-text">
-                {t('admin.groups.groupName')}
-                <span className="required-mark" aria-hidden="true">*</span>
-              </span>
-              <input
-                className={groupNameError ? 'field-invalid' : undefined}
-                placeholder={t('admin.groups.groupNamePlaceholder')}
-                value={groupName}
-                onChange={(event) => setGroupName(event.target.value)}
-                onBlur={() => setIsGroupNameTouched(true)}
-                aria-invalid={Boolean(groupNameError)}
-                aria-describedby="group-update-name-error"
-              />
-              <span className="field-error" id="group-update-name-error" aria-live="polite">
-                {groupNameError}
-              </span>
-            </label>
-            <label>
-              <span className="form-label-text">{t('admin.groups.description')}</span>
-              <input
-                placeholder={t('admin.groups.describeGroup')}
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-              <span className="field-error" aria-hidden="true" />
-            </label>
-          </div>
-
-          <div>
-            <span className="label-text">{t('admin.groups.permissionType')}</span>
-            <div className="segment two-option-segment">
-              {permissionScopes.map((scope) => (
-                <button
-                  className={permissionScope === scope ? 'active' : ''}
-                  type="button"
-                  key={scope}
-                  onClick={() => setPermissionScope(scope)}
-                >
-                  {scope === 'users' ? t('admin.groups.usersScope') : t('admin.groups.groupsScope')}
-                </button>
-              ))}
+        <div className="modal-body group-modal-body">
+          <section className="group-form-section">
+            <div className="section-heading">
+              <p className="form-kicker">{t('admin.groups.identity')}</p>
             </div>
-          </div>
 
-          <div className="matrix-title">
-            <span className="form-kicker">{permissionScope === 'users' ? t('admin.groups.userPermissions') : t('admin.groups.groupPermissions')}</span>
-            <em>{permissionScope === 'users' ? t('admin.groups.userPermissionsDescription') : t('admin.groups.groupPermissionsDescription')}</em>
-          </div>
-          <table className="permission-table">
-            <thead><tr><th>{t('admin.groups.action')}</th><th>{t('admin.groups.description')}</th><th>{t('admin.groups.grant')}</th></tr></thead>
-            <tbody>
-              {activeRows.map((row) => (
-                <tr key={row.key}>
-                  <td>{t(`admin.groups.permissionsRows.${row.key}.action`)}</td>
-                  <td>{t(`admin.groups.permissionsRows.${row.key}.description`)}</td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={permissions[permissionScope].includes(row.key)}
-                      onChange={() => handlePermissionToggle(row.key)}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="permission-summary">
-            {permissionScopes
-              .map((scope) => t('admin.groups.permissionSummary', {
-                scope: scope === 'users' ? t('admin.groups.usersScope') : t('admin.groups.groupsScope'),
-                count: getGrantedCount(permissions[scope], scope),
-              }))
-              .join(' / ')}
-          </div>
+            <div className="group-basic-grid">
+              <label className="group-name-field">
+                <span className="form-label-text">
+                  {t('admin.groups.groupName')}
+                  <span className="required-mark" aria-hidden="true">*</span>
+                </span>
+                <input
+                  className={groupNameError ? 'field-invalid' : undefined}
+                  placeholder={t('admin.groups.groupNamePlaceholder')}
+                  value={groupName}
+                  onChange={(event) => setGroupName(event.target.value)}
+                  onBlur={() => setIsGroupNameTouched(true)}
+                  aria-invalid={Boolean(groupNameError)}
+                  aria-describedby="group-update-name-error"
+                />
+                <span
+                  className={`field-error${groupNameError ? '' : ' field-error-placeholder'}`}
+                  id="group-update-name-error"
+                  aria-live="polite"
+                >
+                  {groupNameError || '\u00A0'}
+                </span>
+              </label>
+
+              <label className="group-description-field">
+                <span className="form-label-text">{t('admin.groups.description')}</span>
+                <input
+                  placeholder={t('admin.groups.describeGroup')}
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                />
+                <span className="field-error field-error-placeholder" aria-hidden="true" />
+              </label>
+            </div>
+          </section>
+
+          <section className="group-form-section">
+            <div className="section-heading permission-heading">
+              <div>
+                <p className="form-kicker">{t('admin.groups.permissions')}</p>
+                <em>
+                  {permissionScope === 'users'
+                    ? t('admin.groups.userPermissionsDescription')
+                    : t('admin.groups.groupPermissionsDescription')}
+                </em>
+              </div>
+
+              <div className="segment two-option-segment permission-scope-tabs" role="group" aria-label={t('admin.groups.permissionType')}>
+                {permissionScopes.map((scope) => (
+                  <button
+                    className={permissionScope === scope ? 'active' : ''}
+                    type="button"
+                    key={scope}
+                    onClick={() => setPermissionScope(scope)}
+                  >
+                    {scope === 'users' ? t('admin.groups.usersScope') : t('admin.groups.groupsScope')}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <table className="permission-table">
+              <thead><tr><th>{t('admin.groups.action')}</th><th>{t('admin.groups.description')}</th><th>{t('admin.groups.grant')}</th></tr></thead>
+              <tbody>
+                {activeRows.map((row) => (
+                  <tr key={row.key}>
+                    <td>{t(`admin.groups.permissionsRows.${row.key}.action`)}</td>
+                    <td>{t(`admin.groups.permissionsRows.${row.key}.description`)}</td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={permissions[permissionScope].includes(row.key)}
+                        onChange={() => handlePermissionToggle(row.key)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="permission-summary">
+              {permissionScopes
+                .map((scope) => t('admin.groups.permissionSummary', {
+                  scope: scope === 'users' ? t('admin.groups.usersScope') : t('admin.groups.groupsScope'),
+                  count: getGrantedCount(permissions[scope], scope),
+                }))
+                .join(' / ')}
+            </div>
+          </section>
         </div>
 
         <footer className="modal-footer">

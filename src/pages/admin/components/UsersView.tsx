@@ -98,7 +98,7 @@ function UsersView() {
           <span className="sr-only">{t('admin.users.usersSelected', { count: selectedUserIds.length })}</span>
         </label>
       ),
-      className: 'select-column',
+      className: 'table-column-select',
       render: (user) => (
         <label className="table-select-check">
           <input
@@ -113,6 +113,7 @@ function UsersView() {
     {
       key: 'name',
       header: t('common.name'),
+      className: 'table-column-primary',
       render: (user) => (
         <div className="user-cell">
           <span className={`avatar avatar-${user.initials.toLowerCase()}`}>{user.initials}</span>
@@ -123,18 +124,37 @@ function UsersView() {
     {
       key: 'email',
       header: t('common.email'),
+      className: 'table-column-secondary',
       render: (user) => user.email,
     },
     {
       key: 'role',
       header: t('admin.users.role'),
+      className: 'table-column-tertiary',
       render: (user) => (
         user.groups.length > 0 ? <span className="role-pill">{user.role}</span> : null
       ),
     },
     {
+      key: 'spacer',
+      header: null,
+      className: 'table-column-spacer',
+      render: () => null,
+    },
+    {
+      key: 'status',
+      header: t('admin.users.status'),
+      className: 'table-column-status',
+      render: (user) => (
+        <span className={`status-pill ${user.active ? 'status-active' : 'status-inactive'}`}>
+          {user.active ? t('admin.users.active') : t('admin.users.inactive')}
+        </span>
+      ),
+    },
+    {
       key: 'actions',
       header: t('common.actions'),
+      className: 'table-column-actions',
       render: (user) => (
         <div className="row-actions">
           <IconButton icon={Eye} label={t('admin.users.viewUser', { name: user.fullName })} onClick={() => openUserModal('details', user)} disabled={openingUserId === user.id} />

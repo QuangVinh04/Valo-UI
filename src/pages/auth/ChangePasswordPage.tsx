@@ -1,6 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { LockKeyhole } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -54,22 +54,18 @@ function ChangePasswordPage() {
   const { t } = useTranslation();
   const { authLoading, isAuthenticated, changePassword } = useAuth();
   const toast = useToast();
-  const location = useLocation();
   const navigate = useNavigate();
-  const loginState = location.state as { currentPassword?: string } | null;
-  const loginCurrentPassword = loginState?.currentPassword;
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const effectiveCurrentPassword = loginCurrentPassword || currentPassword;
   const passwordChecks = useMemo(
-    () => getPasswordChecks(newPassword, effectiveCurrentPassword),
-    [effectiveCurrentPassword, newPassword]
+    () => getPasswordChecks(newPassword, currentPassword),
+    [currentPassword, newPassword]
   );
   const isPasswordStrong = passwordChecks.every((check) => check.isValid);
   const doPasswordsMatch = Boolean(confirmPassword) && newPassword === confirmPassword;
-  const canSubmit = Boolean(effectiveCurrentPassword)
+  const canSubmit = Boolean(currentPassword)
     && isPasswordStrong
     && doPasswordsMatch
     && !isSubmitting;
@@ -92,7 +88,7 @@ function ChangePasswordPage() {
 
     try {
       await changePassword({
-        currentPassword: effectiveCurrentPassword,
+        currentPassword,
         newPassword,
         confirmPassword,
       });
@@ -129,23 +125,19 @@ function ChangePasswordPage() {
             </p>
 
             <form className="auth-form" onSubmit={handleSubmit}>
-              {!loginCurrentPassword && (
-                <>
-                  <label htmlFor="currentPassword">{t('auth.currentPassword')}</label>
-                  <div className="password-field">
-                    <input
-                      id="currentPassword"
-                      type="password"
-                      autoComplete="current-password"
-                      placeholder={t('auth.temporaryPasswordPlaceholder')}
-                      value={currentPassword}
-                      onChange={(event) => setCurrentPassword(event.target.value)}
-                      required
-                    />
-                    <span aria-hidden="true"><LockKeyhole size={18} /></span>
-                  </div>
-                </>
-              )}
+              <label htmlFor="currentPassword">{t('auth.currentPassword')}</label>
+              <div className="password-field">
+                <input
+                  id="currentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder={t('auth.currentPasswordPlaceholder')}
+                  value={currentPassword}
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                  required
+                />
+                <span aria-hidden="true"><LockKeyhole size={18} /></span>
+              </div>
 
               <label htmlFor="newPassword">{t('auth.newPassword')}</label>
               <input

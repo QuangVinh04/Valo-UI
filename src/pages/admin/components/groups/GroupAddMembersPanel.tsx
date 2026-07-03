@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowLeft, UserPlus } from 'lucide-react';
+import ActionIconButton from '@/components/common/ActionIconButton';
 import { useToast } from '@/context/ToastContext';
 import { addGroupMembers } from '@/services/group.service';
 import type { GroupMemberDto } from '@/types/group.type';
@@ -162,18 +164,21 @@ function GroupAddMembersPanel({
         </div>
 
         <div className="member-section-actions">
-          <button className="btn-cancel flat" type="button" onClick={onBack}>
-            {t('common.back')}
-          </button>
+          <ActionIconButton
+            icon={ArrowLeft}
+            label={t('common.back')}
+            onClick={onBack}
+            disabled={isAdding}
+          />
 
-          <button
-            className="btn-primary btn-xl"
-            type="button"
+          <ActionIconButton
+            icon={UserPlus}
+            label={isAdding ? t('admin.users.adding') : t('admin.groups.addSelected')}
+            variant="primary"
             onClick={handleAddMembers}
             disabled={isAdding || selectedUsers.length === 0}
-          >
-            {isAdding ? t('admin.users.adding') : t('admin.groups.addSelected')}
-          </button>
+            isLoading={isAdding}
+          />
         </div>
       </div>
 

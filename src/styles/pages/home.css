@@ -120,6 +120,36 @@
   box-shadow: 0 0 0 3px rgba(36, 120, 230, 0.22);
 }
 
+.otp-input {
+  font: inherit;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+.otp-resend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.otp-resend button {
+  color: var(--blue-2);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+}
+
+.otp-resend button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .password-rules {
   margin-top: 0.25rem;
   color: var(--muted);

@@ -45,6 +45,19 @@ function getRequestLanguage() {
   return language === 'en' ? 'en-US' : 'vi-VN';
 }
 
+function isPublicAuthRequest(url?: string): boolean {
+  if (!url) return false;
+
+  const publicAuthPaths = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/verify-otp',
+    '/auth/resend-otp',
+  ];
+
+  return publicAuthPaths.some((path) => url.endsWith(path));
+}
+
 async function refreshAccessToken(): Promise<string> {
   const response = await Axios.post(
     `${API_BASE_URL}/auth/refresh-token`,
@@ -94,7 +107,8 @@ api.interceptors.response.use(
       error.response?.status === 401 &&
       originalRequest &&
       !originalRequest._retry &&
-      !originalRequest.skipAuth
+      !originalRequest.skipAuth &&
+      !isPublicAuthRequest(originalRequest.url)
     ) {
       originalRequest._retry = true;
 

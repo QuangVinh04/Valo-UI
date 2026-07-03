@@ -5,6 +5,7 @@ import ChangePasswordPage from '@/pages/auth/ChangePasswordPage';
 import DashboardPage from '@/pages/admin/DashboardPage';
 import GroupsPage from '@/pages/admin/GroupsPage';
 import LoginPage from '@/pages/auth/LoginPage';
+import OtpVerificationPage from '@/pages/auth/OtpVerificationPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import UsersPage from '@/pages/admin/UsersPage';
@@ -15,6 +16,7 @@ function AppRoutes() {
       <Route path="/" element={<LoginPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-otp" element={<OtpVerificationPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
       <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />

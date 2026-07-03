@@ -1,9 +1,10 @@
 import { api } from '@/lib/api-client';
 import { AppError } from '@/errors/app-error';
 import { handleServiceError } from './service-error.helper';
-import type { ApiResponse } from '@/types/api.type';
+import type { ApiMeta, ApiResponse } from '@/types/api.type';
 import type {
   CreatedGroupDto,
+  BulkDeleteGroupsResponseDto,
   CreateGroupPayload,
   GroupDto,
   GroupListItemDto,
@@ -11,7 +12,7 @@ import type {
   UpdateGroupPayload,
 } from '@/types/group.type';
 
-export async function getGroups(page = 1, limit = 100, search?: string): Promise<GroupListItemDto[]> {
+export async function getGroups(page = 1, limit = 10, search?: string): Promise<{ groups: GroupListItemDto[]; meta: ApiMeta | null }> {
   try {
     const params = new URLSearchParams({
       page: String(page),
@@ -27,7 +28,10 @@ export async function getGroups(page = 1, limit = 100, search?: string): Promise
       throw new AppError(response.data.message, response.status, response.data.errors);
     }
 
-    return response.data.data;
+    return {
+      groups: response.data.data,
+      meta: response.data.meta ?? null,
+    };
   } catch (error) {
     handleServiceError(error);
   }
@@ -119,6 +123,22 @@ export async function deleteGroup(groupId: string): Promise<void> {
     if (!response.data.success) {
       throw new AppError(response.data.message, response.status, response.data.errors);
     }
+  } catch (error) {
+    handleServiceError(error);
+  }
+}
+
+export async function deleteGroups(groupIds: string[]): Promise<BulkDeleteGroupsResponseDto> {
+  try {
+    const response = await api.delete<ApiResponse<BulkDeleteGroupsResponseDto>>('/groups/bulk', {
+      data: { ids: groupIds },
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
   } catch (error) {
     handleServiceError(error);
   }

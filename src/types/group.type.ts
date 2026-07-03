@@ -2,6 +2,7 @@ export type GroupListItemDto = {
   id: string;
   name: string;
   description: string | null;
+  createdAt: string;
   memberCount: number;
 };
 
@@ -24,6 +25,11 @@ export type GroupMemberDto = {
 
 export type CreatedGroupDto = {
   id: string;
+};
+
+export type BulkDeleteGroupsResponseDto = {
+  deletedCount: number;
+  notFoundIds: string[];
 };
 
 export type CreateGroupPayload = {

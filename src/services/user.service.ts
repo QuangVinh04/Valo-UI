@@ -68,8 +68,8 @@ export async function getUsers(page = 1, limit = 10, filters: UserListFilters = 
     params.set('groupId', filters.groupId);
   }
 
-  if (filters.mustChangePassword !== undefined) {
-    params.set('mustChangePassword', String(filters.mustChangePassword));
+  if (filters.active !== undefined) {
+    params.set('active', String(filters.active));
   }
 
   try {

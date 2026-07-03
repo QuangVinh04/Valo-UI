@@ -25,6 +25,7 @@ function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
             <div className="detail-field"><span className="label-text">{t('common.email')}</span><strong>{user.email}</strong></div>
             <div className="detail-field"><span className="label-text">{t('admin.users.phone')}</span><strong>{user.phoneNumber ?? t('admin.users.noPhone')}</strong></div>
             <div className="detail-field"><span className="label-text">{t('admin.users.address')}</span><strong>{user.address ?? t('admin.users.noAddress')}</strong></div>
+            <div className="detail-field"><span className="label-text">{t('admin.users.status')}</span><strong>{user.active ? t('admin.users.active') : t('admin.users.inactive')}</strong></div>
             <div className="detail-field"><span className="label-text">{t('admin.users.joined')}</span><strong>{formatUserDate(user.createdAt)}</strong></div>
           </div>
           <section className="detail-section">

@@ -4,7 +4,7 @@ export type AuthUser = {
   id: string;
   fullName: string;
   email?: string;
-  mustChangePassword: boolean;
+  active: boolean;
   accessToken: string | null;
   settings: UserSettingsInput;
 };
@@ -16,6 +16,17 @@ export type LoginPayload = {
 
 export type RegisterPayload = {
   fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
+export type VerifyOtpPayload = {
+  email: string;
+  otp: string;
+};
+
+export type ResendOtpPayload = {
   email: string;
 };
 

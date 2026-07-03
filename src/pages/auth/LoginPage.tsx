@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { LockKeyhole } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -9,16 +9,22 @@ import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
 import '@/styles/pages/home.css';
 
+type LoginLocationState = {
+  email?: string;
+};
+
 function LoginPage() {
   const { t } = useTranslation();
   const { authLoading, isAuthenticated, login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const location = useLocation();
+  const locationState = location.state as LoginLocationState | null;
+  const [username, setUsername] = useState(locationState?.email ?? '');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Xử lý đăng nhập và điều hướng theo trạng thái bắt buộc đổi mật khẩu.
+  // Route inactive accounts through email verification before workspace access.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -26,10 +32,10 @@ function LoginPage() {
     try {
       const user = await login(username, password);
       navigate(
-        user.mustChangePassword ? '/change-password' : '/chat',
+        user.active ? '/chat' : '/verify-otp',
         {
           replace: true,
-          state: user.mustChangePassword ? { currentPassword: password } : undefined,
+          state: user.active ? undefined : { email: user.email ?? username },
         }
       );
     } catch (err) {

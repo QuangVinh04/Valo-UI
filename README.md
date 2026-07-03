@@ -1,6 +1,6 @@
 # Valo UI
 
-Valo UI is the React frontend for Agent Hub, an enterprise-style AI workspace with chat, user management, group permissions, account settings, and first-login password reset flows.
+Valo UI is the React frontend for Agent Hub, an enterprise-style AI workspace with chat, user management, group permissions, account settings, and OTP-verified registration flows.
 
 ## Tech Stack
 
@@ -14,7 +14,7 @@ Valo UI is the React frontend for Agent Hub, an enterprise-style AI workspace wi
 ## Features
 
 - Secure login and registration flow
-- First-time password change screen
+- OTP account verification screen
 - AI chat interface with SSE streaming responses
 - Conversation recents with rename/delete actions
 - File upload support for chat context

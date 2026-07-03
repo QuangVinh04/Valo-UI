@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, Pencil, Plus, Shield, Trash2, UserPlus } from 'lucide-react';
+import { Eye, Pencil, Plus, Search, Shield, Trash2, UserPlus } from 'lucide-react';
+import ActionIconButton from '@/components/common/ActionIconButton';
 import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import IconButton from '@/components/common/IconButton';
 import { useGroups } from '@/hooks/useGroups';
@@ -10,21 +11,36 @@ import GroupDeleteModal from './groups/GroupDeleteModal';
 import GroupDetailsModal from './groups/GroupDetailsModal';
 import GroupMembersModal from './groups/GroupMembersModal';
 import GroupUpdateModal from './groups/GroupUpdateModal';
-import { toGroupViewModel, type GroupViewModel } from './groups/group-view-model';
+import { formatGroupDate, toGroupViewModel, type GroupViewModel } from './groups/group-view-model';
 
 function GroupsView() {
   const { t } = useTranslation();
+  const selectAllRef = useRef<HTMLInputElement | null>(null);
+  const [isConfirmingDeleteSelected, setIsConfirmingDeleteSelected] = useState(false);
   const {
     modal,
     selectedGroup,
     groups,
+    totalItems,
+    page,
+    limit,
+    totalPages,
     isLoading,
     openingGroupId,
+    selectedGroupIds,
+    isDeletingSelectedGroups,
+    search,
     canReadGroups,
+    setSearch,
+    applySearch,
     loadGroups,
+    goToPage,
     openCreateModal,
     openGroupModal,
     closeModal,
+    toggleSelectedGroup,
+    toggleAllGroups: toggleAllGroupsSelection,
+    deleteSelectedGroups,
   } = useGroups();
 
   const tableGroups = useMemo(() => {
@@ -35,10 +51,62 @@ function GroupsView() {
     return groups.map(toGroupViewModel);
   }, [canReadGroups, groups]);
 
+  const isAllGroupsSelected = tableGroups.length > 0 && selectedGroupIds.length === tableGroups.length;
+  const hasSelectedGroups = selectedGroupIds.length > 0;
+  const showingFrom = totalItems === 0 ? 0 : (page - 1) * limit + 1;
+  const showingTo = totalItems === 0 ? 0 : Math.min(page * limit, totalItems);
+
+  useEffect(() => {
+    if (!selectAllRef.current) return;
+
+    selectAllRef.current.indeterminate = hasSelectedGroups && !isAllGroupsSelected;
+  }, [hasSelectedGroups, isAllGroupsSelected]);
+
+  function toggleAllGroups() {
+    toggleAllGroupsSelection(tableGroups.map((group) => group.id));
+  }
+
+  async function handleConfirmDeleteSelected() {
+    await deleteSelectedGroups();
+    setIsConfirmingDeleteSelected(false);
+  }
+
+  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    applySearch();
+  }
+
   const groupTableColumns: Array<DataTableColumn<GroupViewModel>> = [
+    {
+      key: 'select',
+      header: (
+        <label className="table-select-check">
+          <input
+            ref={selectAllRef}
+            type="checkbox"
+            checked={isAllGroupsSelected}
+            onChange={toggleAllGroups}
+            disabled={tableGroups.length === 0}
+          />
+          <span className="sr-only">{t('admin.groups.groupsSelected', { count: selectedGroupIds.length })}</span>
+        </label>
+      ),
+      className: 'table-column-select',
+      render: (group) => (
+        <label className="table-select-check">
+          <input
+            type="checkbox"
+            checked={selectedGroupIds.includes(group.id)}
+            onChange={() => toggleSelectedGroup(group.id)}
+          />
+          <span className="sr-only">{group.name}</span>
+        </label>
+      ),
+    },
     {
       key: 'name',
       header: t('admin.groups.groupName'),
+      className: 'table-column-primary',
       render: (group) => (
         <div className="user-cell">
           <span className="avatar"><Shield size={18} aria-hidden="true" /></span>
@@ -49,11 +117,25 @@ function GroupsView() {
     {
       key: 'members',
       header: t('admin.groups.memberCount'),
+      className: 'table-column-secondary',
       render: (group) => t('admin.groups.membersCount', { count: group.memberCount }),
+    },
+    {
+      key: 'createdAt',
+      header: t('admin.groups.created'),
+      className: 'table-column-tertiary',
+      render: (group) => formatGroupDate(group.createdAt),
+    },
+    {
+      key: 'spacer',
+      header: null,
+      className: 'table-column-spacer',
+      render: () => null,
     },
     {
       key: 'actions',
       header: t('common.actions'),
+      className: 'table-column-actions',
       render: (group) => (
         <div className="row-actions">
           <IconButton icon={Eye} label={t('admin.groups.viewGroup', { name: group.name })} onClick={() => openGroupModal('details', group)} disabled={openingGroupId === group.id} />
@@ -85,16 +167,42 @@ function GroupsView() {
             {t('admin.groups.pageDescription')}
           </p>
         </div>
-        <button className="btn-primary btn-xl" type="button" onClick={openCreateModal}>
-          <Plus size={18} aria-hidden="true" />
-          {t('admin.groups.createNewGroup')}
-        </button>
       </header>
 
       <section className="data-card group-card">
-        <div className="card-title-row">
-          <h2>{t('admin.groups.activeGroups')}</h2>
-          <span className="count-badge">{t('admin.groups.total', { count: tableGroups.length })}</span>
+        <div className={`bulk-row table-action-bar ${hasSelectedGroups ? 'selection-actions' : ''}`}>
+          {hasSelectedGroups ? (
+            <>
+              <span>{t('admin.groups.groupsSelected', { count: selectedGroupIds.length })}</span>
+              <ActionIconButton
+                icon={Trash2}
+                label={t('admin.groups.deleteSelected')}
+                variant="danger"
+                onClick={() => setIsConfirmingDeleteSelected(true)}
+                disabled={isDeletingSelectedGroups}
+                isLoading={isDeletingSelectedGroups}
+              />
+            </>
+          ) : (
+            <div className="table-toolbar">
+              <form className="table-search-bar" onSubmit={handleSearchSubmit}>
+                <input
+                  value={search}
+                  placeholder={t('admin.groups.searchPlaceholder')}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+                <button type="submit" aria-label={t('common.search')}>
+                  <Search size={22} aria-hidden="true" />
+                </button>
+              </form>
+              <ActionIconButton
+                icon={Plus}
+                label={t('admin.groups.createNewGroup')}
+                variant="primary"
+                onClick={openCreateModal}
+              />
+            </div>
+          )}
         </div>
         {isLoading && <div className="state-row">{t('admin.groups.loadingGroups')}</div>}
         <DataTable
@@ -102,6 +210,7 @@ function GroupsView() {
           columns={groupTableColumns}
           data={tableGroups}
           getRowKey={(group) => group.id}
+          getRowClassName={(group) => (selectedGroupIds.includes(group.id) ? 'selected' : undefined)}
         />
         {!isLoading && tableGroups.length === 0 && (
           <div className="empty-state">
@@ -110,6 +219,25 @@ function GroupsView() {
             <p>{t('admin.groups.noGroupsDescription')}</p>
           </div>
         )}
+
+        <footer className="table-footer">
+          <span>{t('admin.groups.showing', { from: showingFrom, to: showingTo, total: totalItems })}</span>
+          <div className="pagination">
+            <button type="button" disabled={page <= 1 || isLoading} onClick={() => goToPage(page - 1)}>‹</button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+              <button
+                type="button"
+                className={pageNumber === page ? 'active' : ''}
+                key={pageNumber}
+                disabled={isLoading}
+                onClick={() => goToPage(pageNumber)}
+              >
+                {pageNumber}
+              </button>
+            ))}
+            <button type="button" disabled={page >= totalPages || isLoading} onClick={() => goToPage(page + 1)}>›</button>
+          </div>
+        </footer>
       </section>
 
       {modal === 'create' && <GroupCreateModal onClose={closeModal} onCreated={() => loadGroups()} />}
@@ -122,6 +250,53 @@ function GroupsView() {
       )}
       {modal === 'delete' && selectedGroup && (
         <GroupDeleteModal group={selectedGroup} onClose={closeModal} onDeleted={() => loadGroups()} />
+      )}
+      {isConfirmingDeleteSelected && (
+        <div
+          className="modal-backdrop"
+          onClick={() => {
+            if (!isDeletingSelectedGroups) {
+              setIsConfirmingDeleteSelected(false);
+            }
+          }}
+        >
+          <section className="modal-card compact-modal" onClick={(event) => event.stopPropagation()}>
+            <header className="modal-header">
+              <h2>{t('admin.groups.deleteSelectedTitle')}</h2>
+              <button
+                type="button"
+                aria-label={t('admin.groups.closeDeleteSelected')}
+                onClick={() => setIsConfirmingDeleteSelected(false)}
+                disabled={isDeletingSelectedGroups}
+              >
+                ×
+              </button>
+            </header>
+            <div className="modal-body">
+              <p className="confirm-description">
+                {t('admin.groups.deleteSelectedDescription', { count: selectedGroupIds.length })}
+              </p>
+            </div>
+            <footer className="modal-footer">
+              <button
+                className="btn-muted"
+                type="button"
+                onClick={() => setIsConfirmingDeleteSelected(false)}
+                disabled={isDeletingSelectedGroups}
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                className="btn-solid-danger"
+                type="button"
+                onClick={() => void handleConfirmDeleteSelected()}
+                disabled={isDeletingSelectedGroups}
+              >
+                {isDeletingSelectedGroups ? t('common.deleting') : t('admin.groups.deleteSelected')}
+              </button>
+            </footer>
+          </section>
+        </div>
       )}
     </div>
   );

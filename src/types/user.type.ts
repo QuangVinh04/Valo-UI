@@ -11,7 +11,7 @@ export type UserDto = {
   phoneNumber: string | null;
   address: string | null;
   groups: UserGroupSummary[];
-  mustChangePassword: boolean;
+  active: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -21,6 +21,7 @@ export type UserListItemDto = {
   fullName: string;
   email: string;
   groups: UserGroupSummary[];
+  active: boolean;
 };
 
 export type UserProfileUpdate = {
@@ -31,12 +32,14 @@ export type UserProfileUpdate = {
 export type UserListFilters = {
   search?: string;
   groupId?: string;
-  mustChangePassword?: boolean;
+  active?: boolean;
 };
 
 export type CreateUserPayload = {
   fullName: string;
   email: string;
+  password: string;
+  confirmPassword: string;
   phoneNumber?: string;
   address?: string;
 };

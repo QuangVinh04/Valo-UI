@@ -21,7 +21,7 @@ type AuthContextValue = {
   refreshAuth: () => void;
   login: (username: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
-  register: (fullName: string, email: string) => Promise<boolean>;
+  register: (fullName: string, email: string, password: string, confirmPassword: string) => Promise<boolean>;
   changePassword: (input: {
     currentPassword: string;
     newPassword: string;
@@ -133,8 +133,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshAuth();
   }, [refreshAuth]);
 
-  const register = useCallback((fullName: string, email: string) => (
-    registerRequest(fullName, email)
+  const register = useCallback((
+    fullName: string,
+    email: string,
+    password: string,
+    confirmPassword: string
+  ) => (
+    registerRequest(fullName, email, password, confirmPassword)
   ), []);
 
   const changePassword = useCallback((input: {

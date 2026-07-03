@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Plus, Trash2, Users } from 'lucide-react';
+import ActionIconButton from '@/components/common/ActionIconButton';
 import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import { useToast } from '@/context/ToastContext';
 import { removeGroupMembers } from '@/services/group.service';
@@ -34,7 +36,6 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   }, [group]);
 
   function toggleSelectedMember(userId: string) {
-    // Chọn hoặc bỏ chọn một thành viên hiện có trong nhóm.
     setSelectedMemberIds((current) => (
       current.includes(userId)
         ? current.filter((id) => id !== userId)
@@ -43,14 +44,12 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   }
 
   function toggleAllMembers() {
-    // Chọn toàn bộ thành viên hiện có hoặc bỏ chọn tất cả.
     setSelectedMemberIds((current) => (
       current.length === currentMembers.length ? [] : currentMembers.map((member) => member.id)
     ));
   }
 
   function openRemoveConfirmation() {
-    // Yêu cầu xác nhận trước khi gỡ thành viên khỏi nhóm.
     if (selectedMemberIds.length === 0) {
       toast.error(t('admin.groups.selectAtLeastOneMember'));
       return;
@@ -60,7 +59,6 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   }
 
   async function handleRemoveMembers() {
-    // Gỡ các thành viên đã chọn và cập nhật lại danh sách trong modal.
     setIsRemoving(true);
 
     try {
@@ -80,7 +78,6 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   }
 
   function handleMembersAdded(updatedGroup: GroupMemberDto) {
-    // Nhận danh sách thành viên mới từ panel thêm thành viên và quay lại trang danh sách.
     setCurrentMembers(updatedGroup.members);
     setCurrentMemberCount(updatedGroup.memberCount);
     setSelectedMemberIds([]);
@@ -98,6 +95,7 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   }
 
   const isAllMembersSelected = currentMembers.length > 0 && selectedMemberIds.length === currentMembers.length;
+  const hasSelectedMembers = selectedMemberIds.length > 0;
   const selectedCountLabel = selectedMemberIds.length > 0
     ? t('common.selected', { count: selectedMemberIds.length })
     : t('admin.groups.noneSelected');
@@ -117,6 +115,7 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
           <span className="sr-only">{t('admin.groups.selectAllMembers')}</span>
         </label>
       ),
+      className: 'table-column-select',
       render: (member) => (
         <label className="member-check-cell">
           <input
@@ -133,6 +132,7 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
     {
       key: 'name',
       header: t('common.name'),
+      className: 'table-column-primary',
       render: (member) => (
         <div className="user-cell">
           <span className="member-avatar-small" aria-hidden="true">{getMemberInitials(member.fullName)}</span>
@@ -143,7 +143,14 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
     {
       key: 'email',
       header: t('common.email'),
+      className: 'table-column-secondary',
       render: (member) => member.email,
+    },
+    {
+      key: 'spacer',
+      header: null,
+      className: 'table-column-spacer',
+      render: () => null,
     },
   ];
 
@@ -158,13 +165,7 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
           <button type="button" aria-label={t('admin.groups.closeMemberManagement')} onClick={onClose}>×</button>
         </header>
 
-        <div className="modal-body">
-          <p className="form-kicker">{t('admin.groups.targetGroup')}</p>
-          <div className="mock-input">
-            <strong>{group.name}</strong>
-            <span className="muted">{t('admin.groups.currentMembersCount', { count: currentMemberCount })}</span>
-          </div>
-
+        <div className="modal-body member-modal-body">
           {isAddPage ? (
             <GroupAddMembersPanel
               group={group}
@@ -174,44 +175,55 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
             />
           ) : (
             <section className="member-table-card">
-              <div className="member-section-header">
-                <div>
-                  <p className="form-kicker">{t('admin.groups.currentMembers')}</p>
-                  <span className="member-selection-count">{selectedCountLabel}</span>
-                </div>
-                <div className="member-section-actions">
-                  <button
-                    className="btn-danger-link"
-                    type="button"
-                    onClick={openRemoveConfirmation}
-                    disabled={selectedMemberIds.length === 0 || isRemoving}
-                  >
-                    {isRemoving ? t('common.deleting') : t('admin.groups.deleteSelected')}
-                  </button>
-                  <button
-                    className="btn-chip"
-                    type="button"
-                    onClick={() => setMemberPage('add')}
-                  >
-                    {t('admin.groups.addMember')}
-                  </button>
-                </div>
-              </div>
-              <div className="member-table-wrap">
-                {currentMembers.length > 0 ? (
-                  <DataTable
-                    className="member-management-table"
-                    columns={memberTableColumns}
-                    data={currentMembers}
-                    getRowKey={(member) => member.id}
-                    getRowClassName={(member) => (
-                      selectedMemberIds.includes(member.id) ? 'selected' : undefined
-                    )}
-                  />
+              <div className={`bulk-row table-action-bar ${hasSelectedMembers ? 'selection-actions' : ''}`}>
+                {hasSelectedMembers ? (
+                  <>
+                    <span className="member-selection-count">
+                      {t('common.selected', { count: selectedMemberIds.length })}
+                    </span>
+                    <ActionIconButton
+                      icon={Trash2}
+                      label={isRemoving ? t('common.deleting') : t('admin.groups.deleteSelected')}
+                      variant="danger"
+                      onClick={openRemoveConfirmation}
+                      isLoading={isRemoving}
+                      disabled={isRemoving}
+                    />
+                  </>
                 ) : (
-                  <div className="member-row muted">{t('admin.groups.noMembersInGroup')}</div>
+                  <div className="table-toolbar">
+                    <div>
+                      <p className="form-kicker">{group.name}</p>
+                      <span className="member-selection-count">{selectedCountLabel}</span>
+                      <span className="member-selection-count">
+                        {t('admin.groups.currentMembersCount', { count: currentMemberCount })}
+                      </span>
+                    </div>
+                    <ActionIconButton
+                      icon={Plus}
+                      label={t('admin.groups.addMember')}
+                      variant="primary"
+                      onClick={() => setMemberPage('add')}
+                    />
+                  </div>
                 )}
               </div>
+              <DataTable
+                className="member-management-table"
+                columns={memberTableColumns}
+                data={currentMembers}
+                getRowKey={(member) => member.id}
+                getRowClassName={(member) => (
+                  selectedMemberIds.includes(member.id) ? 'selected' : undefined
+                )}
+              />
+              {currentMembers.length === 0 && (
+                <div className="member-empty-state">
+                  <Users size={28} aria-hidden="true" />
+                  <strong>{t('admin.groups.noMembersInGroup')}</strong>
+                  <span>{t('admin.groups.typeToSearchUsers')}</span>
+                </div>
+              )}
             </section>
           )}
         </div>

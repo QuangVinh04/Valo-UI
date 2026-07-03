@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/context/ToastContext';
-import { getGroupById, getGroupMembers, getGroups } from '@/services/group.service';
+import { deleteGroups, getGroupById, getGroupMembers, getGroups } from '@/services/group.service';
 import type { GroupListItemDto } from '@/types/group.type';
 import { toGroupViewModel, type GroupViewModel } from '@/pages/admin/components/groups/group-view-model';
 import { usePermissions } from './usePermissions';
@@ -32,15 +32,26 @@ export function useGroups() {
   const [groups, setGroups] = useState<GroupListItemDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [openingGroupId, setOpeningGroupId] = useState<string | null>(null);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
+  const [isDeletingSelectedGroups, setIsDeletingSelectedGroups] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearchInput] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
 
   const showPermissionNotice = useCallback((permission: string) => {
     toast.warning(t(permissionMessages[permission] ?? 'common.noPagePermission'));
   }, [t, toast]);
 
   // Tải danh sách nhóm sau khi xác nhận người dùng có quyền xem nhóm.
-  const loadGroups = useCallback(async () => {
+  const loadGroups = useCallback(async (targetPage = page) => {
     if (permissions.cannot('GROUP_R')) {
       setGroups([]);
+      setSelectedGroupIds([]);
+      setTotalItems(0);
+      setTotalPages(1);
       setIsLoading(false);
       return;
     }
@@ -48,14 +59,18 @@ export function useGroups() {
     setIsLoading(true);
 
     try {
-      const data = await getGroups();
-      setGroups(data);
+      const result = await getGroups(targetPage, limit, activeSearch);
+      setGroups(result.groups);
+      setSelectedGroupIds([]);
+      setTotalItems(result.meta?.totalItems ?? result.groups.length);
+      setTotalPages(result.meta?.totalPages ?? 1);
+      setPage(result.meta?.page ?? targetPage);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('admin.groups.loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [permissions, t, toast]);
+  }, [activeSearch, limit, page, permissions, t, toast]);
 
   useEffect(() => {
     void loadGroups();
@@ -131,16 +146,89 @@ export function useGroups() {
     setSelectedGroup(null);
   }
 
+  function setSearch(value: string) {
+    setSearchInput(value);
+
+    if (!value.trim()) {
+      setActiveSearch('');
+      setPage(1);
+    }
+  }
+
+  function applySearch() {
+    setActiveSearch(search.trim());
+    setPage(1);
+  }
+
+  function goToPage(targetPage: number) {
+    const nextPage = Math.min(Math.max(targetPage, 1), totalPages);
+    if (nextPage === page || isLoading) return;
+
+    setPage(nextPage);
+  }
+
+  function toggleSelectedGroup(groupId: string) {
+    setSelectedGroupIds((current) => (
+      current.includes(groupId)
+        ? current.filter((id) => id !== groupId)
+        : [...current, groupId]
+    ));
+  }
+
+  function toggleAllGroups(visibleGroupIds: string[]) {
+    setSelectedGroupIds((current) => (
+      current.length === visibleGroupIds.length ? [] : visibleGroupIds
+    ));
+  }
+
+  async function deleteSelectedGroups() {
+    const requiredPermission = groupActionPermissions.delete;
+    if (permissions.cannot(requiredPermission)) {
+      showPermissionNotice(requiredPermission);
+      return;
+    }
+
+    if (selectedGroupIds.length === 0) {
+      toast.warning(t('admin.groups.selectAtLeastOneGroup'));
+      return;
+    }
+
+    setIsDeletingSelectedGroups(true);
+
+    try {
+      const result = await deleteGroups(selectedGroupIds);
+      toast.success(t('admin.groups.deletedSelected', { count: result.deletedCount }));
+      await loadGroups();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('admin.groups.deleteFailed'));
+    } finally {
+      setIsDeletingSelectedGroups(false);
+    }
+  }
+
   return {
     modal,
     selectedGroup,
     groups,
+    totalItems,
+    page,
+    limit,
+    totalPages,
     isLoading,
     openingGroupId,
+    selectedGroupIds,
+    isDeletingSelectedGroups,
+    search,
     canReadGroups,
+    setSearch,
+    applySearch,
     loadGroups,
+    goToPage,
     openCreateModal,
     openGroupModal,
     closeModal,
+    toggleSelectedGroup,
+    toggleAllGroups,
+    deleteSelectedGroups,
   };
 }

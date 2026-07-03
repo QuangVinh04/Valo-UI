@@ -60,9 +60,9 @@ export function useUsers() {
   const userQueryFilters = useMemo(() => ({
     search: activeFilters.search.trim() || undefined,
     groupId: activeFilters.groupId || undefined,
-    mustChangePassword: activeFilters.status === 'all'
+    active: activeFilters.status === 'all'
       ? undefined
-      : activeFilters.status === 'inactive',
+      : activeFilters.status === 'active',
   }), [activeFilters]);
 
   const showPermissionNotice = useCallback((permission: string) => {
@@ -113,7 +113,7 @@ export function useUsers() {
       try {
         const [userResult, groupResult] = await Promise.all([
           getUsers(page, limit, userQueryFilters),
-          getGroups().catch(() => [] as GroupListItemDto[]),
+          getGroups().then((result) => result.groups).catch(() => [] as GroupListItemDto[]),
         ]);
 
         if (ignore) return;
