@@ -158,8 +158,8 @@ function UsersView() {
       render: (user) => (
         <div className="row-actions">
           <IconButton icon={Eye} label={t('admin.users.viewUser', { name: user.fullName })} onClick={() => openUserModal('details', user)} disabled={openingUserId === user.id} />
-          <IconButton icon={Trash2} label={t('admin.users.deleteUser', { name: user.fullName })} onClick={() => openUserModal('delete', user)} disabled={openingUserId === user.id} />
           <IconButton icon={Pencil} label={t('admin.users.updateUser', { name: user.fullName })} onClick={() => openUserModal('update', user)} disabled={openingUserId === user.id} />
+          <IconButton icon={Trash2} label={t('admin.users.deleteUser', { name: user.fullName })} onClick={() => openUserModal('delete', user)} disabled={openingUserId === user.id} />
         </div>
       ),
     },

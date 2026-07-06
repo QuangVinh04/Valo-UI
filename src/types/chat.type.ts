@@ -7,6 +7,7 @@ export type ChatMessage = {
   modelName: string | null;
   createdAt: string;
   fileUploads?: FileUpload[];
+  streamStatus?: 'error' | 'stopped';
 };
 
 export type FileUpload = {

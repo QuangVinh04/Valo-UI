@@ -152,6 +152,12 @@
   line-height: 1.65;
 }
 
+.assistant-msg-error .assistant-content,
+.assistant-msg-error .assistant-content p,
+.assistant-msg-error .assistant-content li {
+  color: var(--danger);
+}
+
 .assistant-content ul,
 .assistant-content ol {
   margin: 0.1rem 0;
@@ -305,7 +311,40 @@
   background: color-mix(in srgb, var(--composer-bg) 92%, white 4%);
   padding: 0.45rem 0.5rem 0.45rem 0.75rem;
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  transition: border-color 160ms ease, border-radius 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.chat-composer-expanded {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  border-radius: 28px;
+  padding-block: 0.65rem;
+}
+
+.chat-composer-expanded textarea {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-height: 58px;
+  padding: 0.45rem 1.05rem 0.2rem;
+}
+
+.chat-composer-expanded .composer-icon,
+.chat-composer-expanded .composer-model,
+.chat-composer-expanded .send-btn {
+  grid-row: 2;
+}
+
+.chat-composer-expanded .composer-icon {
+  grid-column: 1;
+}
+
+.chat-composer-expanded .composer-model {
+  grid-column: 3;
+}
+
+.chat-composer-expanded .send-btn {
+  grid-column: 4;
 }
 
 .chat-composer:focus-within {
@@ -330,6 +369,7 @@
   min-width: 0;
   max-height: 132px;
   min-height: 36px;
+  overflow: hidden;
   resize: none;
   border: 0;
   background: transparent;
@@ -339,6 +379,7 @@
   font: inherit;
   font-size: 0.95rem;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .composer-model {

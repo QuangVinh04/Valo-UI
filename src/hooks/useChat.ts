@@ -1,5 +1,7 @@
 import { createContext, createElement, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useMatch, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useLocation, useMatch, useNavigate } from 'react-router-dom';
+import { useToast } from '@/context/ToastContext';
 import { deleteUploadedFile, uploadChatFile, type UploadTarget } from '@/services/file-upload.service';
 import { deleteConversation, getConversation, getConversations, renameConversation, sendMessageStream } from '@/services/chat.service';
 import type { ChatMessage, Conversation, FileUpload, StreamDoneEvent, StreamReadyEvent } from '@/types/chat.type';
@@ -12,6 +14,28 @@ export const chatModelOptions = [
 const availableModels = chatModelOptions.map((model) => model.value);
 export type ChatModelKey = typeof chatModelOptions[number]['value'];
 const defaultModel = availableModels[0];
+const chatFileLimits = {
+  maxFiles: 5,
+  maxFileSizeBytes: 10 * 1024 * 1024,
+  acceptedFileTypes: [
+    '.pdf',
+    '.txt',
+    '.xls',
+    '.xlsx',
+    'application/pdf',
+    'text/plain',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ].join(','),
+};
+
+const supportedFileExtensions = new Set(['pdf', 'txt', 'xls', 'xlsx']);
+const supportedFileMimes = new Set([
+  'application/pdf',
+  'text/plain',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+]);
 
 function normalizeModelName(modelName: string | null | undefined): ChatModelKey {
   return availableModels.includes(modelName as typeof availableModels[number])
@@ -51,6 +75,34 @@ function createPendingAssistantMessage(modelName: string): ChatMessage {
   };
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+
+  const units = ['KB', 'MB', 'GB'];
+  let value = bytes / 1024;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function getFileExtension(fileName: string): string {
+  const extension = fileName.split('.').pop();
+
+  return extension?.toLowerCase() ?? '';
+}
+
+function isSupportedChatFile(file: File): boolean {
+  const mime = file.type.toLowerCase();
+
+  return supportedFileExtensions.has(getFileExtension(file.name))
+    || supportedFileMimes.has(mime);
+}
+
 type ChatContextValue = ReturnType<typeof useChatState>;
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -65,7 +117,10 @@ export type SelectedChatFile = {
 };
 
 function useChatState() {
+  const { t } = useTranslation();
+  const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const chatRouteMatch = useMatch('/chat/:conversationId');
   const routeConversationId = chatRouteMatch?.params.conversationId ?? null;
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -81,6 +136,40 @@ function useChatState() {
   const streamAbortControllerRef = useRef<AbortController | null>(null);
   const historyResetVersionRef = useRef(0);
   const removedUploadIdsRef = useRef(new Set<string>());
+  const selectedFilesRef = useRef<SelectedChatFile[]>([]);
+
+  const cleanupUploadedFiles = useCallback((fileUploads: FileUpload[]) => {
+    fileUploads.forEach((fileUpload) => {
+      void deleteUploadedFile(fileUpload).catch(() => undefined);
+    });
+  }, []);
+
+  const cleanupSelectedUploads = useCallback((files: SelectedChatFile[]) => {
+    files.forEach((file) => {
+      removedUploadIdsRef.current.add(file.id);
+
+      if (file.fileUpload) {
+        void deleteUploadedFile(file.fileUpload)
+          .catch(() => undefined)
+          .finally(() => {
+            removedUploadIdsRef.current.delete(file.id);
+          });
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    selectedFilesRef.current = selectedFiles;
+  }, [selectedFiles]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/chat') || selectedFilesRef.current.length === 0) {
+      return;
+    }
+
+    cleanupSelectedUploads(selectedFilesRef.current);
+    setSelectedFiles([]);
+  }, [cleanupSelectedUploads, location.pathname]);
 
   useEffect(() => {
     let ignore = false;
@@ -123,6 +212,8 @@ function useChatState() {
     const resetVersion = historyResetVersionRef.current;
 
     setError('');
+    cleanupSelectedUploads(selectedFilesRef.current);
+    setSelectedFiles([]);
     setOpeningConversationId(conversationId);
     const existing = conversations.find((conversation) => conversation.id === conversationId);
     if (existing) {
@@ -148,7 +239,7 @@ function useChatState() {
         setOpeningConversationId((current) => current === conversationId ? null : current);
       }
     }
-  }, [conversations]);
+  }, [cleanupSelectedUploads, conversations]);
 
   useEffect(() => {
     if (!routeConversationId || routeConversationId === activeConversationId || openingConversationId === routeConversationId) {
@@ -161,6 +252,7 @@ function useChatState() {
   // Reset vùng chat để bắt đầu hội thoại mới.
   const startNewChat = useCallback(() => {
     streamAbortControllerRef.current?.abort();
+    cleanupSelectedUploads(selectedFilesRef.current);
     setActiveConversation(null);
     setMessages([]);
     setPrompt('');
@@ -168,13 +260,14 @@ function useChatState() {
     setError('');
     setOpeningConversationId(null);
     navigate('/chat');
-  }, [navigate]);
+  }, [cleanupSelectedUploads, navigate]);
 
   // Xóa toàn bộ trạng thái chat trong bộ nhớ sau khi backend đã xóa lịch sử.
   const clearChatHistoryState = useCallback(() => {
     historyResetVersionRef.current += 1;
     streamAbortControllerRef.current?.abort();
     streamAbortControllerRef.current = null;
+    cleanupSelectedUploads(selectedFilesRef.current);
 
     setConversations([]);
     setActiveConversation(null);
@@ -189,7 +282,7 @@ function useChatState() {
     if (routeConversationId) {
       navigate('/chat', { replace: true });
     }
-  }, [navigate, routeConversationId]);
+  }, [cleanupSelectedUploads, navigate, routeConversationId]);
 
   // Dừng stream đang chạy nhưng giữ lại nội dung đã nhận được.
   const stopGenerating = () => {
@@ -197,9 +290,55 @@ function useChatState() {
   };
 
   // Thêm tệp vào hàng đợi upload và cập nhật trạng thái từng tệp độc lập.
-  const addFiles = (files: FileList | File[]) => {
-    const availableSlots = Math.max(5 - selectedFiles.length, 0);
-    const nextFiles = Array.from(files).slice(0, availableSlots);
+  const addFiles = async (files: FileList | File[]) => {
+    const incomingFiles = Array.from(files);
+    let availableSlots = Math.max(chatFileLimits.maxFiles - selectedFiles.length, 0);
+    let rejectedByCount = 0;
+    const warningMessages: string[] = [];
+    const nextFiles: File[] = [];
+
+    for (const file of incomingFiles) {
+      if (availableSlots <= 0) {
+        rejectedByCount += 1;
+        continue;
+      }
+
+      if (!isSupportedChatFile(file)) {
+        warningMessages.push(t('chat.fileLimitUnsupportedType', { name: file.name }));
+        continue;
+      }
+
+      if (file.size > chatFileLimits.maxFileSizeBytes) {
+        warningMessages.push(t('chat.fileLimitSize', {
+          name: file.name,
+          maxSize: formatFileSize(chatFileLimits.maxFileSizeBytes),
+        }));
+        continue;
+      }
+
+      nextFiles.push(file);
+      availableSlots -= 1;
+    }
+
+    if (rejectedByCount > 0) {
+      warningMessages.unshift(t('chat.fileLimitTooMany', {
+        count: rejectedByCount,
+        max: chatFileLimits.maxFiles,
+      }));
+    }
+
+    if (warningMessages.length > 0) {
+      const visibleMessages = warningMessages.slice(0, 3);
+      const hiddenMessageCount = warningMessages.length - visibleMessages.length;
+      const message = hiddenMessageCount > 0
+        ? `${visibleMessages.join(' ')} ${t('chat.fileLimitMore', { count: hiddenMessageCount })}`
+        : visibleMessages.join(' ');
+
+      toast.warning(message);
+    }
+
+    if (nextFiles.length === 0) return;
+
     const nextSelectedFiles = nextFiles.map((file) => ({
       id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
       file,
@@ -350,6 +489,32 @@ function useChatState() {
 
     let assistantMessage = createPendingAssistantMessage(modelName);
 
+    const updatePendingAssistantMessage = (
+      content: string,
+      streamStatus?: ChatMessage['streamStatus']
+    ) => {
+      assistantMessage = {
+        ...assistantMessage,
+        content,
+        streamStatus,
+      };
+
+      setMessages((current) => current.map((message) => (
+        message.id === assistantMessage.id ? assistantMessage : message
+      )));
+    };
+
+    const appendAssistantStatus = (
+      statusMessage: string,
+      streamStatus?: ChatMessage['streamStatus']
+    ) => {
+      const nextContent = assistantMessage.content.trim()
+        ? `${assistantMessage.content.trimEnd()}\n\n${statusMessage}`
+        : statusMessage;
+
+      updatePendingAssistantMessage(nextContent, streamStatus);
+    };
+
     // Khi backend tạo hội thoại/tin nhắn xong, hiển thị ngay tin nhắn đầu tiên.
     const handleReady = (event: StreamReadyEvent) => {
       if (historyResetVersionRef.current !== resetVersion) return;
@@ -397,9 +562,7 @@ function useChatState() {
         ...assistantMessage,
         content: assistantMessage.content + token,
       };
-      setMessages((current) => current.map((message) => (
-        message.id === assistantMessage.id ? assistantMessage : message
-      )));
+      updatePendingAssistantMessage(assistantMessage.content);
     };
 
     // Khi stream kết thúc, thay tin nhắn tạm bằng dữ liệu chuẩn từ backend.
@@ -422,9 +585,11 @@ function useChatState() {
       }
     };
 
-    try {
-      const fileUploads = readyFiles.flatMap((file) => file.fileUpload ? [file.fileUpload] : []);
+    let didCompleteStream = false;
+    let didStreamFail = false;
+    const fileUploads = readyFiles.flatMap((file) => file.fileUpload ? [file.fileUpload] : []);
 
+    try {
       await sendMessageStream({
         conversationId: activeConversationId,
         question,
@@ -435,12 +600,31 @@ function useChatState() {
       }, {
         onReady: handleReady,
         onToken: handleToken,
-        onDone: handleDone,
-        onError: setError,
+        onDone: (event) => {
+          didCompleteStream = true;
+          void handleDone(event);
+        },
+        onError: (message) => {
+          didStreamFail = true;
+          setError(message);
+          appendAssistantStatus(t('chat.generationError', { message }), 'error');
+        },
       });
+
+      if (didStreamFail && !didCompleteStream) {
+        cleanupUploadedFiles(fileUploads);
+      }
     } catch (err) {
-      if (!(err instanceof DOMException && err.name === 'AbortError')) {
-        setError(err instanceof Error ? err.message : 'Cannot send message');
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        appendAssistantStatus(t('chat.generationStopped'));
+      } else {
+        const message = err instanceof Error ? err.message : 'Cannot send message';
+        setError(message);
+        appendAssistantStatus(t('chat.generationError', { message }), 'error');
+      }
+
+      if (!didCompleteStream) {
+        cleanupUploadedFiles(fileUploads);
       }
     } finally {
       if (streamAbortControllerRef.current === abortController) {
@@ -463,6 +647,7 @@ function useChatState() {
     isStreaming,
     isWaitingForUploads: selectedFiles.some((file) => file.status === 'uploading'),
     hasFailedUploads: selectedFiles.some((file) => file.status === 'error'),
+    fileLimits: chatFileLimits,
     error,
     setPrompt,
     setModelName,
@@ -475,7 +660,7 @@ function useChatState() {
     deleteChat,
     stopGenerating,
     sendPrompt,
-  }), [conversations, activeConversationId, messages, prompt, selectedFiles, modelName, isLoading, isOpeningConversation, openingConversationId, isStreaming, error, selectConversation, startNewChat, clearChatHistoryState]);
+  }), [conversations, activeConversationId, messages, prompt, selectedFiles, modelName, isLoading, isOpeningConversation, openingConversationId, isStreaming, error, t, toast, selectConversation, startNewChat, clearChatHistoryState]);
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {

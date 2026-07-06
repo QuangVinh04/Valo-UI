@@ -17,6 +17,7 @@ function ChatView() {
   const modelMenuRef = useRef<HTMLDivElement | null>(null);
   const isEmptyChat = !chat.messages.length && !chat.isLoading && !chat.isOpeningConversation;
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
+  const [isComposerExpanded, setIsComposerExpanded] = useState(false);
   const selectedModel = chatModelOptions.find((model) => model.value === chat.modelName) ?? chatModelOptions[0];
 
   useEffect(() => {
@@ -38,6 +39,11 @@ function ChatView() {
 
     textarea.style.height = 'auto';
     textarea.style.height = `${Math.min(textarea.scrollHeight, 148)}px`;
+    setIsComposerExpanded(
+      chat.prompt.length > 64
+      || chat.prompt.includes('\n')
+      || textarea.scrollHeight > 40
+    );
   }, [chat.prompt]);
 
   useEffect(() => {
@@ -109,15 +115,19 @@ function ChatView() {
               ))}
             </div>
           )}
-          <form className="chat-composer" onSubmit={handleSubmit}>
+          <form
+            className={`chat-composer ${isComposerExpanded ? 'chat-composer-expanded' : ''}`}
+            onSubmit={handleSubmit}
+          >
             <input
               ref={fileInputRef}
               type="file"
               multiple
+              accept={chat.fileLimits.acceptedFileTypes}
               className="file-input"
               onChange={(event) => {
                 if (event.target.files) {
-                  chat.addFiles(event.target.files);
+                  void chat.addFiles(event.target.files);
                   event.target.value = '';
                 }
               }}
@@ -128,7 +138,7 @@ function ChatView() {
               label={t('chat.attachFiles')}
               className="composer-icon"
               onClick={() => fileInputRef.current?.click()}
-              disabled={chat.isStreaming || chat.selectedFiles.length >= 5}
+              disabled={chat.isStreaming || chat.selectedFiles.length >= chat.fileLimits.maxFiles}
             />
             <textarea
               ref={promptRef}
@@ -256,8 +266,14 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
     );
   }
 
+  const assistantClassName = [
+    'assistant-msg',
+    isStreaming ? 'streaming' : '',
+    message.streamStatus === 'error' ? 'assistant-msg-error' : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <div className={`assistant-msg ${isStreaming ? 'streaming' : ''}`}>
+    <div className={assistantClassName}>
       <div className="bot-avatar"><Bot size={20} aria-hidden="true" /></div>
       <div>
         <div className="assistant-content">
