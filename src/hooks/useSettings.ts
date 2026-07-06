@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { usePreferences } from '@/context/PreferencesContext';
 import { useToast } from '@/context/ToastContext';
 import type { UserProfileDto } from '@/types/user.type';
 import type { ConfirmAction, SettingsFormModal } from '@/types/settings.type';
 import { useSettingsProfile } from './useSettingsProfile';
 
-const fallbackPhoneNumber = '+1 (555) 000-0000';
-const fallbackAddress = '123 Digital Way, Silicon Valley, CA';
-
 export function useSettings() {
   const preferences = usePreferences();
+  const { refreshAuth } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [modal, setModal] = useState<SettingsFormModal | null>(null);
@@ -18,8 +17,10 @@ export function useSettings() {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const { profile, error: profileError, updateProfileFromUser } = useSettingsProfile();
   const userId = profile.id;
-  const phoneNumber = profile.phoneNumber || fallbackPhoneNumber;
-  const address = profile.address || fallbackAddress;
+  const fullName = profile.fullName || '';
+  const email = profile.email || '';
+  const phoneNumber = profile.phoneNumber || '';
+  const address = profile.address || '';
 
   useEffect(() => {
     if (profileError) {
@@ -60,6 +61,7 @@ export function useSettings() {
   function handleProfileSaved(user: UserProfileDto) {
     // Cập nhật lại hồ sơ trên UI sau khi lưu thành công từ modal.
     updateProfileFromUser(user);
+    refreshAuth();
     closeModal();
   }
 
@@ -76,6 +78,8 @@ export function useSettings() {
     modal,
     showStorage,
     confirmAction,
+    fullName,
+    email,
     phoneNumber,
     address,
     userId,

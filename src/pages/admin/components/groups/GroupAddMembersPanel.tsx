@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, UserPlus } from 'lucide-react';
-import ActionIconButton from '@/components/common/ActionIconButton';
 import { useToast } from '@/context/ToastContext';
 import { addGroupMembers } from '@/services/group.service';
 import type { GroupMemberDto } from '@/types/group.type';
@@ -154,91 +152,85 @@ function GroupAddMembersPanel({
     debouncedSearch && !isLoadingUsers && availableUsers.length === 0;
 
   return (
-    <section className="add-members-page">
-      <div className="member-section-header">
-        <div>
-          <p className="form-kicker">{t('admin.groups.addMembers')}</p>
-          <span className="member-selection-count">
-            {t('common.selected', { count: selectedUsers.length })}
-          </span>
-        </div>
-
-        <div className="member-section-actions">
-          <ActionIconButton
-            icon={ArrowLeft}
-            label={t('common.back')}
-            onClick={onBack}
+    <section className="add-members-panel">
+      <div className="add-members-page">
+        <label className="member-search-field">
+          {t('admin.groups.searchUser')}
+          <input
+            placeholder={
+              isLoadingUsers
+                ? t('admin.users.loadingUsers')
+                : t('admin.groups.searchUsersPlaceholder')
+            }
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
             disabled={isAdding}
           />
+        </label>
 
-          <ActionIconButton
-            icon={UserPlus}
-            label={isAdding ? t('admin.users.adding') : t('admin.groups.addSelected')}
-            variant="primary"
-            onClick={handleAddMembers}
-            disabled={isAdding || selectedUsers.length === 0}
-            isLoading={isAdding}
-          />
+        <div className="member-picker-list">
+          {availableUsers.map((user) => (
+            <button
+              type="button"
+              key={user.id}
+              onClick={() => addSelectedUser(user)}
+            >
+              <strong>{user.fullName}</strong>
+              <span>{user.email}</span>
+            </button>
+          ))}
+
+          {shouldShowSearchHint && (
+            <span className="muted">
+              {t('admin.groups.typeToSearchUsers')}
+            </span>
+          )}
+
+          {shouldShowEmptyResult && (
+            <span className="muted">
+              {t('admin.groups.noAvailableUsers')}
+            </span>
+          )}
+        </div>
+
+        <p className="form-kicker">{t('admin.groups.selectedNewMembers')}</p>
+
+        <div className="tag-row">
+          {selectedUsers.length > 0 ? (
+            selectedUsers.map((user) => (
+              <button
+                className="tag tag-button"
+                type="button"
+                key={user.id}
+                onClick={() => removeSelectedUser(user.id)}
+              >
+                {user.fullName} x
+              </button>
+            ))
+          ) : (
+            <span className="muted">{t('admin.groups.noUsersSelected')}</span>
+          )}
         </div>
       </div>
 
-      <label className="member-search-field">
-        {t('admin.groups.searchUser')}
-        <input
-          placeholder={
-            isLoadingUsers
-              ? t('admin.users.loadingUsers')
-              : t('admin.groups.searchUsersPlaceholder')
-          }
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
+      <footer className="modal-footer">
+        <button
+          className="btn-cancel"
+          type="button"
+          onClick={onBack}
           disabled={isAdding}
-        />
-      </label>
-
-      <div className="member-picker-list">
-        {availableUsers.map((user) => (
-          <button
-            type="button"
-            key={user.id}
-            onClick={() => addSelectedUser(user)}
-          >
-            <strong>{user.fullName}</strong>
-            <span>{user.email}</span>
-          </button>
-        ))}
-
-        {shouldShowSearchHint && (
-          <span className="muted">
-            {t('admin.groups.typeToSearchUsers')}
-          </span>
-        )}
-
-        {shouldShowEmptyResult && (
-          <span className="muted">
-            {t('admin.groups.noAvailableUsers')}
-          </span>
-        )}
-      </div>
-
-      <p className="form-kicker">{t('admin.groups.selectedNewMembers')}</p>
-
-      <div className="tag-row">
-        {selectedUsers.length > 0 ? (
-          selectedUsers.map((user) => (
-            <button
-              className="tag tag-button"
-              type="button"
-              key={user.id}
-              onClick={() => removeSelectedUser(user.id)}
-            >
-              {user.fullName} x
-            </button>
-          ))
-        ) : (
-          <span className="muted">{t('admin.groups.noUsersSelected')}</span>
-        )}
-      </div>
+        >
+          {t('common.cancel')}
+        </button>
+        <button
+          className="btn-primary btn-xl"
+          type="button"
+          onClick={handleAddMembers}
+          disabled={isAdding || selectedUsers.length === 0}
+        >
+          {isAdding ? t('admin.users.adding') : t('common.add')}
+        </button>
+      </footer>
     </section>
   );
 }

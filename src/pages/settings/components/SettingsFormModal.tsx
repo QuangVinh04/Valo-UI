@@ -10,6 +10,7 @@ import type { SettingsFormModal as SettingsFormModalType } from '@/types/setting
 type SettingsFormModalProps = {
   mode: SettingsFormModalType;
   userId?: string;
+  fullName: string;
   phoneNumber: string;
   address: string;
   onClose: () => void;
@@ -19,6 +20,7 @@ type SettingsFormModalProps = {
 function SettingsFormModal({
   mode,
   userId,
+  fullName,
   phoneNumber,
   address,
   onClose,
@@ -27,14 +29,18 @@ function SettingsFormModal({
   const { t } = useTranslation();
   const { changePassword } = useAuth();
   const toast = useToast();
-  const [value, setValue] = useState(mode === 'phone' ? phoneNumber : address);
+  const [value, setValue] = useState(
+    mode === 'name' ? fullName : mode === 'phone' ? phoneNumber : address,
+  );
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const title = mode === 'phone'
-    ? t('settings.updatePhone')
+  const title = mode === 'name'
+    ? t('settings.updateFullName')
+    : mode === 'phone'
+      ? t('settings.updatePhone')
       : mode === 'address'
         ? t('settings.updateAddress')
         : t('settings.updatePassword');
@@ -64,7 +70,11 @@ function SettingsFormModal({
 
       const updatedUser = await updateCurrentUserProfile(
         userId,
-        mode === 'phone' ? { phoneNumber: value } : { address: value },
+        mode === 'name'
+          ? { fullName: value.trim() }
+          : mode === 'phone'
+            ? { phoneNumber: value }
+            : { address: value },
       );
       onProfileSaved(updatedUser);
     } catch (err) {
@@ -100,14 +110,18 @@ function SettingsFormModal({
         ) : (
           <div className="settings-modal-body">
             <label>
-              {mode === 'phone' ? t('settings.phoneNumber') : t('settings.address')}
+              {mode === 'name'
+                ? t('settings.fullName')
+                : mode === 'phone'
+                  ? t('settings.phoneNumber')
+                  : t('settings.address')}
               <input value={value} onChange={(event) => setValue(event.target.value)} required />
             </label>
           </div>
         )}
 
         <footer>
-          <button type="button" className="btn-muted" onClick={onClose}>{t('settings.cancel')}</button>
+          <button type="button" className="btn-cancel" onClick={onClose}>{t('settings.cancel')}</button>
           <button type="submit" className="btn-blue" disabled={isSaving}>
             {isSaving ? t('settings.saving') : t('settings.save')}
           </button>

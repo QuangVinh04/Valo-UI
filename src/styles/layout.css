@@ -167,7 +167,7 @@
 .account-menu-email {
   margin: 0;
   padding: 1rem 1rem 0.85rem;
-  color: #d8dce4;
+  color: var(--muted);
   border-bottom: 1px solid var(--line);
   font-size: 0.92rem;
   overflow-wrap: anywhere;

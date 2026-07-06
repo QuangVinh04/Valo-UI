@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { HardDrive, Languages, MapPin, Moon, Palette, Phone, ShieldCheck, Sun, Trash2, User, UserX } from 'lucide-react';
+import { HardDrive, Languages, Mail, MapPin, Moon, Palette, Phone, ShieldCheck, Sun, Trash2, User, UserRound, UserX } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import ConfirmActionModal from './ConfirmActionModal';
 import SettingRow from './SettingRow';
@@ -17,6 +17,8 @@ function SettingsView() {
     modal,
     showStorage,
     confirmAction,
+    fullName,
+    email,
     phoneNumber,
     address,
     userId,
@@ -35,9 +37,23 @@ function SettingsView() {
       <section>
         <h1 className="section-title"><span><User size={24} aria-hidden="true" /></span> {t('settings.personalInfo')}</h1>
         <SettingRow
+          icon={Mail}
+          title={t('settings.email')}
+          description={email || t('settings.notProvided')}
+        />
+        <SettingRow
+          icon={UserRound}
+          title={t('settings.fullName')}
+          description={fullName || t('settings.notProvided')}
+          buttonLabel={t('settings.update')}
+          buttonClassName="btn-blue"
+          onClick={() => openModal('name')}
+        />
+
+        <SettingRow
           icon={Phone}
           title={t('settings.phoneNumber')}
-          description={phoneNumber}
+          description={phoneNumber || t('settings.noInformation')}
           buttonLabel={t('settings.update')}
           buttonClassName="btn-blue"
           onClick={() => openModal('phone')}
@@ -45,7 +61,7 @@ function SettingsView() {
         <SettingRow
           icon={MapPin}
           title={t('settings.address')}
-          description={address}
+          description={address || t('settings.noInformation')}
           buttonLabel={t('settings.update')}
           buttonClassName="btn-blue"
           onClick={() => openModal('address')}
@@ -140,6 +156,7 @@ function SettingsView() {
         <SettingsFormModalComponent
           mode={modal}
           userId={userId}
+          fullName={fullName}
           phoneNumber={phoneNumber}
           address={address}
           onClose={closeModal}

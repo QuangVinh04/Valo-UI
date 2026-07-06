@@ -7,11 +7,13 @@ import type { AttachmentItem, DeleteAttachmentsResult } from '@/types/attachment
 export async function getAttachments(input: {
   cursor?: string | null;
   limit?: number;
+  search?: string;
 } = {}): Promise<{ data: AttachmentItem[]; meta: ApiMeta | null }> {
   try {
     const params = new URLSearchParams();
     params.set('limit', String(input.limit ?? 20));
     if (input.cursor) params.set('cursor', input.cursor);
+    if (input.search?.trim()) params.set('search', input.search.trim());
 
     const response = await api.get<ApiResponse<AttachmentItem[]>>(`/attachments?${params.toString()}`);
     if (!response.data.success || !response.data.data) {

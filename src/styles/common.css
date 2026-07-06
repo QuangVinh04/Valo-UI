@@ -46,6 +46,14 @@
   box-shadow: var(--button-shadow);
 }
 
+.btn-cancel {
+  min-width: 118px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+  font-weight: 500;
+}
+
 .btn-xl {
   min-height: 44px;
   border-radius: 10px;
@@ -170,7 +178,7 @@
   border: 1px solid var(--panel);
   border-radius: 999px;
   background: var(--danger);
-  color: #451616;
+  color: var(--danger-text);
   font-size: 0.72rem;
   font-weight: 600;
   line-height: 1;
@@ -188,10 +196,10 @@
   display: inline-grid;
   place-items: center;
   flex: 0 0 auto;
-  border: 1px solid var(--blue-2);
+  border: 1px solid var(--primary-button-bg);
   border-radius: 6px;
-  background: var(--blue-2);
-  color: #081d42;
+  background: var(--primary-button-bg);
+  color: var(--primary-button-text);
 }
 
 .ui-checkmark svg {
@@ -216,10 +224,10 @@ input[type="checkbox"]:not(.member-checkbox-input) {
 }
 
 input[type="checkbox"]:not(.member-checkbox-input):checked {
-  border-color: var(--blue-2);
+  border-color: var(--primary-button-bg);
   background:
-    var(--blue-2)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23081d42' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    var(--primary-button-bg)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
     center / 14px 14px no-repeat;
 }
 
@@ -304,10 +312,10 @@ input[type="checkbox"]:not(.member-checkbox-input):disabled {
 }
 
 .settings-modal input[type="checkbox"]:not(.member-checkbox-input):checked {
-  border-color: var(--blue-2);
+  border-color: var(--primary-button-bg);
   background:
-    var(--blue-2)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23081d42' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    var(--primary-button-bg)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
     center / 14px 14px no-repeat;
 }
 
@@ -344,7 +352,7 @@ input[type="checkbox"]:not(.member-checkbox-input):disabled {
   min-width: 96px;
   border: 0;
   background: var(--danger);
-  color: #451616;
+  color: var(--danger-text);
   border-radius: 8px;
 }
 

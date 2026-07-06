@@ -176,7 +176,7 @@ function GroupsView() {
               <span>{t('admin.groups.groupsSelected', { count: selectedGroupIds.length })}</span>
               <ActionIconButton
                 icon={Trash2}
-                label={t('admin.groups.deleteSelected')}
+                label={t('common.delete')}
                 variant="danger"
                 onClick={() => setIsConfirmingDeleteSelected(true)}
                 disabled={isDeletingSelectedGroups}
@@ -197,7 +197,7 @@ function GroupsView() {
               </form>
               <ActionIconButton
                 icon={Plus}
-                label={t('admin.groups.createNewGroup')}
+                label={t('common.add')}
                 variant="primary"
                 onClick={openCreateModal}
               />
@@ -205,20 +205,22 @@ function GroupsView() {
           )}
         </div>
         {isLoading && <div className="state-row">{t('admin.groups.loadingGroups')}</div>}
-        <DataTable
-          className="group-table"
-          columns={groupTableColumns}
-          data={tableGroups}
-          getRowKey={(group) => group.id}
-          getRowClassName={(group) => (selectedGroupIds.includes(group.id) ? 'selected' : undefined)}
-        />
-        {!isLoading && tableGroups.length === 0 && (
-          <div className="empty-state">
-            <Shield size={28} aria-hidden="true" />
-            <h3>{t('admin.groups.noGroupsFound')}</h3>
-            <p>{t('admin.groups.noGroupsDescription')}</p>
-          </div>
-        )}
+        <div className={`data-table-body ${!isLoading && tableGroups.length === 0 ? 'is-empty' : ''}`}>
+          <DataTable
+            className="group-table"
+            columns={groupTableColumns}
+            data={tableGroups}
+            getRowKey={(group) => group.id}
+            getRowClassName={(group) => (selectedGroupIds.includes(group.id) ? 'selected' : undefined)}
+          />
+          {!isLoading && tableGroups.length === 0 && (
+            <div className="empty-state">
+              <Shield size={28} aria-hidden="true" />
+              <h3>{t('admin.groups.noGroupsFound')}</h3>
+              <p>{t('admin.groups.noGroupsDescription')}</p>
+            </div>
+          )}
+        </div>
 
         <footer className="table-footer">
           <span>{t('admin.groups.showing', { from: showingFrom, to: showingTo, total: totalItems })}</span>
@@ -292,7 +294,7 @@ function GroupsView() {
                 onClick={() => void handleConfirmDeleteSelected()}
                 disabled={isDeletingSelectedGroups}
               >
-                {isDeletingSelectedGroups ? t('common.deleting') : t('admin.groups.deleteSelected')}
+                {isDeletingSelectedGroups ? t('common.deleting') : t('common.delete')}
               </button>
             </footer>
           </section>

@@ -50,14 +50,45 @@ export async function getGroupById(groupId: string): Promise<GroupDto> {
   }
 }
 
-export async function getGroupMembers(groupId: string): Promise<GroupMemberDto> {
+export function getGroupMembers(groupId: string): Promise<GroupMemberDto>;
+export function getGroupMembers(
+  groupId: string,
+  page: number,
+  limit: number,
+  search?: string,
+): Promise<{ group: GroupMemberDto; meta: ApiMeta | null }>;
+export async function getGroupMembers(
+  groupId: string,
+  page?: number,
+  limit?: number,
+  search?: string,
+): Promise<GroupMemberDto | { group: GroupMemberDto; meta: ApiMeta | null }> {
   try {
-    const response = await api.get<ApiResponse<GroupMemberDto>>(`/groups/${groupId}/users`);
+    const params = new URLSearchParams();
+
+    if (page !== undefined && limit !== undefined) {
+      params.set('page', String(page));
+      params.set('limit', String(limit));
+    }
+
+    if (search?.trim()) {
+      params.set('search', search.trim());
+    }
+
+    const query = params.toString();
+    const response = await api.get<ApiResponse<GroupMemberDto>>(`/groups/${groupId}/users${query ? `?${query}` : ''}`);
     if (!response.data.success || !response.data.data) {
       throw new AppError(response.data.message, response.status, response.data.errors);
     }
 
-    return response.data.data;
+    if (page === undefined || limit === undefined) {
+      return response.data.data;
+    }
+
+    return {
+      group: response.data.data,
+      meta: response.data.meta ?? null,
+    };
   } catch (error) {
     handleServiceError(error);
   }

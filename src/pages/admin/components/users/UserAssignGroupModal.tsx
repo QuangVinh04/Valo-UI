@@ -172,7 +172,7 @@ function UserAssignGroupModal({
 
         <footer className="modal-footer">
           <button
-            className="btn-cancel flat"
+            className="btn-cancel"
             type="button"
             onClick={onClose}
           >
@@ -187,7 +187,7 @@ function UserAssignGroupModal({
           >
             {isSubmitting
               ? t('admin.users.adding')
-              : t('admin.users.addToGroupsTitle')}
+              : t('common.add')}
           </button>
         </footer>
       </section>

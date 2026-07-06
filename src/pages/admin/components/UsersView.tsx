@@ -194,7 +194,7 @@ function UsersView() {
               <span>{t('admin.users.usersSelected', { count: selectedUserIds.length })}</span>
               <ActionIconButton
                 icon={Trash2}
-                label={t('admin.users.deleteSelected')}
+                label={t('common.delete')}
                 variant="danger"
                 onClick={() => setIsConfirmingDeleteSelected(true)}
                 disabled={isDeletingSelectedUsers}
@@ -202,7 +202,7 @@ function UsersView() {
               />
               <ActionIconButton
                 icon={UserPlus}
-                label={t('admin.users.addToGroup')}
+                label={t('common.add')}
                 onClick={openAssignGroupModal}
                 disabled={isDeletingSelectedUsers}
               />
@@ -279,20 +279,22 @@ function UsersView() {
 
         {isLoading && <div className="state-row">{t('admin.users.loadingUsers')}</div>}
 
-        <DataTable
-          className="users-table"
-          columns={userTableColumns}
-          data={tableUsers}
-          getRowKey={(user) => user.id}
-          getRowClassName={(user) => (selectedUserIds.includes(user.id) ? 'selected' : undefined)}
-        />
-        {!isLoading && tableUsers.length === 0 && (
-          <div className="empty-state">
-            <Plus size={28} aria-hidden="true" />
-            <h3>{t('admin.users.noUsersFound')}</h3>
-            <p>{t('admin.users.noUsersDescription')}</p>
-          </div>
-        )}
+        <div className={`data-table-body ${!isLoading && tableUsers.length === 0 ? 'is-empty' : ''}`}>
+          <DataTable
+            className="users-table"
+            columns={userTableColumns}
+            data={tableUsers}
+            getRowKey={(user) => user.id}
+            getRowClassName={(user) => (selectedUserIds.includes(user.id) ? 'selected' : undefined)}
+          />
+          {!isLoading && tableUsers.length === 0 && (
+            <div className="empty-state">
+              <Plus size={28} aria-hidden="true" />
+              <h3>{t('admin.users.noUsersFound')}</h3>
+              <p>{t('admin.users.noUsersDescription')}</p>
+            </div>
+          )}
+        </div>
 
         <footer className="table-footer">
           <span>{t('admin.users.showing', { from: showingFrom, to: showingTo, total: totalItems })}</span>
@@ -365,7 +367,7 @@ function UsersView() {
                 onClick={() => void handleConfirmDeleteSelected()}
                 disabled={isDeletingSelectedUsers}
               >
-                {isDeletingSelectedUsers ? t('common.deleting') : t('admin.users.deleteSelected')}
+                {isDeletingSelectedUsers ? t('common.deleting') : t('common.delete')}
               </button>
             </footer>
           </section>

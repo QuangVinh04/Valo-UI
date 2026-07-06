@@ -29,34 +29,36 @@ function DataTable<T>({
   getRowClassName,
 }: DataTableProps<T>) {
   return (
-    <table className={joinClassNames('data-table', className)}>
-      <thead>
-        <tr>
-          {columns.map((column) => (
-            <th
-              className={joinClassNames(column.className, column.headerClassName)}
-              key={column.key}
-            >
-              {column.header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((item, index) => (
-          <tr className={getRowClassName?.(item, index)} key={getRowKey(item, index)}>
+    <div className="data-table-scroll" role="region" tabIndex={0}>
+      <table className={joinClassNames('data-table', className)}>
+        <thead>
+          <tr>
             {columns.map((column) => (
-              <td
-                className={joinClassNames(column.className, column.cellClassName)}
+              <th
+                className={joinClassNames(column.className, column.headerClassName)}
                 key={column.key}
               >
-                {column.render(item, index)}
-              </td>
+                {column.header}
+              </th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {data.map((item, index) => (
+            <tr className={getRowClassName?.(item, index)} key={getRowKey(item, index)}>
+              {columns.map((column) => (
+                <td
+                  className={joinClassNames(column.className, column.cellClassName)}
+                  key={column.key}
+                >
+                  {column.render(item, index)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

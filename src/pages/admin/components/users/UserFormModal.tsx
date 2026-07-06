@@ -309,8 +309,8 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
             {isSubmitting
               ? t('admin.users.saving')
               : isUpdate
-                ? t('admin.users.updateUserTitle')
-                : t('admin.users.createUser')}
+                ? t('common.update')
+                : t('common.create')}
           </button>
         </footer>
       </section>

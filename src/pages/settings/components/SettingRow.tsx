@@ -4,10 +4,10 @@ type SettingRowProps = {
   icon: LucideIcon;
   title: string;
   description: string;
-  buttonLabel: string;
-  buttonClassName: string;
+  buttonLabel?: string;
+  buttonClassName?: string;
   danger?: boolean;
-  onClick: () => void;
+  onClick?: () => void;
 };
 
 function SettingRow({
@@ -30,9 +30,13 @@ function SettingRow({
         <h3>{title}</h3>
         <p>{description}</p>
       </div>
-      <button type="button" className={buttonClassName} onClick={onClick}>
-        {buttonLabel}
-      </button>
+      {buttonLabel && onClick ? (
+        <button type="button" className={buttonClassName} onClick={onClick}>
+          {buttonLabel}
+        </button>
+      ) : (
+        <span aria-hidden="true" />
+      )}
     </div>
   );
 }

@@ -25,6 +25,7 @@ export type UserListItemDto = {
 };
 
 export type UserProfileUpdate = {
+  fullName?: string;
   phoneNumber?: string;
   address?: string;
 };
@@ -57,6 +58,7 @@ export type CreatedUserDto = {
 export type UserProfileDto = {
   id: string;
   fullName: string;
+  email?: string;
   phoneNumber: string | null;
   address: string | null;
 };

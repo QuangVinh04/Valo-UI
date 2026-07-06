@@ -337,16 +337,18 @@ function SelectedFilePreview({
           <FileText size={22} aria-hidden="true" />
         )}
       </a>
+      <div className="selected-file-meta">
+        <span title={file.name}>{file.name}</span>
+        <small
+          className={`selected-file-status ${selectedFile.status} ${selectedFile.uploadTarget === 'local-fallback' ? 'fallback' : ''}`}
+          title={selectedFile.error}
+        >
+          {statusLabel}
+        </small>
+      </div>
       <button type="button" onClick={() => onRemove(index)} aria-label={t('chat.removeFile', { name: file.name })}>
         <X size={14} aria-hidden="true" />
       </button>
-      <span title={file.name}>{file.name}</span>
-      <small
-        className={`selected-file-status ${selectedFile.status} ${selectedFile.uploadTarget === 'local-fallback' ? 'fallback' : ''}`}
-        title={selectedFile.error}
-      >
-        {statusLabel}
-      </small>
     </div>
   );
 }

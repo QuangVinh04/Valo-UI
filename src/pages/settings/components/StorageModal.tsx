@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, FileText, Loader2, Trash2 } from 'lucide-react';
+import { Download, FileText, Loader2, Search, Trash2 } from 'lucide-react';
 import ActionIconButton from '@/components/common/ActionIconButton';
 import { useToast } from '@/context/ToastContext';
 import { deleteAttachments, getAttachments } from '@/services/attachment.service';
@@ -22,22 +22,34 @@ function StorageModal({ onClose }: StorageModalProps) {
   const toast = useToast();
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
+  const [submittedSearch, setSubmittedSearch] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const selectedCount = selectedIds.length;
+  const selectedIdsSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const selectedAttachments = useMemo(
+    () => attachments.filter((attachment) => selectedIdsSet.has(attachment.id)),
+    [attachments, selectedIdsSet],
+  );
+  const hasSelectedFiles = selectedCount > 0;
+  const hasSearch = Boolean(submittedSearch.trim());
+  const isTableEmpty = attachments.length === 0;
   const allVisibleSelected = attachments.length > 0
     && attachments.every((attachment) => selectedIds.includes(attachment.id));
-
-  const selectedIdsSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
   // Tải trang tệp đầu tiên hoặc trang kế tiếp dựa trên cursor.
   const loadAttachments = async (cursor?: string | null) => {
     setIsLoading(true);
 
     try {
-      const result = await getAttachments({ cursor, limit: 20 });
+      const result = await getAttachments({
+        cursor,
+        limit: 20,
+        search: submittedSearch,
+      });
       setAttachments((current) => cursor
         ? [...current, ...result.data]
         : result.data);
@@ -51,7 +63,7 @@ function StorageModal({ onClose }: StorageModalProps) {
 
   useEffect(() => {
     void loadAttachments();
-  }, []);
+  }, [submittedSearch]);
 
   // Chọn hoặc bỏ chọn một tệp trong danh sách lưu trữ.
   const toggleAttachment = (id: string) => {
@@ -65,8 +77,9 @@ function StorageModal({ onClose }: StorageModalProps) {
   // Chọn toàn bộ tệp đang hiển thị hoặc bỏ chọn nhóm đó.
   const toggleAllVisible = () => {
     setSelectedIds((current) => {
+      const visibleIds = new Set(attachments.map((attachment) => attachment.id));
+
       if (allVisibleSelected) {
-        const visibleIds = new Set(attachments.map((attachment) => attachment.id));
         return current.filter((id) => !visibleIds.has(id));
       }
 
@@ -103,6 +116,23 @@ function StorageModal({ onClose }: StorageModalProps) {
     }
   };
 
+  const handleDownloadSelected = () => {
+    selectedAttachments.forEach((attachment) => {
+      if (!attachment.url) {
+        return;
+      }
+
+      window.open(attachment.url, '_blank', 'noopener,noreferrer');
+    });
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSelectedIds([]);
+    setNextCursor(null);
+    setSubmittedSearch(search.trim());
+  };
+
   return (
     <div className="settings-modal-backdrop" onClick={() => { if (!isDeleting) onClose(); }}>
       <section
@@ -112,23 +142,45 @@ function StorageModal({ onClose }: StorageModalProps) {
       >
         <header>
           <div>
-            <p className="storage-modal-kicker">{t('settings.storage')}</p>
             <h3 id="storage-modal-title">{t('settings.uploadedFiles')}</h3>
             <p className="storage-modal-description">{t('settings.storageManageDescription')}</p>
           </div>
           <button type="button" aria-label={t('settings.cancel')} onClick={onClose}>×</button>
         </header>
 
-        <div className="storage-toolbar">
-          <span>{t('settings.selectedCount', { count: selectedCount })}</span>
-          <ActionIconButton
-            icon={Trash2}
-            label={t('settings.deleteSelected')}
-            variant="danger"
-            disabled={!selectedCount || isDeleting}
-            onClick={handleDeleteSelected}
-            isLoading={isDeleting}
-          />
+        <div className={`storage-toolbar ${hasSelectedFiles ? 'selection-actions' : ''}`}>
+          {hasSelectedFiles ? (
+            <>
+              <span>{t('settings.selectedCount', { count: selectedCount })}</span>
+              <div className="storage-selection-actions">
+                <ActionIconButton
+                  icon={Download}
+                  label={t('settings.downloadSelected')}
+                  disabled={!selectedAttachments.some((attachment) => attachment.url) || isDeleting}
+                  onClick={handleDownloadSelected}
+                />
+                <ActionIconButton
+                  icon={Trash2}
+                  label={t('settings.deleteSelected')}
+                  variant="danger"
+                  disabled={isDeleting}
+                  onClick={handleDeleteSelected}
+                  isLoading={isDeleting}
+                />
+              </div>
+            </>
+          ) : (
+            <form className="storage-search-bar" onSubmit={handleSearchSubmit}>
+              <input
+                value={search}
+                placeholder={t('settings.searchFilesPlaceholder')}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              <button type="submit" aria-label={t('common.search')}>
+                <Search size={22} aria-hidden="true" />
+              </button>
+            </form>
+          )}
         </div>
 
         <div className="storage-table" role="table" aria-label={t('settings.uploadedFiles')}>
@@ -148,48 +200,58 @@ function StorageModal({ onClose }: StorageModalProps) {
             <span />
           </div>
 
-          {attachments.map((attachment) => (
-            <div className="storage-row" role="row" key={attachment.id}>
-              <label className="storage-check">
-                <input
-                  type="checkbox"
-                  checked={selectedIdsSet.has(attachment.id)}
-                  onChange={() => toggleAttachment(attachment.id)}
-                />
-                <span className="sr-only">{attachment.name}</span>
-              </label>
-              <div className="storage-file">
-                <span className="storage-file-icon"><FileText size={16} aria-hidden="true" /></span>
-                <span title={attachment.name}>{attachment.name}</span>
+          <div className="storage-table-body">
+            {attachments.map((attachment) => (
+              <div className="storage-row" role="row" key={attachment.id}>
+                <label className="storage-check">
+                  <input
+                    type="checkbox"
+                    checked={selectedIdsSet.has(attachment.id)}
+                    onChange={() => toggleAttachment(attachment.id)}
+                  />
+                  <span className="sr-only">{attachment.name}</span>
+                </label>
+                <div className="storage-file">
+                  <span className="storage-file-icon"><FileText size={16} aria-hidden="true" /></span>
+                  <span title={attachment.name}>{attachment.name}</span>
+                </div>
+                <span>{new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(attachment.createdAt))}</span>
+                <span>{formatBytes(attachment.size)}</span>
+                <a
+                  className="storage-download"
+                  href={attachment.url ?? undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={t('settings.downloadFile', { name: attachment.name })}
+                >
+                  <Download size={16} aria-hidden="true" />
+                </a>
               </div>
-              <span>{new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(attachment.createdAt))}</span>
-              <span>{formatBytes(attachment.size)}</span>
-              <a
-                className="storage-download"
-                href={attachment.url ?? undefined}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={t('settings.downloadFile', { name: attachment.name })}
-              >
-                <Download size={16} aria-hidden="true" />
-              </a>
-            </div>
-          ))}
+            ))}
+
+            {!isLoading && isTableEmpty && (
+              <p className="storage-empty">
+                {hasSearch ? t('settings.storageNoResults') : t('settings.storageEmpty')}
+              </p>
+            )}
+
+            {isLoading && (
+              <p className="storage-loading"><Loader2 size={16} aria-hidden="true" /> {t('settings.loading')}</p>
+            )}
+          </div>
         </div>
-
-        {!isLoading && !attachments.length && (
-          <p className="storage-empty">{t('settings.storageEmpty')}</p>
-        )}
-
-        {isLoading && (
-          <p className="storage-loading"><Loader2 size={16} aria-hidden="true" /> {t('settings.loading')}</p>
-        )}
 
         {nextCursor && !isLoading && (
           <button type="button" className="btn-muted storage-load-more" onClick={() => loadAttachments(nextCursor)}>
             {t('settings.loadMore')}
           </button>
         )}
+
+        <footer>
+          <button type="button" className="btn-cancel" onClick={onClose} disabled={isDeleting}>
+            {t('common.close')}
+          </button>
+        </footer>
       </section>
     </div>
   );

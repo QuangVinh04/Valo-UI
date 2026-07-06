@@ -236,7 +236,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
 
         <footer className="modal-footer">
           <button
-            className="btn-cancel flat"
+            className="btn-cancel"
             type="button"
             onClick={onClose}
           >
@@ -251,7 +251,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
           >
             {isSubmitting
               ? t('admin.groups.creating')
-              : t('admin.groups.initializeGroup')}
+              : t('common.create')}
           </button>
         </footer>
       </section>

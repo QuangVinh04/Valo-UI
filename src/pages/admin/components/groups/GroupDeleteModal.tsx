@@ -51,7 +51,7 @@ function GroupDeleteModal({ group, onClose, onDeleted }: GroupDeleteModalProps) 
         <footer className="modal-footer">
           <button className="btn-muted" type="button" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn-solid-danger" type="button" onClick={handleDelete} disabled={isDeleting}>
-            {isDeleting ? t('common.deleting') : t('admin.groups.deleteGroupTitle')}
+            {isDeleting ? t('common.deleting') : t('common.delete')}
           </button>
         </footer>
       </section>

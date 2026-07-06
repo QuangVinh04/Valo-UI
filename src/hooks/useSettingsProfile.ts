@@ -20,6 +20,8 @@ export function useSettingsProfile() {
         if (!ignore) {
           setProfile({
             id: user.id,
+            fullName: user.fullName,
+            email: user.email,
             phoneNumber: user.phoneNumber,
             address: user.address,
           });
@@ -39,11 +41,13 @@ export function useSettingsProfile() {
   }, [t]);
 
   const updateProfileFromUser = (user: UserProfileDto) => {
-    setProfile({
+    setProfile((current) => ({
       id: user.id,
+      fullName: user.fullName,
+      email: user.email ?? current.email,
       phoneNumber: user.phoneNumber,
       address: user.address,
-    });
+    }));
   };
 
   return {

@@ -213,9 +213,9 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
         </div>
 
         <footer className="modal-footer">
-          <button className="btn-cancel flat" type="button" onClick={onClose}>{t('common.cancel')}</button>
+          <button className="btn-cancel" type="button" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn-primary btn-xl" type="button" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? t('admin.groups.updating') : t('admin.groups.updateGroupTitle')}
+            {isSubmitting ? t('admin.groups.updating') : t('common.update')}
           </button>
         </footer>
       </section>

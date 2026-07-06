@@ -69,6 +69,8 @@
 }
 
 .settings-card {
+  display: flex;
+  flex-direction: column;
   padding: 1.25rem;
 }
 
@@ -84,11 +86,16 @@
   font-size: 1.1rem;
 }
 
+.settings-card > p:not(.label) {
+  min-height: calc(1.55em * 2);
+}
+
 .theme-choice {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-top: 1.25rem;
+  margin-top: auto;
+  padding-top: 1.25rem;
 }
 
 .theme-btn,
@@ -113,7 +120,7 @@
 }
 
 .select-mock {
-  margin-top: 1.25rem;
+  margin-top: auto;
   text-align: left;
 }
 
@@ -137,7 +144,25 @@
   max-height: min(760px, calc(100vh - 3rem));
   display: flex;
   flex-direction: column;
-  padding: 1.8rem;
+  overflow: hidden;
+  padding: 0;
+}
+
+.settings-modal.storage-modal header,
+.settings-modal.storage-modal .storage-toolbar,
+.settings-modal.storage-modal footer {
+  padding-inline: 1.8rem;
+}
+
+.settings-modal.storage-modal header {
+  padding-top: 1.8rem;
+}
+
+.settings-modal.storage-modal footer {
+  margin-top: 0;
+  border-top: 1px solid var(--line);
+  padding-block: 1rem;
+  background: var(--modal-footer-bg);
 }
 
 .settings-modal header,
@@ -196,6 +221,19 @@
   margin-top: 1.5rem;
 }
 
+.settings-modal footer .btn-primary,
+.settings-modal footer .btn-blue,
+.settings-modal footer .btn-cancel,
+.settings-modal footer .btn-muted,
+.settings-modal footer .btn-outline-danger,
+.settings-modal footer .btn-solid-danger {
+  min-width: 118px;
+  min-height: 44px;
+  border-radius: 10px;
+  padding: 0 1.15rem;
+  font-size: 0.98rem;
+}
+
 .settings-modal button:disabled {
   cursor: not-allowed;
   opacity: 0.68;
@@ -222,8 +260,80 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.1rem;
+  min-height: 74px;
+  margin-bottom: 0;
   color: var(--muted);
+}
+
+.storage-toolbar.selection-actions {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.storage-search-bar {
+  position: relative;
+  flex: 0 1 630px;
+  width: min(420px, 100%);
+  max-width: 420px;
+  min-width: 0;
+  min-height: 44px;
+  display: block;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--modal-input-border);
+  border-radius: 8px;
+  background: var(--modal-input-bg);
+}
+
+.storage-search-bar,
+.storage-search-bar:focus,
+.storage-search-bar:focus-visible,
+.storage-search-bar input,
+.storage-search-bar input:focus,
+.storage-search-bar input:focus-visible,
+.storage-search-bar button,
+.storage-search-bar button:focus,
+.storage-search-bar button:focus-visible {
+  outline: none;
+}
+
+.storage-search-bar input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 0 3.35rem 0 1.35rem;
+  font: inherit;
+  letter-spacing: 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.storage-search-bar button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 48px;
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+
+.storage-search-bar:focus-within {
+  border-color: #679ce8;
+  box-shadow: none;
+}
+
+.storage-selection-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
 }
 
 .storage-load-more {
@@ -235,14 +345,23 @@
 
 .storage-table {
   display: grid;
-  flex: 1;
+  grid-template-rows: auto minmax(0, 1fr);
+  flex: 1 1 auto;
   min-height: 260px;
   max-height: min(520px, 52vh);
-  overflow-y: auto;
+  overflow: hidden;
   overflow-x: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
+  margin-inline: 1.8rem;
+  margin-bottom: 1.35rem;
+}
+
+.storage-table-body {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .storage-row {
@@ -262,8 +381,6 @@
 }
 
 .storage-head {
-  position: sticky;
-  top: 0;
   z-index: 1;
   min-height: 48px;
   background: var(--panel);
@@ -335,14 +452,15 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 140px;
+  min-height: 210px;
+  height: 100%;
   margin: 0;
   color: var(--muted);
 }
 
 .storage-load-more {
   width: 100%;
-  margin-top: 1rem;
+  margin: 1rem 1.8rem 0;
 }
 
 .sr-only {

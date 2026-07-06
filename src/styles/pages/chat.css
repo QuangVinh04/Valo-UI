@@ -430,7 +430,7 @@
   height: 20px;
   display: grid;
   place-items: center;
-  color: #081d42;
+  color: var(--primary-button-text);
 }
 
 .model-menu-item strong,
@@ -462,8 +462,8 @@
   place-items: center;
   border: 0;
   border-radius: 999px;
-  background: var(--blue-2);
-  color: #071d42;
+  background: var(--primary-button-bg);
+  color: var(--primary-button-text);
   transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
 }
 
@@ -497,35 +497,42 @@
 .selected-files {
   width: min(760px, 100%);
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
+  flex-wrap: nowrap;
+  gap: 0.55rem;
   margin: 0 auto 0.7rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.15rem;
+  scrollbar-width: thin;
 }
 
 .selected-file {
   position: relative;
   display: grid;
-  width: 164px;
-  min-width: 0;
-  gap: 0.45rem;
-  padding: 0.5rem;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  width: 260px;
+  min-width: 260px;
+  gap: 0.65rem;
+  padding: 0.45rem 2.1rem 0.45rem 0.5rem;
   border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--composer-bg);
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 0.86rem;
 }
 
 .selected-file-preview {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  width: 42px;
+  height: 42px;
   display: grid;
   place-items: center;
+  flex: 0 0 auto;
   overflow: hidden;
   border: 1px solid var(--line-strong);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--panel) 78%, transparent);
-  color: var(--text);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--blue) 82%, #ffffff);
+  color: #fff;
 }
 
 .selected-file-preview img {
@@ -539,7 +546,13 @@
   color: var(--soft);
 }
 
-.selected-file span,
+.selected-file-meta {
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.selected-file-meta > span,
 .selected-file-status {
   max-width: 100%;
   min-width: 0;
@@ -550,7 +563,7 @@
 
 .selected-file-status {
   color: var(--soft);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
 }
 
 .selected-file-status.ready {
@@ -558,7 +571,7 @@
 }
 
 .selected-file-status.fallback {
-  color: #f0c36a;
+  color: var(--warning);
 }
 
 .selected-file-status.error {
@@ -567,16 +580,17 @@
 
 .selected-file button {
   position: absolute;
-  top: 0.3rem;
-  right: 0.3rem;
+  top: 0.35rem;
+  right: 0.35rem;
   display: grid;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   place-items: center;
-  border: 1px solid var(--line-strong);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
-  color: var(--text);
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 92%, transparent);
+  color: var(--bg);
+  padding: 0;
 }
 
 .chat-disclaimer {
