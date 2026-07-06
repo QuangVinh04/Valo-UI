@@ -12,6 +12,7 @@ import '@/styles/pages/home.css';
 type PasswordCheck = {
   key: string;
   labelKey: string;
+  errorKey: string;
   isValid: boolean;
 };
 
@@ -20,31 +21,37 @@ function getPasswordChecks(password: string, currentPassword: string): PasswordC
     {
       key: 'length',
       labelKey: 'auth.passwordRuleLength',
+      errorKey: 'auth.passwordErrorLength',
       isValid: password.length >= 8,
     },
     {
       key: 'uppercase',
       labelKey: 'auth.passwordRuleUppercase',
+      errorKey: 'auth.passwordErrorUppercase',
       isValid: /[A-Z]/.test(password),
     },
     {
       key: 'lowercase',
       labelKey: 'auth.passwordRuleLowercase',
+      errorKey: 'auth.passwordErrorLowercase',
       isValid: /[a-z]/.test(password),
     },
     {
       key: 'number',
       labelKey: 'auth.passwordRuleNumber',
+      errorKey: 'auth.passwordErrorNumber',
       isValid: /\d/.test(password),
     },
     {
       key: 'symbol',
       labelKey: 'auth.passwordRuleSymbol',
+      errorKey: 'auth.passwordErrorSymbol',
       isValid: /[^A-Za-z0-9]/.test(password),
     },
     {
       key: 'different',
       labelKey: 'auth.passwordRuleDifferent',
+      errorKey: 'auth.passwordErrorDifferent',
       isValid: Boolean(password) && (!currentPassword || password !== currentPassword),
     },
   ];
@@ -64,6 +71,9 @@ function ChangePasswordPage() {
     [currentPassword, newPassword]
   );
   const isPasswordStrong = passwordChecks.every((check) => check.isValid);
+  const passwordValidationError = newPassword
+    ? passwordChecks.find((check) => !check.isValid)?.errorKey
+    : undefined;
   const doPasswordsMatch = Boolean(confirmPassword) && newPassword === confirmPassword;
   const canSubmit = Boolean(currentPassword)
     && isPasswordStrong
@@ -141,6 +151,7 @@ function ChangePasswordPage() {
 
               <label htmlFor="newPassword">{t('auth.newPassword')}</label>
               <input
+                className={passwordValidationError ? 'field-invalid' : undefined}
                 id="newPassword"
                 type="password"
                 autoComplete="new-password"
@@ -148,21 +159,19 @@ function ChangePasswordPage() {
                 minLength={8}
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
+                aria-invalid={Boolean(passwordValidationError)}
+                aria-describedby={passwordValidationError ? 'new-password-error' : 'new-password-hint'}
                 required
               />
-              <div className="password-rules" aria-live="polite">
-                <p>{t('auth.passwordRequirements')}</p>
-                <ul>
-                  {passwordChecks.map((check) => (
-                    <li
-                      key={check.key}
-                      className={check.isValid ? 'is-valid' : undefined}
-                    >
-                      {t(check.labelKey)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {passwordValidationError ? (
+                <p className="auth-field-error" id="new-password-error" aria-live="polite">
+                  {t(passwordValidationError)}
+                </p>
+              ) : (
+                <div className="password-rules" id="new-password-hint">
+                  <p>{t('auth.passwordChangeRequirements')}</p>
+                </div>
+              )}
 
               <label htmlFor="confirmPassword">{t('auth.confirmPassword')}</label>
               <input

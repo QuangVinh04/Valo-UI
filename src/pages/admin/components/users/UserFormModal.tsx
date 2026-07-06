@@ -19,29 +19,39 @@ type RequiredField = 'fullName' | 'email' | 'password' | 'confirmPassword';
 
 type PasswordCheck = {
   labelKey: string;
+  errorKey: string;
   isValid: boolean;
 };
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
 
 function getPasswordChecks(password: string): PasswordCheck[] {
   return [
     {
       labelKey: 'auth.passwordRuleLength',
+      errorKey: 'auth.passwordErrorLength',
       isValid: password.length >= 8,
     },
     {
       labelKey: 'auth.passwordRuleUppercase',
+      errorKey: 'auth.passwordErrorUppercase',
       isValid: /[A-Z]/.test(password),
     },
     {
       labelKey: 'auth.passwordRuleLowercase',
+      errorKey: 'auth.passwordErrorLowercase',
       isValid: /[a-z]/.test(password),
     },
     {
       labelKey: 'auth.passwordRuleNumber',
+      errorKey: 'auth.passwordErrorNumber',
       isValid: /\d/.test(password),
     },
     {
       labelKey: 'auth.passwordRuleSymbol',
+      errorKey: 'auth.passwordErrorSymbol',
       isValid: /[^A-Za-z0-9]/.test(password),
     },
   ];
@@ -68,15 +78,20 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const passwordChecks = useMemo(() => getPasswordChecks(password), [password]);
   const isPasswordStrong = passwordChecks.every((check) => check.isValid);
+  const passwordRuleErrorKey = passwordChecks.find((check) => !check.isValid)?.errorKey;
 
   const fullNameError = touchedFields.fullName && !fullName.trim()
     ? t('admin.users.fullNameRequired')
     : '';
-  const emailError = !isUpdate && touchedFields.email && !email.trim()
-    ? t('admin.users.emailRequired')
+  const emailError = !isUpdate
+    ? touchedFields.email && !email.trim()
+      ? t('admin.users.emailRequired')
+      : email.trim() && !isValidEmail(email)
+        ? t('auth.emailFormatInvalid')
+        : ''
     : '';
-  const passwordError = !isUpdate && touchedFields.password && !isPasswordStrong
-    ? t('auth.passwordStrengthFailed')
+  const passwordError = !isUpdate && (password || touchedFields.password) && passwordRuleErrorKey
+    ? t(passwordRuleErrorKey)
     : '';
   const confirmPasswordError = !isUpdate && touchedFields.confirmPassword && password !== confirmPassword
     ? t('auth.passwordsDoNotMatch')
@@ -101,6 +116,12 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
       });
 
       toast.error(t('admin.users.nameEmailRequired'));
+      return;
+    }
+
+    if (!isUpdate && !isValidEmail(normalizedEmail)) {
+      setTouchedFields((current) => ({ ...current, email: true }));
+      toast.error(t('auth.emailFormatInvalid'));
       return;
     }
 
@@ -203,6 +224,7 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
                 isUpdate ? 'locked-input' : undefined,
                 emailError ? 'field-invalid' : undefined,
               ].filter(Boolean).join(' ') || undefined}
+              type="email"
               value={email}
               placeholder="name@company.com"
               onChange={(event) => setEmail(event.target.value)}
@@ -233,23 +255,18 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
                   onChange={(event) => setPassword(event.target.value)}
                   onBlur={() => markFieldTouched('password')}
                   aria-invalid={Boolean(passwordError)}
-                  aria-describedby="user-password-error"
+                  aria-describedby={passwordError ? 'user-password-error' : 'user-password-hint'}
                 />
                 <span className="field-error" id="user-password-error" aria-live="polite">
                   {passwordError}
                 </span>
               </label>
 
-              <div className="modal-password-rules" aria-live="polite">
-                <p>{t('auth.passwordRequirements')}</p>
-                <ul>
-                  {passwordChecks.map((check) => (
-                    <li className={check.isValid ? 'is-valid' : undefined} key={check.labelKey}>
-                      {t(check.labelKey)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {!passwordError && (
+                <div className="modal-password-rules" id="user-password-hint">
+                  <p>{t('auth.passwordRequirements')}</p>
+                </div>
+              )}
 
               <label>
                 <span className="form-label-text">

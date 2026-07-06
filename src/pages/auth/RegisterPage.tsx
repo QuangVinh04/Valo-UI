@@ -11,29 +11,39 @@ import '@/styles/pages/home.css';
 
 type PasswordCheck = {
   labelKey: string;
+  errorKey: string;
   isValid: boolean;
 };
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
 
 function getRegistrationPasswordChecks(password: string): PasswordCheck[] {
   return [
     {
       labelKey: 'auth.passwordRuleLength',
+      errorKey: 'auth.passwordErrorLength',
       isValid: password.length >= 8,
     },
     {
       labelKey: 'auth.passwordRuleUppercase',
+      errorKey: 'auth.passwordErrorUppercase',
       isValid: /[A-Z]/.test(password),
     },
     {
       labelKey: 'auth.passwordRuleLowercase',
+      errorKey: 'auth.passwordErrorLowercase',
       isValid: /[a-z]/.test(password),
     },
     {
       labelKey: 'auth.passwordRuleNumber',
+      errorKey: 'auth.passwordErrorNumber',
       isValid: /\d/.test(password),
     },
     {
       labelKey: 'auth.passwordRuleSymbol',
+      errorKey: 'auth.passwordErrorSymbol',
       isValid: /[^A-Za-z0-9]/.test(password),
     },
   ];
@@ -51,6 +61,12 @@ function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const passwordChecks = useMemo(() => getRegistrationPasswordChecks(password), [password]);
   const isPasswordStrong = passwordChecks.every((check) => check.isValid);
+  const passwordValidationError = password
+    ? passwordChecks.find((check) => !check.isValid)?.errorKey
+    : undefined;
+  const emailValidationError = email && !isValidEmail(email)
+    ? t('auth.emailFormatInvalid')
+    : '';
   const doPasswordsMatch = !confirmPassword || password === confirmPassword;
 
   // Create the account, then continue into OTP verification.
@@ -114,39 +130,49 @@ function RegisterPage() {
 
               <label htmlFor="registerEmail">{t('auth.emailAddress')}</label>
               <input
+                className={emailValidationError ? 'field-invalid' : undefined}
                 id="registerEmail"
                 type="email"
                 autoComplete="email"
                 placeholder="name@company.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                aria-invalid={Boolean(emailValidationError)}
+                aria-describedby={emailValidationError ? 'register-email-error' : undefined}
                 required
               />
+              {emailValidationError && (
+                <p className="auth-field-error" id="register-email-error" aria-live="polite">
+                  {emailValidationError}
+                </p>
+              )}
 
               <label htmlFor="registerPassword">{t('auth.password')}</label>
               <div className="password-field">
                 <input
+                  className={passwordValidationError ? 'field-invalid' : undefined}
                   id="registerPassword"
                   type="password"
                   autoComplete="new-password"
                   placeholder={t('auth.newPasswordPlaceholder')}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
+                  aria-invalid={Boolean(passwordValidationError)}
+                  aria-describedby={passwordValidationError ? 'register-password-error' : 'register-password-hint'}
                   required
                 />
                 <span aria-hidden="true"><LockKeyhole size={18} /></span>
               </div>
 
-              <div className="password-rules" aria-live="polite">
-                <p>{t('auth.passwordRequirements')}</p>
-                <ul>
-                  {passwordChecks.map((check) => (
-                    <li className={check.isValid ? 'is-valid' : undefined} key={check.labelKey}>
-                      {t(check.labelKey)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {passwordValidationError ? (
+                <p className="auth-field-error" id="register-password-error" aria-live="polite">
+                  {t(passwordValidationError)}
+                </p>
+              ) : (
+                <div className="password-rules" id="register-password-hint">
+                  <p>{t('auth.passwordRequirements')}</p>
+                </div>
+              )}
 
               <label htmlFor="registerConfirmPassword">{t('auth.confirmPassword')}</label>
               <input

@@ -120,6 +120,16 @@
   box-shadow: 0 0 0 3px rgba(36, 120, 230, 0.22);
 }
 
+.auth-form input.field-invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 20%, transparent);
+}
+
+.auth-form input.field-invalid:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 24%, transparent);
+}
+
 .otp-input {
   font: inherit;
   letter-spacing: 0;
@@ -158,23 +168,8 @@
 }
 
 .password-rules p {
-  margin: 0 0 0.45rem;
-  color: var(--muted);
-}
-
-.password-rules ul {
-  display: grid;
-  gap: 0.28rem;
   margin: 0;
-  padding-left: 1.15rem;
-}
-
-.password-rules li {
-  color: var(--soft);
-}
-
-.password-rules li.is-valid {
-  color: var(--success);
+  color: var(--muted);
 }
 
 .auth-field-error {

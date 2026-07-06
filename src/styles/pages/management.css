@@ -808,23 +808,8 @@ html[data-theme='light'] .btn-danger-link {
 }
 
 .modal-password-rules p {
-  margin: 0 0 0.45rem;
-  color: var(--text);
-}
-
-.modal-password-rules ul {
-  display: grid;
-  gap: 0.25rem;
   margin: 0;
-  padding-left: 1.15rem;
-}
-
-.modal-password-rules li {
   color: var(--muted);
-}
-
-.modal-password-rules li.is-valid {
-  color: var(--success);
 }
 
 .mock-input {
