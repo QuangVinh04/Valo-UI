@@ -14,6 +14,11 @@ type RetryRequestConfig = InternalAxiosRequestConfig & {
   skipAuth?: boolean;
 };
 
+type AuthFetchInit = RequestInit & {
+  skipAuth?: boolean;
+  _retry?: boolean;
+};
+
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipAuth?: boolean;
@@ -37,6 +42,20 @@ function clearAuth() {
   delete api.defaults.headers.common.Authorization;
 
   window.dispatchEvent(new Event('auth:changed'));
+}
+
+function applyAuthFetchHeaders(init: AuthFetchInit = {}, accessToken?: string): Headers {
+  const headers = new Headers(init.headers);
+
+  headers.set('Accept-Language', getRequestLanguage() || DEFAULT_LANGUAGE);
+
+  if (!init.skipAuth && accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`);
+  } else {
+    headers.delete('Authorization');
+  }
+
+  return headers;
 }
 
 function getRequestLanguage() {
@@ -80,6 +99,43 @@ async function refreshAccessToken(): Promise<string> {
   api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
   return accessToken;
+}
+
+export async function authFetch(
+  input: RequestInfo | URL,
+  init: AuthFetchInit = {}
+): Promise<Response> {
+  const { skipAuth, _retry, ...fetchInit } = init;
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY) ?? undefined;
+  const requestInit: RequestInit = {
+    ...fetchInit,
+    credentials: init.credentials ?? 'include',
+    headers: applyAuthFetchHeaders(init, token),
+  };
+
+  const response = await fetch(input, requestInit);
+
+  if (
+    response.status !== 401
+    || _retry
+    || skipAuth
+    || isPublicAuthRequest(typeof input === 'string' ? input : input.toString())
+  ) {
+    return response;
+  }
+
+  try {
+    const accessToken = await refreshAccessToken();
+
+    return fetch(input, {
+      ...fetchInit,
+      credentials: init.credentials ?? 'include',
+      headers: applyAuthFetchHeaders({ ...init, _retry: true }, accessToken),
+    });
+  } catch (refreshError) {
+    clearAuth();
+    throw refreshError;
+  }
 }
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {

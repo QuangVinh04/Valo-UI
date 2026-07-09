@@ -1,4 +1,4 @@
-import { API_BASE_URL, api } from '@/lib/api-client';
+import { API_BASE_URL, api, authFetch } from '@/lib/api-client';
 import { AppError } from '@/errors/app-error';
 import { handleServiceError } from './service-error.helper';
 import type { ApiResponse } from '@/types/api.type';
@@ -54,14 +54,8 @@ export async function deleteConversation(id: string): Promise<void> {
   }
 }
 export async function exportMessageDocx(messageId: string): Promise<void> {
-  const token = localStorage.getItem('accessToken');
-
-  const response = await fetch(`${API_BASE_URL}/messages/${messageId}/export/docx`, {
+  const response = await authFetch(`${API_BASE_URL}/messages/${messageId}/export/docx`, {
     method: 'GET',
-    credentials: 'include',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
   });
 
   if (!response.ok) {
@@ -121,15 +115,11 @@ export async function sendMessageStream(
     ...(input.fileUploads?.length ? { fileUploads: input.fileUploads } : {}),
   };
 
-  const token = localStorage.getItem('accessToken');
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await authFetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(body),
     signal: input.signal,
