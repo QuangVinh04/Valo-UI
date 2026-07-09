@@ -146,7 +146,6 @@ function RegisterPage() {
                   {emailValidationError}
                 </p>
               )}
-
               <label htmlFor="registerPassword">{t('auth.password')}</label>
               <div className="password-field">
                 <input

@@ -22,12 +22,12 @@ function UserDeleteModal({ user, onClose, onDeleted }: UserDeleteModalProps) {
       await deleteUser(user.id);
       toast.success(t('admin.users.deleted', { name: user.fullName }));
       onDeleted();
-      onClose();
     } catch (err) {
       const message = err instanceof Error ? err.message : t('admin.users.deleteFailed');
       toast.error(message);
     } finally {
       setIsDeleting(false);
+      onClose();
     }
   }
 

@@ -101,6 +101,11 @@
   margin: 0;
 }
 
+.user-bubble-failed {
+  border-color: color-mix(in srgb, var(--danger) 44%, var(--line));
+  background: color-mix(in srgb, var(--danger) 8%, var(--panel));
+}
+
 .msg-time {
   display: none;
 }

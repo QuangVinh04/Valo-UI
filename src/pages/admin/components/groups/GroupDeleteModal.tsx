@@ -22,12 +22,12 @@ function GroupDeleteModal({ group, onClose, onDeleted }: GroupDeleteModalProps) 
       await deleteGroup(group.id);
       toast.success(t('admin.groups.deleted', { name: group.name }));
       onDeleted();
-      onClose();
     } catch (err) {
       const message = err instanceof Error ? err.message : t('admin.groups.deleteFailed');
       toast.error(message);
     } finally {
       setIsDeleting(false);
+      onClose();
     }
   }
 

@@ -127,6 +127,8 @@
     "copied": "Copied",
     "copyFailed": "Copy failed",
     "assistantThinking": "Assistant is thinking",
+    "messagePending": "Processing...",
+    "messageFailed": "This message could not be processed.",
     "openFile": "Open {{name}}",
     "removeFile": "Remove {{name}}",
     "uploading": "Uploading...",

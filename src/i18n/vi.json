@@ -127,6 +127,8 @@
     "copied": "Đã sao chép",
     "copyFailed": "Sao chép thất bại",
     "assistantThinking": "Trợ lý đang suy nghĩ",
+    "messagePending": "Đang xử lý...",
+    "messageFailed": "Không thể xử lý tin nhắn này.",
     "openFile": "Mở {{name}}",
     "removeFile": "Xóa {{name}}",
     "uploading": "Đang tải lên...",

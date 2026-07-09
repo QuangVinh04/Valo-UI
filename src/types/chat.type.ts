@@ -1,9 +1,11 @@
 export type ChatRole = 'user' | 'assistant' | 'system';
+export type MessageStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
 
 export type ChatMessage = {
   id: string;
   content: string;
   senderType: ChatRole;
+  status?: MessageStatus;
   modelName: string | null;
   createdAt: string;
   fileUploads?: FileUpload[];

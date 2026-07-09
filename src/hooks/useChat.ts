@@ -4,7 +4,7 @@ import { useLocation, useMatch, useNavigate } from 'react-router-dom';
 import { useToast } from '@/context/ToastContext';
 import { deleteUploadedFile, uploadChatFile, type UploadTarget } from '@/services/file-upload.service';
 import { deleteConversation, getConversation, getConversations, renameConversation, sendMessageStream } from '@/services/chat.service';
-import type { ChatMessage, Conversation, FileUpload, StreamDoneEvent, StreamReadyEvent } from '@/types/chat.type';
+import type { ChatMessage, Conversation, FileUpload, MessageStatus, StreamDoneEvent, StreamReadyEvent } from '@/types/chat.type';
 
 export const chatModelOptions = [
   { value: 'groq-llama-3.3', label: 'Llama 3.3' },
@@ -63,6 +63,14 @@ function upsertConversationAtTop(current: Conversation[], conversation: Conversa
     nextConversation,
     ...current.filter((item) => item.id !== conversation.id),
   ];
+}
+
+function updateMessagesStatus(messages: ChatMessage[] | undefined, messageId: string, status: MessageStatus): ChatMessage[] | undefined {
+  if (!messages) return messages;
+
+  return messages.map((message) => (
+    message.id === messageId ? { ...message, status } : message
+  ));
 }
 
 function createPendingAssistantMessage(modelName: string): ChatMessage {
@@ -486,17 +494,20 @@ function useChatState() {
     const abortController = new AbortController();
     streamAbortControllerRef.current = abortController;
     const resetVersion = historyResetVersionRef.current;
+    let readyUserMessageId: string | null = null;
 
     let assistantMessage = createPendingAssistantMessage(modelName);
 
     const updatePendingAssistantMessage = (
       content: string,
-      streamStatus?: ChatMessage['streamStatus']
+      streamStatus?: ChatMessage['streamStatus'],
+      status?: MessageStatus
     ) => {
       assistantMessage = {
         ...assistantMessage,
         content,
         streamStatus,
+        ...(status ? { status } : {}),
       };
 
       setMessages((current) => current.map((message) => (
@@ -506,13 +517,25 @@ function useChatState() {
 
     const appendAssistantStatus = (
       statusMessage: string,
-      streamStatus?: ChatMessage['streamStatus']
+      streamStatus?: ChatMessage['streamStatus'],
+      status?: MessageStatus
     ) => {
       const nextContent = assistantMessage.content.trim()
         ? `${assistantMessage.content.trimEnd()}\n\n${statusMessage}`
         : statusMessage;
 
-      updatePendingAssistantMessage(nextContent, streamStatus);
+      updatePendingAssistantMessage(nextContent, streamStatus, status);
+    };
+
+    const updateUserMessageStatus = (messageId: string, status: MessageStatus) => {
+      setMessages((current) => updateMessagesStatus(current, messageId, status) ?? current);
+      setActiveConversation((current) => current
+        ? { ...current, messages: updateMessagesStatus(current.messages, messageId, status) }
+        : current);
+      setConversations((current) => current.map((conversation) => ({
+        ...conversation,
+        messages: updateMessagesStatus(conversation.messages, messageId, status),
+      })));
     };
 
     // Khi backend tạo hội thoại/tin nhắn xong, hiển thị ngay tin nhắn đầu tiên.
@@ -520,9 +543,14 @@ function useChatState() {
       if (historyResetVersionRef.current !== resetVersion) return;
 
       const now = new Date().toISOString();
+      const userMessage = {
+        ...event.userMessage,
+        status: event.userMessage.status ?? 'PENDING',
+      };
+      readyUserMessageId = userMessage.id;
 
       setSelectedFiles([]);
-      setMessages((current) => [...current, event.userMessage, assistantMessage]);
+      setMessages((current) => [...current, userMessage, assistantMessage]);
       setActiveConversation((current) => current ?? {
         id: event.conversationId,
         title: question.slice(0, 50),
@@ -530,7 +558,7 @@ function useChatState() {
         userId: '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        messages: [event.userMessage],
+        messages: [userMessage],
       });
       setConversations((current) => {
         const existing = current.find((conversation) => conversation.id === event.conversationId);
@@ -546,7 +574,7 @@ function useChatState() {
             userId: '',
             createdAt: now,
             updatedAt: now,
-            messages: [event.userMessage],
+            messages: [userMessage],
           };
 
         return upsertConversationAtTop(current, conversation);
@@ -568,6 +596,10 @@ function useChatState() {
     // Khi stream kết thúc, thay tin nhắn tạm bằng dữ liệu chuẩn từ backend.
     const handleDone = async (event: StreamDoneEvent) => {
       if (historyResetVersionRef.current !== resetVersion) return;
+
+      if (readyUserMessageId) {
+        updateUserMessageStatus(readyUserMessageId, 'SUCCESS');
+      }
 
       setMessages((current) => current.map((message) => (
         message.id === assistantMessage.id ? event.assistantMessage : message
@@ -607,7 +639,7 @@ function useChatState() {
         onError: (message) => {
           didStreamFail = true;
           setError(message);
-          appendAssistantStatus(t('chat.generationError', { message }), 'error');
+          appendAssistantStatus(t('chat.generationError', { message }), 'error', 'FAILED');
         },
       });
 
@@ -616,11 +648,11 @@ function useChatState() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
-        appendAssistantStatus(t('chat.generationStopped'));
+        appendAssistantStatus(t('chat.generationStopped'), 'stopped', 'FAILED');
       } else {
         const message = err instanceof Error ? err.message : 'Cannot send message';
         setError(message);
-        appendAssistantStatus(t('chat.generationError', { message }), 'error');
+        appendAssistantStatus(t('chat.generationError', { message }), 'error', 'FAILED');
       }
 
       if (!didCompleteStream) {

@@ -1,4 +1,4 @@
-import { FormEvent, ReactElement, useEffect, useRef, useState } from 'react';
+import { FormEvent, Fragment, ReactElement, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bot, Check, ChevronDown, Copy, Download, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
@@ -93,13 +93,36 @@ function ChatView() {
               <h2>{t('chat.startConversation')}</h2>
             </div>
           )}
-          {chat.messages.map((message, index) => (
-            <ChatMessageItem
-              key={message.id}
-              message={message}
-              isStreaming={chat.isStreaming && index === chat.messages.length - 1 && message.senderType === 'assistant'}
-            />
-          ))}
+          {chat.messages.map((message, index) => {
+            const nextMessage = chat.messages[index + 1];
+            const shouldShowFailedAssistant = message.senderType === 'user'
+              && message.status === 'FAILED'
+              && nextMessage?.senderType !== 'assistant';
+
+            return (
+              <Fragment key={message.id}>
+                <ChatMessageItem
+                  message={message}
+                  isStreaming={chat.isStreaming && index === chat.messages.length - 1 && message.senderType === 'assistant'}
+                />
+                {shouldShowFailedAssistant && (
+                  <ChatMessageItem
+                    message={{
+                      id: `${message.id}-failed-assistant`,
+                      content: t('chat.messageFailed'),
+                      senderType: 'assistant',
+                      status: 'FAILED',
+                      modelName: message.modelName,
+                      createdAt: message.createdAt,
+                      streamStatus: 'error',
+                    }}
+                    isStreaming={false}
+                    isSyntheticError
+                  />
+                )}
+              </Fragment>
+            );
+          })}
         </section>
 
         <footer className={`chat-composer-wrap ${isEmptyChat ? 'chat-composer-empty' : ''}`}>
@@ -227,7 +250,15 @@ function ChatView() {
   );
 }
 
-function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStreaming: boolean }) {
+function ChatMessageItem({
+  message,
+  isStreaming,
+  isSyntheticError = false,
+}: {
+  message: ChatMessage;
+  isStreaming: boolean;
+  isSyntheticError?: boolean;
+}) {
   const { t } = useTranslation();
   const [copyLabelKey, setCopyLabelKey] = useState('chat.copyResponse');
 
@@ -255,9 +286,11 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
   };
 
   if (message.senderType === 'user') {
+    const status = message.status ?? 'SUCCESS';
+
     return (
       <>
-        <div className="user-bubble">
+        <div className={`user-bubble ${status === 'FAILED' ? 'user-bubble-failed' : ''}`}>
           {message.content && <p>{message.content}</p>}
           <FileUploadList fileUploads={message.fileUploads} />
         </div>
@@ -269,8 +302,11 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
   const assistantClassName = [
     'assistant-msg',
     isStreaming ? 'streaming' : '',
-    message.streamStatus === 'error' ? 'assistant-msg-error' : '',
+    message.streamStatus === 'error' || message.status === 'FAILED' ? 'assistant-msg-error' : '',
   ].filter(Boolean).join(' ');
+  const canExportMessage = message.senderType === 'assistant'
+    && !isSyntheticError
+    && !message.id.startsWith('assistant-');
 
   return (
     <div className={assistantClassName}>
@@ -297,7 +333,7 @@ function ChatMessageItem({ message, isStreaming }: { message: ChatMessage; isStr
             </div>
             <div className="message-actions">
               <IconButton icon={Copy} label={t(copyLabelKey)} onClick={() => void copyMessage()} />
-              {message.senderType === 'assistant' && (
+              {canExportMessage && (
                 <IconButton
                   icon={Download}
                   label="Export DOCX"
