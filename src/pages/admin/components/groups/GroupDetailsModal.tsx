@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import Modal from '@/components/common/Modal';
 import { formatGroupDate, type GroupViewModel } from './group-view-model';
 
 type GroupDetailsModalProps = {
@@ -10,12 +11,16 @@ function GroupDetailsModal({ group, onClose }: GroupDetailsModalProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <section className="modal-card group-modal" onClick={(event) => event.stopPropagation()}>
+    <Modal
+      className="modal-card group-modal"
+      labelledBy="group-details-modal-title"
+      describedBy="group-details-modal-description"
+      onClose={onClose}
+    >
         <header className="modal-header stacked">
           <div>
-            <h2>{t('admin.groups.groupDetails')}</h2>
-            <p>{t('admin.groups.groupDetailsSubtitle')}</p>
+            <h2 id="group-details-modal-title">{t('admin.groups.groupDetails')}</h2>
+            <p id="group-details-modal-description">{t('admin.groups.groupDetailsSubtitle')}</p>
           </div>
           <button type="button" aria-label={t('admin.groups.closeGroupDetails')} onClick={onClose}>×</button>
         </header>
@@ -76,8 +81,7 @@ function GroupDetailsModal({ group, onClose }: GroupDetailsModalProps) {
         <footer className="modal-footer">
           <button className="btn-primary btn-xl" type="button" onClick={onClose}>{t('common.done')}</button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

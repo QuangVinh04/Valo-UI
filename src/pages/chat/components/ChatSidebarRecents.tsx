@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Check, MessageSquare, MoreHorizontal, Pencil, Trash2, X } from 'lucide-react';
+import Modal from '@/components/common/Modal';
 import { useChat } from '@/hooks/useChat';
 
 function ChatSidebarRecents() {
@@ -30,11 +31,10 @@ function ChatSidebarRecents() {
       }
     };
 
-    // Escape đóng menu, modal xóa và trạng thái đổi tên đang mở.
+    // Escape đóng menu và trạng thái đổi tên đang mở. Modal xóa tự xử lý Escape bằng Modal primitive.
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setOpenMenuId(null);
-        setDeleteTarget(null);
         cancelRename();
       }
     };
@@ -196,13 +196,19 @@ function ChatSidebarRecents() {
         ))}
       </div>
       {deleteTarget && (
-        <div className="settings-modal-backdrop" onClick={() => { if (!isDeleting) setDeleteTarget(null); }}>
-          <section className="settings-modal panel-dark" onClick={(event) => event.stopPropagation()}>
+        <Modal
+          backdropClassName="settings-modal-backdrop"
+          className="settings-modal panel-dark"
+          labelledBy="delete-conversation-modal-title"
+          describedBy="delete-conversation-modal-description"
+          isDismissDisabled={isDeleting}
+          onClose={() => setDeleteTarget(null)}
+        >
             <header>
-              <h3>{t('chat.deleteConversation')}</h3>
+              <h3 id="delete-conversation-modal-title">{t('chat.deleteConversation')}</h3>
               <button type="button" onClick={() => setDeleteTarget(null)}>x</button>
             </header>
-            <p className="confirm-description">
+            <p className="confirm-description" id="delete-conversation-modal-description">
               <Trans
                 i18nKey="chat.deleteConversationDescription"
                 values={{ title: deleteTarget.title }}
@@ -217,8 +223,7 @@ function ChatSidebarRecents() {
                 {isDeleting ? t('common.deleting') : t('common.delete')}
               </button>
             </footer>
-          </section>
-        </div>
+        </Modal>
       )}
     </section>
   );

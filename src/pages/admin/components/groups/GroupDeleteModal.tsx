@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Modal from '@/components/common/Modal';
 import { useToast } from '@/context/ToastContext';
 import { deleteGroup } from '@/services/group.service';
 import type { GroupViewModel } from './group-view-model';
@@ -32,18 +33,23 @@ function GroupDeleteModal({ group, onClose, onDeleted }: GroupDeleteModalProps) 
   }
 
   return (
-    <div className="modal-backdrop" onClick={() => { if (!isDeleting) onClose(); }}>
-      <section className="modal-card group-modal compact-modal" onClick={(event) => event.stopPropagation()}>
+    <Modal
+      className="modal-card group-modal compact-modal"
+      labelledBy="group-delete-modal-title"
+      describedBy="group-delete-modal-description"
+      isDismissDisabled={isDeleting}
+      onClose={onClose}
+    >
         <header className="modal-header stacked">
           <div>
-            <h2>{t('admin.groups.deleteGroupTitle')}</h2>
+            <h2 id="group-delete-modal-title">{t('admin.groups.deleteGroupTitle')}</h2>
             <p>{t('admin.groups.deleteGroupSubtitle')}</p>
           </div>
           <button type="button" aria-label={t('admin.groups.closeDeleteGroup')} onClick={onClose}>×</button>
         </header>
 
         <div className="modal-body">
-          <p className="confirm-description">
+          <p className="confirm-description" id="group-delete-modal-description">
             {t('admin.groups.deleteDetachDescription', { count: group.memberCount, name: group.name })}
           </p>
         </div>
@@ -54,8 +60,7 @@ function GroupDeleteModal({ group, onClose, onDeleted }: GroupDeleteModalProps) 
             {isDeleting ? t('common.deleting') : t('common.delete')}
           </button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Modal from '@/components/common/Modal';
 import { useToast } from '@/context/ToastContext';
 import { deleteUser } from '@/services/user.service';
 import type { UserDto } from '@/types/user.type';
@@ -32,14 +33,19 @@ function UserDeleteModal({ user, onClose, onDeleted }: UserDeleteModalProps) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={() => { if (!isDeleting) onClose(); }}>
-      <section className="modal-card user-modal compact-modal" onClick={(event) => event.stopPropagation()}>
+    <Modal
+      className="modal-card user-modal compact-modal"
+      labelledBy="user-delete-modal-title"
+      describedBy="user-delete-modal-description"
+      isDismissDisabled={isDeleting}
+      onClose={onClose}
+    >
         <header className="modal-header">
-          <h2>{t('admin.users.deleteUserTitle')}</h2>
+          <h2 id="user-delete-modal-title">{t('admin.users.deleteUserTitle')}</h2>
           <button type="button" aria-label={t('admin.users.closeDeleteUser')} onClick={onClose}>×</button>
         </header>
         <div className="modal-body">
-          <p className="confirm-description">
+          <p className="confirm-description" id="user-delete-modal-description">
             {t('admin.users.deleteUserDescription', { email: user.email, name: user.fullName })}
           </p>
         </div>
@@ -49,8 +55,7 @@ function UserDeleteModal({ user, onClose, onDeleted }: UserDeleteModalProps) {
             {isDeleting ? t('common.deleting') : t('common.delete')}
           </button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

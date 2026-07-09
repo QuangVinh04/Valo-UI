@@ -50,6 +50,13 @@ export async function getGroupById(groupId: string): Promise<GroupDto> {
   }
 }
 
+export function getGroupMembers(groupId: string): Promise<GroupMemberDto>;
+export function getGroupMembers(
+  groupId: string,
+  page: number,
+  limit: number,
+  search?: string,
+): Promise<{ group: GroupMemberDto; meta: ApiMeta | null }>;
 export async function getGroupMembers(
   groupId: string,
   page?: number,

@@ -5,6 +5,7 @@ import { useToast } from '@/context/ToastContext';
 import { useChat } from '@/hooks/useChat';
 import { clearAuthState } from '@/lib/auth';
 import { getErrorMessage } from '@/lib/error';
+import Modal from '@/components/common/Modal';
 import { clearChatHistory, deleteCurrentAccount } from '@/services/settings.service';
 import type { ConfirmAction } from '@/types/settings.type';
 
@@ -64,13 +65,19 @@ function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModal
   };
 
   return (
-    <div className="settings-modal-backdrop" onClick={() => { if (!isSaving) onClose(); }}>
-      <section className="settings-modal panel-dark" onClick={(event) => event.stopPropagation()}>
+    <Modal
+      backdropClassName="settings-modal-backdrop"
+      className="settings-modal panel-dark"
+      labelledBy="confirm-action-modal-title"
+      describedBy="confirm-action-modal-description"
+      isDismissDisabled={isSaving}
+      onClose={onClose}
+    >
         <header>
-          <h3>{copy.title}</h3>
+          <h3 id="confirm-action-modal-title">{copy.title}</h3>
           <button type="button" onClick={onClose}>x</button>
         </header>
-        <p className="confirm-description">{copy.description}</p>
+        <p className="confirm-description" id="confirm-action-modal-description">{copy.description}</p>
         <footer>
           <button type="button" className="btn-muted" onClick={onClose}>{t('settings.cancel')}</button>
           <button
@@ -82,8 +89,7 @@ function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModal
             {isSaving ? t('settings.saving') : copy.confirmLabel}
           </button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

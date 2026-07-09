@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, FileText, Loader2, Search, Trash2 } from 'lucide-react';
 import ActionIconButton from '@/components/common/ActionIconButton';
+import Modal from '@/components/common/Modal';
 import { useToast } from '@/context/ToastContext';
 import { deleteAttachments, getAttachments } from '@/services/attachment.service';
 import type { AttachmentItem } from '@/types/attachment.type';
@@ -134,16 +135,18 @@ function StorageModal({ onClose }: StorageModalProps) {
   };
 
   return (
-    <div className="settings-modal-backdrop" onClick={() => { if (!isDeleting) onClose(); }}>
-      <section
-        className="settings-modal storage-modal panel-dark"
-        aria-labelledby="storage-modal-title"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <Modal
+      backdropClassName="settings-modal-backdrop"
+      className="settings-modal storage-modal panel-dark"
+      labelledBy="storage-modal-title"
+      describedBy="storage-modal-description"
+      isDismissDisabled={isDeleting}
+      onClose={onClose}
+    >
         <header>
           <div>
             <h3 id="storage-modal-title">{t('settings.uploadedFiles')}</h3>
-            <p className="storage-modal-description">{t('settings.storageManageDescription')}</p>
+            <p className="storage-modal-description" id="storage-modal-description">{t('settings.storageManageDescription')}</p>
           </div>
           <button type="button" aria-label={t('settings.cancel')} onClick={onClose}>×</button>
         </header>
@@ -252,8 +255,7 @@ function StorageModal({ onClose }: StorageModalProps) {
             {t('common.close')}
           </button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

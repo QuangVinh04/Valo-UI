@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Modal from '@/components/common/Modal';
 import { useToast } from '@/context/ToastContext';
 import type { GroupListItemDto } from '@/types/group.type';
 import { assignUserGroups } from '@/services/user.service';
@@ -93,12 +94,17 @@ function UserAssignGroupModal({
   const shouldShowEmptyResult = keyword && filteredGroups.length === 0;
 
   return (
-    <div className="modal-backdrop" onClick={() => { if (!isSubmitting) onClose(); }}>
-      <section className="modal-card user-modal compact-modal" onClick={(event) => event.stopPropagation()}>
+    <Modal
+      className="modal-card user-modal compact-modal"
+      labelledBy="assign-group-modal-title"
+      describedBy="assign-group-modal-description"
+      isDismissDisabled={isSubmitting}
+      onClose={onClose}
+    >
         <header className="modal-header stacked">
           <div>
-            <h2>{t('admin.users.addToGroupsTitle')}</h2>
-            <p>{t('admin.users.selectGroupsFor', { count: userIds.length })}</p>
+            <h2 id="assign-group-modal-title">{t('admin.users.addToGroupsTitle')}</h2>
+            <p id="assign-group-modal-description">{t('admin.users.selectGroupsFor', { count: userIds.length })}</p>
           </div>
 
           <button
@@ -190,8 +196,7 @@ function UserAssignGroupModal({
               : t('common.add')}
           </button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

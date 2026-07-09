@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UserPlus, UserRound, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
+import Modal from '@/components/common/Modal';
 import { useToast } from '@/context/ToastContext';
 import { createUser, updateUser } from '@/services/user.service';
 import type { GroupListItemDto } from '@/types/group.type';
@@ -172,10 +173,14 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={() => { if (!isSubmitting) onClose(); }}>
-      <section className="modal-card user-modal" onClick={(event) => event.stopPropagation()}>
+    <Modal
+      className="modal-card user-modal"
+      labelledBy="user-form-modal-title"
+      isDismissDisabled={isSubmitting}
+      onClose={onClose}
+    >
         <header className="modal-header">
-          <h2 className="modal-title">
+          <h2 className="modal-title" id="user-form-modal-title">
             {isUpdate ? (
               <UserRound size={21} aria-hidden="true" />
             ) : (
@@ -330,8 +335,7 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
                 : t('common.create')}
           </button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Modal from '@/components/common/Modal';
 import { useToast } from '@/context/ToastContext';
 import { updateGroup } from '@/services/group.service';
 import type { GroupViewModel } from './group-view-model';
@@ -105,12 +106,17 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
   }
 
   return (
-    <div className="modal-backdrop" onClick={() => { if (!isSubmitting) onClose(); }}>
-      <section className="modal-card group-modal" onClick={(event) => event.stopPropagation()}>
+    <Modal
+      className="modal-card group-modal"
+      labelledBy="group-update-modal-title"
+      describedBy="group-update-modal-description"
+      isDismissDisabled={isSubmitting}
+      onClose={onClose}
+    >
         <header className="modal-header stacked">
           <div>
-            <h2>{t('admin.groups.updateGroupTitle')}</h2>
-            <p>{t('admin.groups.updateGroupSubtitle')}</p>
+            <h2 id="group-update-modal-title">{t('admin.groups.updateGroupTitle')}</h2>
+            <p id="group-update-modal-description">{t('admin.groups.updateGroupSubtitle')}</p>
           </div>
           <button type="button" aria-label={t('admin.groups.closeUpdateGroup')} onClick={onClose}>×</button>
         </header>
@@ -218,8 +224,7 @@ function GroupUpdateModal({ group, onClose, onUpdated }: GroupUpdateModalProps) 
             {isSubmitting ? t('admin.groups.updating') : t('common.update')}
           </button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

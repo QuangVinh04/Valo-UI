@@ -4,6 +4,7 @@ import { Eye, Pencil, Plus, Search, Shield, Trash2, UserPlus } from 'lucide-reac
 import ActionIconButton from '@/components/common/ActionIconButton';
 import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import IconButton from '@/components/common/IconButton';
+import Modal from '@/components/common/Modal';
 import { useGroups } from '@/hooks/useGroups';
 import '@/styles/pages/management.css';
 import GroupCreateModal from './groups/GroupCreateModal';
@@ -254,17 +255,15 @@ function GroupsView() {
         <GroupDeleteModal group={selectedGroup} onClose={closeModal} onDeleted={() => loadGroups()} />
       )}
       {isConfirmingDeleteSelected && (
-        <div
-          className="modal-backdrop"
-          onClick={() => {
-            if (!isDeletingSelectedGroups) {
-              setIsConfirmingDeleteSelected(false);
-            }
-          }}
+        <Modal
+          className="modal-card compact-modal"
+          labelledBy="delete-selected-groups-title"
+          describedBy="delete-selected-groups-description"
+          isDismissDisabled={isDeletingSelectedGroups}
+          onClose={() => setIsConfirmingDeleteSelected(false)}
         >
-          <section className="modal-card compact-modal" onClick={(event) => event.stopPropagation()}>
             <header className="modal-header">
-              <h2>{t('admin.groups.deleteSelectedTitle')}</h2>
+              <h2 id="delete-selected-groups-title">{t('admin.groups.deleteSelectedTitle')}</h2>
               <button
                 type="button"
                 aria-label={t('admin.groups.closeDeleteSelected')}
@@ -275,7 +274,7 @@ function GroupsView() {
               </button>
             </header>
             <div className="modal-body">
-              <p className="confirm-description">
+              <p className="confirm-description" id="delete-selected-groups-description">
                 {t('admin.groups.deleteSelectedDescription', { count: selectedGroupIds.length })}
               </p>
             </div>
@@ -297,8 +296,7 @@ function GroupsView() {
                 {isDeletingSelectedGroups ? t('common.deleting') : t('common.delete')}
               </button>
             </footer>
-          </section>
-        </div>
+        </Modal>
       )}
     </div>
   );

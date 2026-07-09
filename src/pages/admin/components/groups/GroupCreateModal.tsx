@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Modal from '@/components/common/Modal';
 import { useToast } from '@/context/ToastContext';
 import { createGroup } from '@/services/group.service';
 
@@ -104,12 +105,17 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={() => { if (!isSubmitting) onClose(); }}>
-      <section className="modal-card group-modal" onClick={(event) => event.stopPropagation()}>
+    <Modal
+      className="modal-card group-modal"
+      labelledBy="group-create-modal-title"
+      describedBy="group-create-modal-description"
+      isDismissDisabled={isSubmitting}
+      onClose={onClose}
+    >
         <header className="modal-header stacked">
           <div>
-            <h2>{t('admin.groups.createGroupTitle')}</h2>
-            <p>{t('admin.groups.createGroupSubtitle')}</p>
+            <h2 id="group-create-modal-title">{t('admin.groups.createGroupTitle')}</h2>
+            <p id="group-create-modal-description">{t('admin.groups.createGroupSubtitle')}</p>
           </div>
 
           <button
@@ -254,8 +260,7 @@ function GroupCreateModal({ onClose, onCreated }: GroupCreateModalProps) {
               : t('common.create')}
           </button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

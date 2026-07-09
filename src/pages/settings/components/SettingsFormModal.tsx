@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
+import Modal from '@/components/common/Modal';
 import { updateCurrentUserProfile } from '@/services/user.service';
 import type { UserProfileDto } from '@/types/user.type';
 import type { SettingsFormModal as SettingsFormModalType } from '@/types/settings.type';
@@ -85,10 +86,17 @@ function SettingsFormModal({
   };
 
   return (
-    <div className="settings-modal-backdrop" onClick={() => { if (!isSaving) onClose(); }}>
-      <form className="settings-modal panel-dark" onSubmit={handleSubmit} onClick={(event) => event.stopPropagation()}>
+    <Modal
+      as="form"
+      backdropClassName="settings-modal-backdrop"
+      className="settings-modal panel-dark"
+      labelledBy="settings-form-modal-title"
+      isDismissDisabled={isSaving}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+    >
         <header>
-          <h3>{title}</h3>
+          <h3 id="settings-form-modal-title">{title}</h3>
           <button type="button" onClick={onClose}>x</button>
         </header>
 
@@ -126,8 +134,7 @@ function SettingsFormModal({
             {isSaving ? t('settings.saving') : t('settings.save')}
           </button>
         </footer>
-      </form>
-    </div>
+    </Modal>
   );
 }
 

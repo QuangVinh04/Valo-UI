@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { UserRound, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
+import Modal from '@/components/common/Modal';
 import type { UserDto } from '@/types/user.type';
 import { formatUserDate } from './user-view-model';
 
@@ -13,10 +14,13 @@ function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <section className="modal-card user-modal" onClick={(event) => event.stopPropagation()}>
+    <Modal
+      className="modal-card user-modal"
+      labelledBy="user-details-modal-title"
+      onClose={onClose}
+    >
         <header className="modal-header">
-          <h2 className="modal-title"><UserRound size={21} aria-hidden="true" /> {t('admin.users.userDetails')}</h2>
+          <h2 className="modal-title" id="user-details-modal-title"><UserRound size={21} aria-hidden="true" /> {t('admin.users.userDetails')}</h2>
           <IconButton icon={X} label={t('admin.users.closeUserDetails')} onClick={onClose} />
         </header>
         <div className="modal-body">
@@ -40,8 +44,7 @@ function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
         <footer className="modal-footer">
           <button className="btn-primary" type="button" onClick={onClose}>{t('common.done')}</button>
         </footer>
-      </section>
-    </div>
+    </Modal>
   );
 }
 

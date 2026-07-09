@@ -4,6 +4,7 @@ import { Eye, Filter, Pencil, Plus, RotateCcw, Search, Trash2, UserPlus } from '
 import ActionIconButton from '@/components/common/ActionIconButton';
 import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import IconButton from '@/components/common/IconButton';
+import Modal from '@/components/common/Modal';
 import { type UserFilters, useUsers } from '@/hooks/useUsers';
 import '@/styles/pages/management.css';
 import UserAssignGroupModal from './users/UserAssignGroupModal';
@@ -327,17 +328,15 @@ function UsersView() {
         <UserDeleteModal user={selectedUser} onClose={closeModal} onDeleted={() => loadUsers(page)} />
       )}
       {isConfirmingDeleteSelected && (
-        <div
-          className="modal-backdrop"
-          onClick={() => {
-            if (!isDeletingSelectedUsers) {
-              setIsConfirmingDeleteSelected(false);
-            }
-          }}
+        <Modal
+          className="modal-card compact-modal"
+          labelledBy="delete-selected-users-title"
+          describedBy="delete-selected-users-description"
+          isDismissDisabled={isDeletingSelectedUsers}
+          onClose={() => setIsConfirmingDeleteSelected(false)}
         >
-          <section className="modal-card compact-modal" onClick={(event) => event.stopPropagation()}>
             <header className="modal-header">
-              <h2>{t('admin.users.deleteSelectedTitle')}</h2>
+              <h2 id="delete-selected-users-title">{t('admin.users.deleteSelectedTitle')}</h2>
               <button
                 type="button"
                 aria-label={t('admin.users.closeDeleteSelected')}
@@ -348,7 +347,7 @@ function UsersView() {
               </button>
             </header>
             <div className="modal-body">
-              <p className="confirm-description">
+              <p className="confirm-description" id="delete-selected-users-description">
                 {t('admin.users.deleteSelectedDescription', { count: selectedUserIds.length })}
               </p>
             </div>
@@ -370,8 +369,7 @@ function UsersView() {
                 {isDeletingSelectedUsers ? t('common.deleting') : t('common.delete')}
               </button>
             </footer>
-          </section>
-        </div>
+        </Modal>
       )}
       {modal === 'assignGroup' && (
         <UserAssignGroupModal
