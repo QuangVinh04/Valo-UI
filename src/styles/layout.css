@@ -13,6 +13,8 @@
 }
 
 .sidebar {
+  position: relative;
+  z-index: 20;
   height: 100vh;
   min-height: 0;
   display: flex;
@@ -50,6 +52,7 @@
 }
 
 .sidebar-collapsed .sidebar {
+  overflow: visible;
   padding-inline: 0.75rem;
 }
 
@@ -59,8 +62,7 @@
 }
 
 .sidebar-collapsed .sidebar-brand,
-.sidebar-collapsed .sidebar-chat-recents,
-.sidebar-collapsed .sidebar-account {
+.sidebar-collapsed .sidebar-chat-recents {
   display: none;
 }
 
@@ -151,6 +153,12 @@
   padding-top: 1rem;
 }
 
+.sidebar-collapsed .sidebar-account {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+}
+
 .account-menu {
   position: absolute;
   left: 0;
@@ -198,6 +206,13 @@
   opacity: 0.68;
 }
 
+.sidebar-collapsed .account-menu {
+  left: 0;
+  right: auto;
+  bottom: calc(100% + 0.75rem);
+  width: 236px;
+}
+
 .sidebar-user {
   width: 100%;
   display: flex;
@@ -223,6 +238,15 @@
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
+.sidebar-collapsed .sidebar-user {
+  width: 42px;
+  min-height: 42px;
+  justify-content: center;
+  gap: 0;
+  border-radius: 10px;
+  padding: 0;
+}
+
 .sidebar-collapsed .sidebar-nav a.active::before {
   left: -0.45rem;
   height: 22px;
@@ -243,6 +267,15 @@
 .sidebar-user-copy {
   min-width: 0;
   color: var(--text);
+}
+
+.sidebar-collapsed .sidebar-user-copy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 .sidebar-user strong {
@@ -308,7 +341,6 @@
   }
 
   .sidebar-brand p,
-  .sidebar-account,
   .sidebar-chat-recents {
     display: none;
   }

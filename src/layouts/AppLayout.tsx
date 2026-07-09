@@ -158,6 +158,8 @@ function AppLayoutContent() {
             className="sidebar-user"
             aria-haspopup="menu"
             aria-expanded={isAccountMenuOpen}
+            aria-label={accountDisplayName}
+            title={accountDisplayName}
             onClick={() => setIsAccountMenuOpen((current) => !current)}
           >
             <span className="sidebar-avatar" aria-hidden="true">{avatarInitial}</span>
