@@ -2,7 +2,7 @@ import { createContext, createElement, ReactNode, useCallback, useContext, useEf
 import { useTranslation } from 'react-i18next';
 import { useLocation, useMatch, useNavigate } from 'react-router-dom';
 import { useToast } from '@/context/ToastContext';
-import { deleteUploadedFile, uploadChatFile, type UploadTarget } from '@/services/file-upload.service';
+import { cancelChunkUpload, deleteUploadedFile, uploadChatFile, type UploadTarget } from '@/services/file-upload.service';
 import { deleteConversation, getConversation, getConversations, renameConversation, sendMessageStream } from '@/services/chat.service';
 import type { ChatMessage, Conversation, FileUpload, MessageStatus, StreamDoneEvent, StreamReadyEvent } from '@/types/chat.type';
 
@@ -16,7 +16,7 @@ export type ChatModelKey = typeof chatModelOptions[number]['value'];
 const defaultModel = availableModels[0];
 const chatFileLimits = {
   maxFiles: 5,
-  maxFileSizeBytes: 10 * 1024 * 1024,
+  maxFileSizeBytes: 20 * 1024 * 1024,
   acceptedFileTypes: [
     '.pdf',
     '.txt',
@@ -118,8 +118,10 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 export type SelectedChatFile = {
   id: string;
   file: File;
-  status: 'uploading' | 'ready' | 'error';
+  status: 'initializing' | 'uploading' | 'finalizing' | 'ready' | 'error';
   uploadTarget?: UploadTarget;
+  uploadId?: string;
+  progress?: number;
   fileUpload?: FileUpload;
   error?: string;
 };
@@ -144,6 +146,8 @@ function useChatState() {
   const streamAbortControllerRef = useRef<AbortController | null>(null);
   const historyResetVersionRef = useRef(0);
   const removedUploadIdsRef = useRef(new Set<string>());
+  const uploadControllersRef = useRef(new Map<string, AbortController>());
+  const uploadSessionIdsRef = useRef(new Map<string, string>());
   const selectedFilesRef = useRef<SelectedChatFile[]>([]);
 
   const cleanupUploadedFiles = useCallback((fileUploads: FileUpload[]) => {
@@ -155,11 +159,23 @@ function useChatState() {
   const cleanupSelectedUploads = useCallback((files: SelectedChatFile[]) => {
     files.forEach((file) => {
       removedUploadIdsRef.current.add(file.id);
+      uploadControllersRef.current.get(file.id)?.abort();
+      uploadControllersRef.current.delete(file.id);
+
+      const uploadId = file.uploadId ?? uploadSessionIdsRef.current.get(file.id);
+      if (uploadId && !file.fileUpload) {
+        void cancelChunkUpload(uploadId)
+          .catch(() => undefined)
+          .finally(() => {
+            uploadSessionIdsRef.current.delete(file.id);
+          });
+      }
 
       if (file.fileUpload) {
         void deleteUploadedFile(file.fileUpload)
           .catch(() => undefined)
           .finally(() => {
+            uploadSessionIdsRef.current.delete(file.id);
             removedUploadIdsRef.current.delete(file.id);
           });
       }
@@ -350,62 +366,124 @@ function useChatState() {
     const nextSelectedFiles = nextFiles.map((file) => ({
       id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
       file,
-      status: 'uploading' as const,
+      status: 'initializing' as const,
+      progress: 0,
     }));
 
     setSelectedFiles((current) => [...current, ...nextSelectedFiles]);
 
-    nextSelectedFiles.forEach((selectedFile) => {
-      void uploadChatFile(selectedFile.file, {
-        onUploadTargetChange: (uploadTarget) => {
-          setSelectedFiles((current) => current.map((item) => (
-            item.id === selectedFile.id
-              ? {
-                ...item,
-                uploadTarget,
-              }
-              : item
-          )));
-        },
-      })
-        .then((uploaded) => {
-          if (removedUploadIdsRef.current.has(selectedFile.id)) {
-            removedUploadIdsRef.current.delete(selectedFile.id);
-            void deleteUploadedFile(uploaded.fileUpload).catch((err) => {
-              setError(err instanceof Error ? err.message : 'Cannot delete uploaded file');
-            });
-            return;
-          }
+    const uploadSelectedFile = async (selectedFile: SelectedChatFile) => {
+      if (removedUploadIdsRef.current.has(selectedFile.id)) {
+        removedUploadIdsRef.current.delete(selectedFile.id);
+        return;
+      }
 
-          setSelectedFiles((current) => current.map((item) => (
-            item.id === selectedFile.id
-              ? {
-                ...item,
-                status: 'ready',
-                uploadTarget: item.uploadTarget,
-                fileUpload: uploaded.fileUpload,
-                error: undefined,
-              }
-              : item
-          )));
-        })
-        .catch((err) => {
-          if (removedUploadIdsRef.current.has(selectedFile.id)) {
-            removedUploadIdsRef.current.delete(selectedFile.id);
-            return;
-          }
+      const controller = new AbortController();
+      uploadControllersRef.current.set(selectedFile.id, controller);
 
-          setSelectedFiles((current) => current.map((item) => (
-            item.id === selectedFile.id
-              ? {
-                ...item,
-                status: 'error',
-                error: err instanceof Error ? err.message : 'Cannot upload file',
-              }
-              : item
-          )));
+      try {
+        const uploaded = await uploadChatFile(selectedFile.file, {
+          signal: controller.signal,
+          onUploadTargetChange: (uploadTarget) => {
+            setSelectedFiles((current) => current.map((item) => (
+              item.id === selectedFile.id
+                ? {
+                  ...item,
+                  uploadTarget,
+                }
+                : item
+            )));
+          },
+          onUploadId: (uploadId) => {
+            uploadSessionIdsRef.current.set(selectedFile.id, uploadId);
+            setSelectedFiles((current) => current.map((item) => (
+              item.id === selectedFile.id
+                ? {
+                  ...item,
+                  uploadId,
+                }
+                : item
+            )));
+          },
+          onProgress: (progress) => {
+            setSelectedFiles((current) => current.map((item) => (
+              item.id === selectedFile.id
+                ? {
+                  ...item,
+                  progress,
+                }
+                : item
+            )));
+          },
+          onPhaseChange: (phase) => {
+            setSelectedFiles((current) => current.map((item) => (
+              item.id === selectedFile.id
+                ? {
+                  ...item,
+                  status: phase,
+                }
+                : item
+            )));
+          },
         });
-    });
+
+        uploadControllersRef.current.delete(selectedFile.id);
+        uploadSessionIdsRef.current.delete(selectedFile.id);
+
+        if (removedUploadIdsRef.current.has(selectedFile.id)) {
+          removedUploadIdsRef.current.delete(selectedFile.id);
+          void deleteUploadedFile(uploaded.fileUpload).catch((err) => {
+            setError(err instanceof Error ? err.message : 'Cannot delete uploaded file');
+          });
+          return;
+        }
+
+        setSelectedFiles((current) => current.map((item) => (
+          item.id === selectedFile.id
+            ? {
+              ...item,
+              status: 'ready',
+              uploadTarget: item.uploadTarget,
+              progress: 100,
+              fileUpload: uploaded.fileUpload,
+              error: undefined,
+            }
+            : item
+        )));
+      } catch (err) {
+        uploadControllersRef.current.delete(selectedFile.id);
+        uploadSessionIdsRef.current.delete(selectedFile.id);
+
+        if (removedUploadIdsRef.current.has(selectedFile.id)) {
+          removedUploadIdsRef.current.delete(selectedFile.id);
+          return;
+        }
+
+        setSelectedFiles((current) => current.map((item) => (
+          item.id === selectedFile.id
+            ? {
+              ...item,
+              status: 'error',
+              error: err instanceof Error ? err.message : 'Cannot upload file',
+            }
+            : item
+        )));
+      }
+    };
+
+    let nextUploadIndex = 0;
+    const uploadWorker = async () => {
+      while (nextUploadIndex < nextSelectedFiles.length) {
+        const selectedFile = nextSelectedFiles[nextUploadIndex];
+        nextUploadIndex += 1;
+
+        await uploadSelectedFile(selectedFile);
+      }
+    };
+
+    void Promise.all(
+      Array.from({ length: Math.min(2, nextSelectedFiles.length) }, uploadWorker)
+    );
   };
 
   // Xóa tệp đã chọn khỏi composer theo vị trí hiển thị.
@@ -414,6 +492,19 @@ function useChatState() {
     if (!selectedFile) return;
 
     removedUploadIdsRef.current.add(selectedFile.id);
+    uploadControllersRef.current.get(selectedFile.id)?.abort();
+    uploadControllersRef.current.delete(selectedFile.id);
+
+    const uploadId = selectedFile.uploadId ?? uploadSessionIdsRef.current.get(selectedFile.id);
+    if (uploadId && !selectedFile.fileUpload) {
+      void cancelChunkUpload(uploadId)
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Cannot cancel upload');
+        })
+        .finally(() => {
+          uploadSessionIdsRef.current.delete(selectedFile.id);
+        });
+    }
 
     if (selectedFile.fileUpload) {
       void deleteUploadedFile(selectedFile.fileUpload)
@@ -421,6 +512,7 @@ function useChatState() {
           setError(err instanceof Error ? err.message : 'Cannot delete uploaded file');
         })
         .finally(() => {
+          uploadSessionIdsRef.current.delete(selectedFile.id);
           removedUploadIdsRef.current.delete(selectedFile.id);
         });
     }
@@ -472,7 +564,11 @@ function useChatState() {
   const sendPrompt = async () => {
     const content = prompt.trim();
     const filesToSend = selectedFiles;
-    const isWaitingForUploads = filesToSend.some((file) => file.status === 'uploading');
+    const isWaitingForUploads = filesToSend.some((file) => (
+      file.status === 'initializing'
+      || file.status === 'uploading'
+      || file.status === 'finalizing'
+    ));
     const hasFailedUploads = filesToSend.some((file) => file.status === 'error');
     const readyFiles = filesToSend.filter((file) => file.status === 'ready' && file.fileUpload);
 
@@ -677,7 +773,11 @@ function useChatState() {
     isOpeningConversation,
     openingConversationId,
     isStreaming,
-    isWaitingForUploads: selectedFiles.some((file) => file.status === 'uploading'),
+    isWaitingForUploads: selectedFiles.some((file) => (
+      file.status === 'initializing'
+      || file.status === 'uploading'
+      || file.status === 'finalizing'
+    )),
     hasFailedUploads: selectedFiles.some((file) => file.status === 'error'),
     fileLimits: chatFileLimits,
     error,

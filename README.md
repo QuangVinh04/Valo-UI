@@ -47,8 +47,8 @@ Update `.env` as needed:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:4001/api/v1
-VITE_CLOUDINARY_CLOUD_NAME=
-VITE_CLOUDINARY_UPLOAD_PRESET=
+VITE_UPLOAD_BASE_ENDPOINT=/attachments/uploads
+VITE_UPLOAD_CHUNK_SIZE_BYTES=2097152
 ```
 
 Start the development server:
@@ -74,8 +74,8 @@ npm run preview
 | Variable | Required | Description |
 | --- | --- | --- |
 | `VITE_API_BASE_URL` | Yes | Base URL for the backend API. |
-| `VITE_CLOUDINARY_CLOUD_NAME` | Required for uploads | Cloudinary cloud name used by chat file uploads. |
-| `VITE_CLOUDINARY_UPLOAD_PRESET` | Required for uploads | Unsigned upload preset used by chat file uploads. |
+| `VITE_UPLOAD_BASE_ENDPOINT` | No | Base API path for chunked multipart/form-data uploads. The frontend calls init/chunk/status/complete/cancel under this path. |
+| `VITE_UPLOAD_CHUNK_SIZE_BYTES` | No | Chunk size in bytes for upload requests. Defaults to 2 MB. |
 
 ## Project Structure
 

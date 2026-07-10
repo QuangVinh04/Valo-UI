@@ -612,12 +612,24 @@
   font-size: 0.78rem;
 }
 
-.selected-file-status.ready {
-  color: var(--blue-2);
+.selected-file-progress {
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line-strong) 65%, transparent);
 }
 
-.selected-file-status.fallback {
-  color: var(--warning);
+.selected-file-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--blue-2);
+  transition: width 0.18s ease;
+}
+
+.selected-file-status.ready {
+  color: var(--blue-2);
 }
 
 .selected-file-status.error {

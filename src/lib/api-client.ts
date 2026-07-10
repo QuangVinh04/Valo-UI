@@ -144,6 +144,10 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
   request.headers['Accept-Language'] = getRequestLanguage() || DEFAULT_LANGUAGE;
 
+  if (request.data instanceof FormData) {
+    delete request.headers['Content-Type'];
+  }
+
   if (!request.skipAuth && token) {
     request.headers.Authorization = `Bearer ${token}`;
   } else {

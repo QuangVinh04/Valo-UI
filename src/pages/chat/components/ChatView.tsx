@@ -362,6 +362,10 @@ function SelectedFilePreview({
   const { file } = selectedFile;
   const isImage = file.type.startsWith('image/');
   const statusLabel = getSelectedFileStatusLabel(selectedFile, t);
+  const isUploadInProgress = selectedFile.status === 'initializing'
+    || selectedFile.status === 'uploading'
+    || selectedFile.status === 'finalizing';
+  const progress = Math.max(0, Math.min(selectedFile.progress ?? 0, 100));
 
   useEffect(() => {
     const nextUrl = URL.createObjectURL(file);
@@ -379,7 +383,7 @@ function SelectedFilePreview({
         rel="noreferrer"
         title={t('chat.openFile', { name: file.name })}
       >
-        {selectedFile.status === 'uploading' ? (
+        {isUploadInProgress ? (
           <Loader2 size={22} aria-hidden="true" />
         ) : isImage && objectUrl ? (
           <img src={objectUrl} alt="" />
@@ -392,11 +396,22 @@ function SelectedFilePreview({
       <div className="selected-file-meta">
         <span title={file.name}>{file.name}</span>
         <small
-          className={`selected-file-status ${selectedFile.status} ${selectedFile.uploadTarget === 'local-fallback' ? 'fallback' : ''}`}
+          className={`selected-file-status ${selectedFile.status}`}
           title={selectedFile.error}
         >
           {statusLabel}
         </small>
+        {isUploadInProgress && (
+          <div
+            className="selected-file-progress"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+          >
+            <span style={{ width: `${progress}%` }} />
+          </div>
+        )}
       </div>
       <button type="button" onClick={() => onRemove(index)} aria-label={t('chat.removeFile', { name: file.name })}>
         <X size={14} aria-hidden="true" />
@@ -414,23 +429,23 @@ function getSelectedFileStatusLabel(
   }
 
   if (selectedFile.status === 'ready') {
-    if (selectedFile.uploadTarget === 'local' || selectedFile.uploadTarget === 'local-fallback') {
-      return t('chat.readyLocal');
+    if (selectedFile.uploadTarget === 'server') {
+      return t('chat.readyServer');
     }
 
     return t('chat.ready');
   }
 
-  if (selectedFile.uploadTarget === 'cloudinary') {
-    return t('chat.uploadingCloudinary');
+  if (selectedFile.status === 'initializing') {
+    return t('chat.uploadInitializing');
   }
 
-  if (selectedFile.uploadTarget === 'local-fallback') {
-    return t('chat.uploadingLocalFallback');
+  if (selectedFile.status === 'finalizing') {
+    return t('chat.uploadFinalizing');
   }
 
-  if (selectedFile.uploadTarget === 'local') {
-    return t('chat.uploadingLocal');
+  if (selectedFile.uploadTarget === 'server') {
+    return t('chat.uploadingServer', { progress: selectedFile.progress ?? 0 });
   }
 
   return t('chat.uploading');
