@@ -10,6 +10,7 @@ export type ChatMessage = {
   createdAt: string;
   fileUploads?: FileUpload[];
   streamStatus?: 'error' | 'stopped';
+  isUserStopped?: boolean;
 };
 
 export type FileUpload = {

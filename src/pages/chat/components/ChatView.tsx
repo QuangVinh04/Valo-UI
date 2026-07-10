@@ -302,7 +302,7 @@ function ChatMessageItem({
   const assistantClassName = [
     'assistant-msg',
     isStreaming ? 'streaming' : '',
-    message.streamStatus === 'error' || message.status === 'FAILED' ? 'assistant-msg-error' : '',
+    message.streamStatus === 'error' || (message.status === 'FAILED' && !message.isUserStopped) ? 'assistant-msg-error' : '',
   ].filter(Boolean).join(' ');
   const canExportMessage = message.senderType === 'assistant'
     && !isSyntheticError
@@ -326,6 +326,9 @@ function ChatMessageItem({
             </div>
           )}
         </div>
+        {!isStreaming && message.isUserStopped && (
+          <p className="assistant-stopped-note">{t('chat.generationStopped')}</p>
+        )}
         {!isStreaming && (
           <>
             <div className="assistant-meta">

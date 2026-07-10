@@ -163,6 +163,14 @@
   color: var(--danger);
 }
 
+.assistant-stopped-note {
+  margin: 0.65rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
 .assistant-content ul,
 .assistant-content ol {
   margin: 0.1rem 0;

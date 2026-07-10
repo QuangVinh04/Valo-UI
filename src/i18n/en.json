@@ -120,7 +120,7 @@
     "stopGenerating": "Stop generating",
     "sendPrompt": "Send prompt",
     "waitForUpload": "Please wait for the file to finish uploading",
-    "generationStopped": "Response stopped.",
+    "generationStopped": "You stopped this response",
     "generationError": "Response stopped because an error occurred: {{message}}",
     "disclaimer": "Agent Hub may display inaccurate info, so double-check its responses.",
     "copyResponse": "Copy response",

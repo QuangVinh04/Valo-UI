@@ -128,12 +128,14 @@ export function useChatStreaming({
     const updatePendingAssistantMessage = (
       nextContent: string,
       streamStatus?: ChatMessage['streamStatus'],
-      status?: MessageStatus
+      status?: MessageStatus,
+      isUserStopped?: boolean
     ) => {
       assistantMessage = {
         ...assistantMessage,
         content: nextContent,
         streamStatus,
+        ...(typeof isUserStopped === 'boolean' ? { isUserStopped } : {}),
         ...(status ? { status } : {}),
       };
 
@@ -272,7 +274,7 @@ export function useChatStreaming({
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
-        appendAssistantStatus(t('chat.generationStopped'), 'stopped', 'FAILED');
+        updatePendingAssistantMessage(assistantMessage.content, 'stopped', 'SUCCESS', true);
       } else {
         const message = err instanceof Error ? err.message : 'Cannot send message';
         setError(message);
