@@ -358,6 +358,7 @@ html[data-theme='light'] .btn-danger-link {
 }
 
 .group-table {
+  --table-column-actions: 220px;
   min-width: 980px;
 }
 
@@ -877,14 +878,16 @@ html[data-theme='light'] .btn-danger-link {
 }
 
 .confirm-popover {
-  position: fixed;
-  z-index: 30;
   width: min(440px, calc(100vw - 2rem));
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: 8px;
   background: var(--panel);
   box-shadow: var(--panel-shadow);
+}
+
+.confirm-modal-backdrop {
+  z-index: 30;
 }
 
 .confirm-popover-header,

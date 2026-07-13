@@ -23,6 +23,9 @@ function ActionIconButton({
   ...props
 }: ActionIconButtonProps) {
   const ButtonIcon = isLoading ? Loader2 : Icon;
+  const badgeLabel = typeof badge === 'string' || typeof badge === 'number'
+    ? `${label} (${badge})`
+    : label;
 
   return (
     <button
@@ -30,11 +33,13 @@ function ActionIconButton({
       type={props.type ?? 'button'}
       className={`action-icon-button action-icon-button-${variant} ${className}`.trim()}
       aria-busy={isLoading || undefined}
-      aria-label={label}
+      aria-label={badgeLabel}
       title={label}
     >
       <ButtonIcon size={size} strokeWidth={2.2} aria-hidden="true" />
-    
+      {badge !== undefined && badge !== null && (
+        <span className="action-icon-badge" aria-hidden="true">{badge}</span>
+      )}
     </button>
   );
 }

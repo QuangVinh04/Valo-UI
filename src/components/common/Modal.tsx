@@ -2,6 +2,7 @@ import {
   type FormEventHandler,
   type MouseEvent,
   type ReactNode,
+  type RefObject,
   useEffect,
   useRef,
 } from 'react';
@@ -12,6 +13,7 @@ type ModalProps = {
   className: string;
   labelledBy: string;
   describedBy?: string;
+  initialFocusRef?: RefObject<HTMLElement | null>;
   isDismissDisabled?: boolean;
   onClose: () => void;
   onSubmit?: FormEventHandler<HTMLFormElement>;
@@ -36,12 +38,18 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
     ));
 }
 
+function isTopmostDialog(dialog: HTMLElement): boolean {
+  const openDialogs = document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]');
+  return openDialogs[openDialogs.length - 1] === dialog;
+}
+
 function Modal({
   as = 'section',
   backdropClassName = 'modal-backdrop',
   className,
   labelledBy,
   describedBy,
+  initialFocusRef,
   isDismissDisabled = false,
   onClose,
   onSubmit,
@@ -66,10 +74,12 @@ function Modal({
     if (!dialog) return undefined;
 
     const focusableElements = getFocusableElements(dialog);
-    const initialFocusTarget = focusableElements[0] ?? dialog;
+    const initialFocusTarget = initialFocusRef?.current ?? focusableElements[0] ?? dialog;
     initialFocusTarget.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isTopmostDialog(dialog)) return;
+
       if (event.key === 'Escape' && !isDismissDisabledRef.current) {
         event.preventDefault();
         onCloseRef.current();
@@ -89,6 +99,12 @@ function Modal({
       const lastElement = elements[elements.length - 1];
       const activeElement = document.activeElement;
 
+      if (!(activeElement instanceof HTMLElement) || !elements.includes(activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? lastElement : firstElement).focus();
+        return;
+      }
+
       if (event.shiftKey && activeElement === firstElement) {
         event.preventDefault();
         lastElement.focus();
@@ -99,11 +115,6 @@ function Modal({
         event.preventDefault();
         firstElement.focus();
         return;
-      }
-
-      if (!dialog.contains(activeElement)) {
-        event.preventDefault();
-        firstElement.focus();
       }
     };
 
@@ -116,7 +127,7 @@ function Modal({
         previousFocusRef.current.focus();
       }
     };
-  }, []);
+  }, [initialFocusRef]);
 
   const handleBackdropClick = () => {
     if (!isDismissDisabledRef.current) {

@@ -110,7 +110,7 @@ function LoginPage() {
               </div>
 
               <button className="auth-submit" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t('auth.signingIn') : t('auth.continueToDashboard')}
+                {isSubmitting ? t('auth.signingIn') : t('auth.login')}
               </button>
             </form>
             <p className="auth-switch">

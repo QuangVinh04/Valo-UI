@@ -74,10 +74,10 @@ export function useChatConversations({
       setError('');
 
       try {
-        const data = await getConversations();
+        const result = await getConversations({ limit: 20 });
         if (ignore || historyResetVersionRef.current !== resetVersion) return;
 
-        setConversations(data);
+        setConversations(result.data);
       } catch (err) {
         if (!ignore && historyResetVersionRef.current === resetVersion) {
           setError(err instanceof Error ? err.message : 'Cannot load conversations');

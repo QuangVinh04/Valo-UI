@@ -124,21 +124,6 @@
   text-align: left;
 }
 
-.settings-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  padding: 1.5rem;
-  background: rgba(5, 7, 8, 0.72);
-}
-
-.settings-modal {
-  width: min(520px, 100%);
-  padding: 1.5rem;
-}
-
 .settings-modal.storage-modal {
   width: min(1060px, calc(100vw - 3rem));
   max-height: min(760px, calc(100vh - 3rem));
@@ -165,78 +150,63 @@
   background: var(--modal-footer-bg);
 }
 
-.settings-modal header,
-.settings-modal footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+.storage-confirm-backdrop {
+  z-index: calc(var(--z-modal) + 1);
 }
 
-.settings-modal header {
-  margin-bottom: 1.5rem;
+.settings-modal.storage-delete-confirm {
+  width: min(520px, calc(100vw - 2rem));
+  padding: 0;
+  overflow: hidden;
 }
 
-.settings-modal header h3 {
+.settings-modal.storage-modal .storage-delete-confirm header,
+.settings-modal.storage-modal .storage-delete-confirm footer {
+  padding: 1.15rem 1.35rem;
+}
+
+.settings-modal.storage-modal .storage-delete-confirm header {
   margin: 0;
-  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
 }
 
-.settings-modal header button {
-  border: 0;
-  background: transparent;
-  color: var(--action-text);
-  font-size: 1.5rem;
+.storage-delete-confirm header p {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
-.settings-modal-body {
+.storage-delete-confirm-body {
   display: grid;
-  gap: 1rem;
+  gap: 0.85rem;
+  padding: 1.25rem 1.35rem;
 }
 
-.settings-modal label {
+.storage-delete-confirm-body ul {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.25rem;
   color: var(--text);
-  font-weight: 500;
 }
 
-.settings-modal input {
-  min-height: 42px;
-  border: 1px solid var(--modal-input-border);
-  border-radius: 10px;
-  background: var(--modal-input-bg);
-  color: var(--text);
-  padding: 0 1rem;
+.storage-delete-confirm-body li {
+  overflow-wrap: anywhere;
 }
 
-.confirm-description {
+.storage-delete-confirm-body p {
   margin: 0;
   color: var(--muted);
-  line-height: 1.6;
 }
 
-.settings-modal footer {
-  justify-content: flex-end;
-  margin-top: 1.5rem;
+.storage-delete-confirm-body .storage-delete-warning {
+  color: var(--danger);
+  font-weight: 600;
 }
 
-.settings-modal footer .btn-primary,
-.settings-modal footer .btn-blue,
-.settings-modal footer .btn-cancel,
-.settings-modal footer .btn-muted,
-.settings-modal footer .btn-outline-danger,
-.settings-modal footer .btn-solid-danger {
-  min-width: 118px;
-  min-height: 44px;
-  border-radius: 10px;
-  padding: 0 1.15rem;
-  font-size: 0.98rem;
-}
-
-.settings-modal button:disabled {
-  cursor: not-allowed;
-  opacity: 0.68;
+.settings-modal.storage-modal .storage-delete-confirm footer {
+  margin: 0;
+  border-top: 1px solid var(--line);
 }
 
 .storage-modal-kicker {

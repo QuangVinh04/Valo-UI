@@ -13,11 +13,14 @@ function ChatView() {
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
+  const chatPageRef = useRef<HTMLDivElement | null>(null);
   const bottomAnchorRef = useRef<HTMLDivElement | null>(null);
   const modelMenuRef = useRef<HTMLDivElement | null>(null);
+  const shouldFollowStreamRef = useRef(true);
   const isEmptyChat = !chat.messages.length && !chat.isLoading && !chat.isOpeningConversation;
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isComposerExpanded, setIsComposerExpanded] = useState(false);
+  const [hasNewResponseBelow, setHasNewResponseBelow] = useState(false);
   const selectedModel = chatModelOptions.find((model) => model.value === chat.modelName) ?? chatModelOptions[0];
 
   useEffect(() => {
@@ -27,11 +30,48 @@ function ChatView() {
   }, [chat.error, toast]);
 
   useEffect(() => {
-    bottomAnchorRef.current?.scrollIntoView({
-      block: 'end',
-      behavior: chat.isStreaming ? 'smooth' : 'auto',
-    });
+    const scrollContainer = chatPageRef.current?.closest<HTMLElement>('.content-chat');
+    if (!scrollContainer) return undefined;
+
+    const updateFollowState = () => {
+      const distanceToBottom = scrollContainer.scrollHeight
+        - scrollContainer.scrollTop
+        - scrollContainer.clientHeight;
+      const isNearBottom = distanceToBottom <= 160;
+      shouldFollowStreamRef.current = isNearBottom;
+
+      if (isNearBottom) {
+        setHasNewResponseBelow(false);
+      }
+    };
+
+    updateFollowState();
+    scrollContainer.addEventListener('scroll', updateFollowState, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', updateFollowState);
+  }, []);
+
+  useEffect(() => {
+    shouldFollowStreamRef.current = true;
+    setHasNewResponseBelow(false);
+  }, [chat.activeConversationId]);
+
+  useEffect(() => {
+    if (shouldFollowStreamRef.current) {
+      bottomAnchorRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' });
+      setHasNewResponseBelow(false);
+      return;
+    }
+
+    if (chat.messages.length > 0) {
+      setHasNewResponseBelow(true);
+    }
   }, [chat.messages, chat.isStreaming]);
+
+  const scrollToLatestResponse = () => {
+    shouldFollowStreamRef.current = true;
+    setHasNewResponseBelow(false);
+    bottomAnchorRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const textarea = promptRef.current;
@@ -79,7 +119,7 @@ function ChatView() {
 
 
   return (
-    <div className="chat-page">
+    <div className="chat-page" ref={chatPageRef}>
       <main className={`chat-main ${isEmptyChat ? 'chat-main-empty' : ''}`}>
         <section className="chat-thread">
           {chat.isOpeningConversation && (
@@ -124,6 +164,13 @@ function ChatView() {
             );
           })}
         </section>
+
+        {hasNewResponseBelow && (
+          <button type="button" className="chat-new-response" onClick={scrollToLatestResponse}>
+            {t('chat.newResponseBelow')}
+            <ChevronDown size={16} aria-hidden="true" />
+          </button>
+        )}
 
         <footer className={`chat-composer-wrap ${isEmptyChat ? 'chat-composer-empty' : ''}`}>
           {chat.selectedFiles.length > 0 && (

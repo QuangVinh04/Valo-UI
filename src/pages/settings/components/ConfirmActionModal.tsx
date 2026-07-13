@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { useChat } from '@/hooks/useChat';
 import { clearAuthState } from '@/lib/auth';
 import { getErrorMessage } from '@/lib/error';
 import Modal from '@/components/common/Modal';
+import IconButton from '@/components/common/IconButton';
 import { clearChatHistory, deleteCurrentAccount } from '@/services/settings.service';
 import type { ConfirmAction } from '@/types/settings.type';
 
@@ -75,7 +77,7 @@ function ConfirmActionModal({ action, onClose, onSignedOut }: ConfirmActionModal
     >
         <header>
           <h3 id="confirm-action-modal-title">{copy.title}</h3>
-          <button type="button" onClick={onClose}>x</button>
+          <IconButton icon={X} label={t('common.close')} onClick={onClose} />
         </header>
         <p className="confirm-description" id="confirm-action-modal-description">{copy.description}</p>
         <footer>

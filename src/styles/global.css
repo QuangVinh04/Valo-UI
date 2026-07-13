@@ -1,6 +1,38 @@
 @import './common.css';
 
 :root {
+  /* Foundations: spacing 4 / 8 / 12 / 16 / 24 / 32 */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 999px;
+  --control-height-sm: 36px;
+  --control-height-md: 40px;
+  --control-height-lg: 44px;
+  --control-height-xl: 48px;
+  --font-size-small: 0.82rem;
+  --font-size-label: 0.92rem;
+  --font-size-body: 1rem;
+  --font-size-title: 1.25rem;
+  --line-height-tight: 1.25;
+  --line-height-body: 1.5;
+  --shadow-sm: 0 6px 16px rgba(5, 13, 24, 0.16);
+  --shadow-md: 0 18px 42px rgba(5, 13, 24, 0.24);
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-modal: 30;
+  --z-toast: 80;
+  /* Shared references: CSS variables cannot be interpolated in @media rules. */
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 760px;
+  --breakpoint-lg: 1100px;
   --bg: #090d0f;
   --panel: #141719;
   --panel-2: #1d2023;
@@ -167,7 +199,8 @@ button:disabled {
 
 body {
   font-weight: 400;
-  line-height: 1.5;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
   color: var(--text);
   background:
     var(--bg);
@@ -185,7 +218,7 @@ a {
 .panel-dark {
   border: 1px solid var(--line);
   background: var(--panel);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--panel-shadow);
 }
 
@@ -207,7 +240,7 @@ a {
   position: fixed;
   right: 1.25rem;
   bottom: 1.25rem;
-  z-index: 60;
+  z-index: var(--z-toast);
   display: grid;
   gap: 0.75rem;
   width: min(380px, calc(100vw - 2.5rem));
@@ -218,7 +251,7 @@ a {
   min-height: 52px;
   border: 1px solid var(--line-strong);
   border-left-width: 5px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--panel);
   color: var(--text);
   box-shadow: var(--panel-shadow);

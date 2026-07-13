@@ -1,9 +1,10 @@
-import { type FormEvent, useCallback, useEffect, useState } from 'react';
+import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Search, Trash2, Users, X } from 'lucide-react';
 import ActionIconButton from '@/components/common/ActionIconButton';
 import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import IconButton from '@/components/common/IconButton';
+import Modal from '@/components/common/Modal';
 import { useToast } from '@/context/ToastContext';
 import { getGroupMembers, removeGroupMembers } from '@/services/group.service';
 import type { GroupMemberDto } from '@/types/group.type';
@@ -35,6 +36,8 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const memberModalTitleRef = useRef<HTMLHeadingElement>(null);
+  const removeConfirmationTitleRef = useRef<HTMLHeadingElement>(null);
 
   const loadMembers = useCallback(async (targetPage = 1, search = activeMemberSearch) => {
     setIsLoadingMembers(true);
@@ -219,142 +222,158 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
   ];
 
   return (
-    <div className="modal-backdrop" onClick={() => { if (!isRemoving) onClose(); }}>
-      <section
-        className={`modal-card group-modal ${isAddPage ? 'compact-modal' : 'member-management-modal'}`}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <header className="modal-header stacked">
-          <div>
-            <h2>{isAddPage ? t('admin.groups.addMembers') : t('admin.groups.manageMembers')}</h2>
-            <p>{isAddPage ? t('admin.groups.attachUsersToGroup', { name: group.name }) : t('admin.groups.addRemoveUsers', { name: group.name })}</p>
-          </div>
-          <IconButton icon={X} label={t('admin.groups.closeMemberManagement')} onClick={onClose} />
-        </header>
-
-        <div className="modal-body member-modal-body">
-          {isAddPage ? (
-            <GroupAddMembersPanel
-              group={group}
-              currentMemberIds={currentMemberIds}
-              onBack={() => setMemberPage('list')}
-              onMembersAdded={handleMembersAdded}
-            />
-          ) : (
-            <section className="member-table-card">
-              <div className={`bulk-row table-action-bar ${hasSelectedMembers ? 'selection-actions' : ''}`}>
-                {hasSelectedMembers ? (
-                  <>
-                    <span className="member-selection-count">
-                      {t('common.selected', { count: selectedMemberIds.length })}
-                    </span>
-                    <ActionIconButton
-                      icon={Trash2}
-                      label={isRemoving ? t('common.deleting') : t('common.delete')}
-                      variant="danger"
-                      onClick={openRemoveConfirmation}
-                      isLoading={isRemoving}
-                      disabled={isRemoving}
-                    />
-                  </>
-                ) : (
-                  <div className="table-toolbar">
-                    <form className="table-search-bar member-search-bar" onSubmit={handleMemberSearchSubmit}>
-                      <input
-                        value={memberSearch}
-                        placeholder={t('admin.groups.searchUsersPlaceholderLong')}
-                        onChange={(event) => setMemberSearch(event.target.value)}
-                      />
-                      <button type="submit" aria-label={t('common.search')}>
-                        <Search size={22} aria-hidden="true" />
-                      </button>
-                    </form>
-                    <ActionIconButton
-                      icon={Plus}
-                      label={t('common.add')}
-                      variant="primary"
-                      onClick={() => setMemberPage('add')}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className={`data-table-body member-table-body ${!isLoadingMembers && currentMembers.length === 0 ? 'is-empty' : ''}`}>
-                <DataTable
-                  className="member-management-table"
-                  columns={memberTableColumns}
-                  data={currentMembers}
-                  getRowKey={(member) => member.id}
-                  getRowClassName={(member) => (
-                    selectedMemberIds.includes(member.id) ? 'selected' : undefined
-                  )}
-                />
-                {isLoadingMembers && <div className="state-row member-table-state">{t('common.loading')}</div>}
-                {!isLoadingMembers && currentMembers.length === 0 && (
-                  <div className="member-empty-state">
-                    <Users size={28} aria-hidden="true" />
-                    <strong>{t('admin.groups.noMembersInGroup')}</strong>
-                    <span>{t('admin.groups.typeToSearchUsers')}</span>
-                  </div>
-                )}
-              </div>
-              <footer className="table-footer member-table-footer">
-                <span>
-                  {t('admin.groups.membersShowing', {
-                    from: showingFrom,
-                    to: showingTo,
-                    total: totalMemberItems,
-                  })}
-                </span>
-                <div className="pagination">
-                  <button
-                    type="button"
-                    disabled={memberTablePage <= 1 || isLoadingMembers || totalMemberItems === 0}
-                    onClick={() => goToMemberPage(memberTablePage - 1)}
-                  >
-                    {'<'}
-                  </button>
-                  {Array.from({ length: totalMemberPages }, (_, index) => index + 1).map((pageNumber) => (
-                    <button
-                      type="button"
-                      className={pageNumber === memberTablePage ? 'active' : ''}
-                      key={pageNumber}
-                      disabled={isLoadingMembers || totalMemberItems === 0}
-                      onClick={() => goToMemberPage(pageNumber)}
-                    >
-                      {pageNumber}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    disabled={memberTablePage >= totalMemberPages || isLoadingMembers || totalMemberItems === 0}
-                    onClick={() => goToMemberPage(memberTablePage + 1)}
-                  >
-                    {'>'}
-                  </button>
-                </div>
-              </footer>
-            </section>
-          )}
+    <Modal
+      className={`modal-card group-modal ${isAddPage ? 'compact-modal' : 'member-management-modal'}`}
+      labelledBy="group-members-modal-title"
+      describedBy="group-members-modal-description"
+      initialFocusRef={memberModalTitleRef}
+      isDismissDisabled={isRemoving || isConfirmingRemove}
+      onClose={onClose}
+    >
+      <header className="modal-header stacked">
+        <div>
+          <h2 id="group-members-modal-title" ref={memberModalTitleRef} tabIndex={-1}>
+            {isAddPage ? t('admin.groups.addMembers') : t('admin.groups.manageMembers')}
+          </h2>
+          <p id="group-members-modal-description">
+            {isAddPage ? t('admin.groups.attachUsersToGroup', { name: group.name }) : t('admin.groups.addRemoveUsers', { name: group.name })}
+          </p>
         </div>
+        <IconButton icon={X} label={t('admin.groups.closeMemberManagement')} onClick={onClose} />
+      </header>
 
-        {!isAddPage && (
-          <footer className="modal-footer">
-            <button className="btn-cancel" type="button" onClick={onClose}>{t('common.done')}</button>
-          </footer>
+      <div className="modal-body member-modal-body">
+        {isAddPage ? (
+          <GroupAddMembersPanel
+            group={group}
+            currentMemberIds={currentMemberIds}
+            onBack={() => setMemberPage('list')}
+            onMembersAdded={handleMembersAdded}
+          />
+        ) : (
+          <section className="member-table-card">
+            <div className={`bulk-row table-action-bar ${hasSelectedMembers ? 'selection-actions' : ''}`}>
+              {hasSelectedMembers ? (
+                <>
+                  <span className="member-selection-count">
+                    {t('common.selected', { count: selectedMemberIds.length })}
+                  </span>
+                  <ActionIconButton
+                    icon={Trash2}
+                    label={isRemoving ? t('common.deleting') : t('common.delete')}
+                    variant="danger"
+                    onClick={openRemoveConfirmation}
+                    isLoading={isRemoving}
+                    disabled={isRemoving}
+                  />
+                </>
+              ) : (
+                <div className="table-toolbar">
+                  <form className="table-search-bar member-search-bar" onSubmit={handleMemberSearchSubmit}>
+                    <input
+                      value={memberSearch}
+                      placeholder={t('admin.groups.searchUsersPlaceholderLong')}
+                      onChange={(event) => setMemberSearch(event.target.value)}
+                    />
+                    <button type="submit" aria-label={t('common.search')}>
+                      <Search size={22} aria-hidden="true" />
+                    </button>
+                  </form>
+                  <ActionIconButton
+                    icon={Plus}
+                    label={t('common.add')}
+                    variant="primary"
+                    onClick={() => setMemberPage('add')}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className={`data-table-body member-table-body ${!isLoadingMembers && currentMembers.length === 0 ? 'is-empty' : ''}`}>
+              <DataTable
+                className="member-management-table"
+                columns={memberTableColumns}
+                data={currentMembers}
+                getRowKey={(member) => member.id}
+                getRowClassName={(member) => (
+                  selectedMemberIds.includes(member.id) ? 'selected' : undefined
+                )}
+              />
+              {isLoadingMembers && <div className="state-row member-table-state">{t('common.loading')}</div>}
+              {!isLoadingMembers && currentMembers.length === 0 && (
+                <div className="member-empty-state">
+                  <Users size={28} aria-hidden="true" />
+                  <strong>{t('admin.groups.noMembersInGroup')}</strong>
+                  <span>{t('admin.groups.typeToSearchUsers')}</span>
+                </div>
+              )}
+            </div>
+            <footer className="table-footer member-table-footer">
+              <span>
+                {t('admin.groups.membersShowing', {
+                  from: showingFrom,
+                  to: showingTo,
+                  total: totalMemberItems,
+                })}
+              </span>
+              <div className="pagination">
+                <button
+                  type="button"
+                  disabled={memberTablePage <= 1 || isLoadingMembers || totalMemberItems === 0}
+                  onClick={() => goToMemberPage(memberTablePage - 1)}
+                >
+                  {'<'}
+                </button>
+                {Array.from({ length: totalMemberPages }, (_, index) => index + 1).map((pageNumber) => (
+                  <button
+                    type="button"
+                    className={pageNumber === memberTablePage ? 'active' : ''}
+                    key={pageNumber}
+                    disabled={isLoadingMembers || totalMemberItems === 0}
+                    onClick={() => goToMemberPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={memberTablePage >= totalMemberPages || isLoadingMembers || totalMemberItems === 0}
+                  onClick={() => goToMemberPage(memberTablePage + 1)}
+                >
+                  {'>'}
+                </button>
+              </div>
+            </footer>
+          </section>
         )}
-      </section>
+      </div>
+
+      {!isAddPage && (
+        <footer className="modal-footer">
+          <button className="btn-cancel" type="button" onClick={onClose}>{t('common.done')}</button>
+        </footer>
+      )}
 
       {isConfirmingRemove && (
-        <section className="confirm-popover" role="dialog" aria-modal="true" aria-labelledby="remove-members-title">
+        <Modal
+          backdropClassName="modal-backdrop confirm-modal-backdrop"
+          className="confirm-popover"
+          labelledBy="remove-members-title"
+          describedBy="remove-members-description"
+          initialFocusRef={removeConfirmationTitleRef}
+          isDismissDisabled={isRemoving}
+          onClose={() => setIsConfirmingRemove(false)}
+        >
           <header className="confirm-popover-header">
             <div>
               <p className="form-kicker">{t('admin.groups.removeMembers')}</p>
-              <h3 id="remove-members-title">{t('admin.groups.confirmRemoval')}</h3>
+              <h3 id="remove-members-title" ref={removeConfirmationTitleRef} tabIndex={-1}>
+                {t('admin.groups.confirmRemoval')}
+              </h3>
             </div>
             <IconButton icon={X} label={t('admin.groups.closeRemoveConfirmation')} onClick={() => setIsConfirmingRemove(false)} />
           </header>
-          <div className="confirm-popover-body">
+          <div className="confirm-popover-body" id="remove-members-description">
             <p>
               {t('admin.groups.removeConfirmText', { count: selectedMemberIds.length, name: group.name })}
             </p>
@@ -368,9 +387,9 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
               {isRemoving ? t('admin.groups.removing') : t('common.delete')}
             </button>
           </footer>
-        </section>
+        </Modal>
       )}
-    </div>
+    </Modal>
   );
 }
 

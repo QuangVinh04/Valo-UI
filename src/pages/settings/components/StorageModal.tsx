@@ -1,7 +1,8 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, FileText, Loader2, Search, Trash2 } from 'lucide-react';
+import { Download, FileText, Loader2, Search, Trash2, X } from 'lucide-react';
 import ActionIconButton from '@/components/common/ActionIconButton';
+import IconButton from '@/components/common/IconButton';
 import Modal from '@/components/common/Modal';
 import { useToast } from '@/context/ToastContext';
 import { deleteAttachments, getAttachments } from '@/services/attachment.service';
@@ -28,6 +29,8 @@ function StorageModal({ onClose }: StorageModalProps) {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const deleteConfirmationTitleRef = useRef<HTMLHeadingElement>(null);
 
   const selectedCount = selectedIds.length;
   const selectedIdsSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -36,6 +39,8 @@ function StorageModal({ onClose }: StorageModalProps) {
     [attachments, selectedIdsSet],
   );
   const hasSelectedFiles = selectedCount > 0;
+  const selectedFilePreview = selectedAttachments.slice(0, 3);
+  const remainingSelectedFileCount = Math.max(0, selectedCount - selectedFilePreview.length);
   const hasSearch = Boolean(submittedSearch.trim());
   const isTableEmpty = attachments.length === 0;
   const allVisibleSelected = attachments.length > 0
@@ -102,6 +107,7 @@ function StorageModal({ onClose }: StorageModalProps) {
       const deletedIds = new Set(selectedIds.filter((id) => !result.notFoundIds.includes(id)));
       setAttachments((current) => current.filter((attachment) => !deletedIds.has(attachment.id)));
       setSelectedIds(result.notFoundIds);
+      setIsConfirmingDelete(false);
 
       if (result.deletedCount > 0) {
         toast.success(t('settings.storageDeleted', { count: result.deletedCount }));
@@ -140,7 +146,7 @@ function StorageModal({ onClose }: StorageModalProps) {
       className="settings-modal storage-modal panel-dark"
       labelledBy="storage-modal-title"
       describedBy="storage-modal-description"
-      isDismissDisabled={isDeleting}
+      isDismissDisabled={isDeleting || isConfirmingDelete}
       onClose={onClose}
     >
         <header>
@@ -148,7 +154,7 @@ function StorageModal({ onClose }: StorageModalProps) {
             <h3 id="storage-modal-title">{t('settings.uploadedFiles')}</h3>
             <p className="storage-modal-description" id="storage-modal-description">{t('settings.storageManageDescription')}</p>
           </div>
-          <button type="button" aria-label={t('settings.cancel')} onClick={onClose}>×</button>
+          <IconButton icon={X} label={t('common.close')} onClick={onClose} />
         </header>
 
         <div className={`storage-toolbar ${hasSelectedFiles ? 'selection-actions' : ''}`}>
@@ -167,7 +173,7 @@ function StorageModal({ onClose }: StorageModalProps) {
                   label={t('settings.deleteSelected')}
                   variant="danger"
                   disabled={isDeleting}
-                  onClick={handleDeleteSelected}
+                  onClick={() => setIsConfirmingDelete(true)}
                   isLoading={isDeleting}
                 />
               </div>
@@ -255,6 +261,64 @@ function StorageModal({ onClose }: StorageModalProps) {
             {t('common.close')}
           </button>
         </footer>
+
+        {isConfirmingDelete && (
+          <Modal
+            backdropClassName="settings-modal-backdrop storage-confirm-backdrop"
+            className="settings-modal storage-delete-confirm panel-dark"
+            labelledBy="storage-delete-confirm-title"
+            describedBy="storage-delete-confirm-description"
+            initialFocusRef={deleteConfirmationTitleRef}
+            isDismissDisabled={isDeleting}
+            onClose={() => setIsConfirmingDelete(false)}
+          >
+            <header>
+              <div>
+                <h3 id="storage-delete-confirm-title" ref={deleteConfirmationTitleRef} tabIndex={-1}>
+                  {t('settings.confirmStorageDeleteTitle', { count: selectedCount })}
+                </h3>
+                <p id="storage-delete-confirm-description">
+                  {t('settings.confirmStorageDeleteDescription', { count: selectedCount })}
+                </p>
+              </div>
+              <IconButton
+                icon={X}
+                label={t('settings.closeStorageDeleteConfirmation')}
+                onClick={() => setIsConfirmingDelete(false)}
+                disabled={isDeleting}
+              />
+            </header>
+
+            <div className="storage-delete-confirm-body">
+              <ul>
+                {selectedFilePreview.map((attachment) => <li key={attachment.id}>{attachment.name}</li>)}
+              </ul>
+              {remainingSelectedFileCount > 0 && (
+                <p>{t('settings.storageDeleteMoreFiles', { count: remainingSelectedFileCount })}</p>
+              )}
+              <p className="storage-delete-warning">{t('settings.storageDeleteWarning')}</p>
+            </div>
+
+            <footer>
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setIsConfirmingDelete(false)}
+                disabled={isDeleting}
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                className="btn-solid-danger"
+                onClick={handleDeleteSelected}
+                disabled={isDeleting}
+              >
+                {isDeleting ? t('settings.deletingSelected') : t('settings.confirmDeleteSelected')}
+              </button>
+            </footer>
+          </Modal>
+        )}
     </Modal>
   );
 }

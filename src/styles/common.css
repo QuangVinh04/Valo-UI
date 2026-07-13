@@ -33,9 +33,9 @@
 .theme-btn,
 .select-mock {
   min-height: 38px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0 0.9rem;
-  font-size: 0.92rem;
+  font-size: var(--font-size-label);
   font-weight: 500;
 }
 
@@ -55,8 +55,8 @@
 }
 
 .btn-xl {
-  min-height: 44px;
-  border-radius: 10px;
+  min-height: var(--control-height-lg);
+  border-radius: var(--radius-lg);
   padding: 0 1.15rem;
   font-size: 0.98rem;
 }
@@ -72,12 +72,14 @@
 }
 
 .icon-button {
-  width: 34px;
-  height: 34px;
+  width: var(--control-height-md);
+  min-width: var(--control-height-md);
+  height: var(--control-height-md);
+  min-height: var(--control-height-md);
   display: inline-grid;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--action-text);
   padding: 0;
@@ -91,15 +93,15 @@
 
 .action-icon-button {
   position: relative;
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: var(--control-height-md);
+  min-width: var(--control-height-md);
+  height: var(--control-height-md);
+  min-height: var(--control-height-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--panel);
   color: var(--action-text);
   padding: 0;
@@ -176,7 +178,7 @@
   display: grid;
   place-items: center;
   border: 1px solid var(--panel);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--danger);
   color: var(--danger-text);
   font-size: 0.72rem;
@@ -244,16 +246,16 @@ input[type="checkbox"]:not(.member-checkbox-input):disabled {
 .settings-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: var(--z-modal);
   display: grid;
   place-items: center;
-  padding: 1.5rem;
+  padding: var(--space-6);
   background: rgba(5, 7, 8, 0.72);
 }
 
 .settings-modal {
   width: min(520px, 100%);
-  padding: 1.5rem;
+  padding: var(--space-6);
 }
 
 .settings-modal header,
@@ -293,12 +295,32 @@ input[type="checkbox"]:not(.member-checkbox-input):disabled {
 }
 
 .settings-modal input {
-  min-height: 42px;
+  min-height: var(--control-height-lg);
   border: 1px solid var(--modal-input-border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: var(--modal-input-bg);
   color: var(--text);
   padding: 0 1rem;
+}
+
+.settings-modal input.field-invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 20%, transparent);
+}
+
+.settings-field-error,
+.settings-password-rules {
+  font-size: var(--font-size-small);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.settings-field-error {
+  color: var(--danger);
+}
+
+.settings-password-rules {
+  color: var(--muted);
 }
 
 .settings-modal input[type="checkbox"]:not(.member-checkbox-input) {
@@ -328,6 +350,19 @@ input[type="checkbox"]:not(.member-checkbox-input):disabled {
 .settings-modal footer {
   justify-content: flex-end;
   margin-top: 1.5rem;
+}
+
+.settings-modal footer .btn-primary,
+.settings-modal footer .btn-blue,
+.settings-modal footer .btn-cancel,
+.settings-modal footer .btn-muted,
+.settings-modal footer .btn-outline-danger,
+.settings-modal footer .btn-solid-danger {
+  min-width: 118px;
+  min-height: var(--control-height-lg);
+  border-radius: var(--radius-lg);
+  padding: 0 1.15rem;
+  font-size: 0.98rem;
 }
 
 .settings-modal button:disabled {

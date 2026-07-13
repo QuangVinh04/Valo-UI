@@ -1,17 +1,24 @@
 import { API_BASE_URL, api, authFetch } from '@/lib/api-client';
 import { AppError } from '@/errors/app-error';
 import { handleServiceError } from './service-error.helper';
-import type { ApiResponse } from '@/types/api.type';
+import type { ApiMeta, ApiResponse } from '@/types/api.type';
 import type { Conversation, FileUpload, StreamDoneEvent, StreamHandlers, StreamReadyEvent } from '@/types/chat.type';
 
-export async function getConversations(): Promise<Conversation[]> {
+export async function getConversations(input: {
+  cursor?: string | null;
+  limit?: number;
+  search?: string;
+} = {}): Promise<{ data: Conversation[]; meta?: ApiMeta }> {
   try {
-    const response = await api.get<ApiResponse<Conversation[]>>('/conversations?page=1&limit=50');
+    const params = new URLSearchParams({ limit: String(input.limit ?? 20) });
+    if (input.cursor) params.set('cursor', input.cursor);
+    if (input.search?.trim()) params.set('search', input.search.trim());
+    const response = await api.get<ApiResponse<Conversation[]>>(`/conversations?${params.toString()}`);
     if (!response.data.success || !response.data.data) {
       throw new AppError(response.data.message, response.status, response.data.errors);
     }
 
-    return response.data.data;
+    return { data: response.data.data, meta: response.data.meta ?? undefined };
   } catch (error) {
     handleServiceError(error);
   }

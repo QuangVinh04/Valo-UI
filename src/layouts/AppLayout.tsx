@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LogOut, MessageSquare, PanelLeft, Settings, Shield, Users } from 'lucide-react';
+import { LogOut, PanelLeft, Search, Settings, Shield, SquarePen, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { ChatProvider, useChat } from '@/hooks/useChat';
 import { usePermissions } from '@/hooks/usePermissions';
 import ChatSidebarRecents from '@/pages/chat/components/ChatSidebarRecents';
+import SearchConversationsModal from '@/pages/chat/components/SearchConversationsModal';
 import '@/styles/layout.css';
 
 const navItems = [
-  { to: '/chat', icon: MessageSquare, labelKey: 'layout.nav.chat' },
   { to: '/users', icon: Users, labelKey: 'layout.nav.users' },
   { to: '/groups', icon: Shield, labelKey: 'layout.nav.groups' },
   { to: '/settings', icon: Settings, labelKey: 'layout.nav.settings' },
@@ -45,7 +45,10 @@ function AppLayoutContent() {
   const location = useLocation();
   const chat = useChat();
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () => localStorage.getItem('sidebar-collapsed') === 'true',
+  );
+  const [isConversationSearchOpen, setIsConversationSearchOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isChatRoute = location.pathname.startsWith('/chat');
@@ -67,6 +70,10 @@ function AppLayoutContent() {
     setIsLoggingOut(true);
     await logout();
   };
+
+  useEffect(() => {
+    localStorage.setItem('sidebar-collapsed', String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
 
   useEffect(() => {
     if (!isAccountMenuOpen) {
@@ -111,23 +118,22 @@ function AppLayoutContent() {
             <PanelLeft size={20} aria-hidden="true" />
           </button>
         </div>
+        <div className="sidebar-primary-actions">
+          <button type="button" onClick={chat.startNewChat}>
+            <SquarePen size={19} aria-hidden="true" />
+            <span>{t('chat.newConversation')}</span>
+          </button>
+          <button type="button" onClick={() => setIsConversationSearchOpen(true)}>
+            <Search size={19} aria-hidden="true" />
+            <span>{t('chat.searchConversations')}</span>
+          </button>
+        </div>
         <nav className="sidebar-nav">
           {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) => {
-                const shouldShowActive = item.to === '/chat'
-                  ? isActive && !chat.activeConversationId
-                  : isActive;
-
-                return shouldShowActive ? 'active' : undefined;
-              }}
-              onClick={() => {
-                if (item.to === '/chat') {
-                  chat.startNewChat();
-                }
-              }}
+              className={({ isActive }) => isActive ? 'active' : undefined}
             >
               <span className="nav-icon" aria-hidden="true">
                 <item.icon size={20} strokeWidth={2} />
@@ -172,6 +178,9 @@ function AppLayoutContent() {
       <section className={isChatRoute ? 'content content-chat' : 'content'}>
         <Outlet />
       </section>
+      {isConversationSearchOpen && (
+        <SearchConversationsModal onClose={() => setIsConversationSearchOpen(false)} />
+      )}
     </div>
   );
 }
