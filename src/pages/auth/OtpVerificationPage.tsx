@@ -12,11 +12,12 @@ const RESEND_COOLDOWN_SECONDS = 60;
 
 type OtpLocationState = {
   email?: string;
+  password?: string;
 };
 
 function OtpVerificationPage() {
   const { t } = useTranslation();
-  const { authLoading, isAuthenticated } = useAuth();
+  const { authLoading, isAuthenticated, login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,7 +49,19 @@ function OtpVerificationPage() {
     try {
       await verifyOtp({ email: normalizedEmail, otp: otp.trim() });
       toast.success(t('auth.otpVerifySuccess'));
-      navigate('/login', { replace: true, state: { email: normalizedEmail } });
+
+      if (!locationState?.password) {
+        navigate('/login', { replace: true, state: { email: normalizedEmail } });
+        return;
+      }
+
+      try {
+        await login(normalizedEmail, locationState.password);
+        navigate('/chat', { replace: true });
+      } catch (loginError) {
+        toast.error(getErrorMessage(loginError, t('auth.loginFailed')));
+        navigate('/login', { replace: true, state: { email: normalizedEmail } });
+      }
     } catch (err) {
       toast.error(getErrorMessage(err, t('auth.otpVerifyFailed')));
     } finally {

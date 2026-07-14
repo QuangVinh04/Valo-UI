@@ -79,7 +79,7 @@
     "otpPlaceholder": "Nhập OTP",
     "verifyingOtp": "Đang xác minh...",
     "verifyAccount": "Xác minh tài khoản",
-    "otpVerifySuccess": "Tài khoản đã được xác minh. Bạn có thể đăng nhập.",
+    "otpVerifySuccess": "Tài khoản đã được xác minh thành công.",
     "otpVerifyFailed": "Xác minh OTP thất bại",
     "resendOtp": "Gửi lại OTP",
     "resendingOtp": "Đang gửi lại...",

@@ -133,7 +133,10 @@ function RegisterPage() {
       const normalizedEmail = email.trim().toLowerCase();
       await register(fullName.trim(), normalizedEmail, password, confirmPassword);
       toast.success(t('auth.registerSuccess'));
-      navigate('/verify-otp', { replace: true, state: { email: normalizedEmail } });
+      navigate('/verify-otp', {
+        replace: true,
+        state: { email: normalizedEmail, password },
+      });
     } catch (err) {
       toast.error(getErrorMessage(err, t('auth.registrationFailed')));
     } finally {

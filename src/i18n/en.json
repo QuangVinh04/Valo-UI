@@ -79,7 +79,7 @@
     "otpPlaceholder": "Enter OTP",
     "verifyingOtp": "Verifying...",
     "verifyAccount": "Verify Account",
-    "otpVerifySuccess": "Your account has been verified. You can now sign in.",
+    "otpVerifySuccess": "Your account has been verified successfully.",
     "otpVerifyFailed": "OTP verification failed",
     "resendOtp": "Resend OTP",
     "resendingOtp": "Resending...",

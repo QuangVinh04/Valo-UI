@@ -63,7 +63,10 @@ function LoginPage() {
         user.active ? '/chat' : '/verify-otp',
         {
           replace: true,
-          state: user.active ? undefined : { email: user.email ?? username },
+          state: user.active ? undefined : {
+            email: user.email ?? username,
+            password,
+          },
         }
       );
     } catch (err) {
