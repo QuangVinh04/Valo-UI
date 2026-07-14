@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/common/Modal';
+import SearchInput from '@/components/common/SearchInput';
 import { useToast } from '@/context/ToastContext';
 import type { GroupListItemDto } from '@/types/group.type';
 import { assignUserGroups } from '@/services/user.service';
@@ -23,11 +24,22 @@ function UserAssignGroupModal({
 
   const [groupIds, setGroupIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedGroupIds = useMemo(() => new Set(groupIds), [groupIds]);
 
-  const keyword = search.trim().toLowerCase();
+  const keyword = debouncedSearch.trim().toLowerCase();
+
+  useEffect(() => {
+    if (!search.trim()) {
+      setDebouncedSearch('');
+      return;
+    }
+
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 400);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
   const filteredGroups = useMemo(() => {
     if (!keyword) {
@@ -119,10 +131,11 @@ function UserAssignGroupModal({
         <div className="modal-body">
           <label>
             {t('admin.users.searchGroup')}
-            <input
+            <SearchInput
               placeholder={t('admin.users.searchGroupPlaceholder')}
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              clearLabel={t('common.clearSearch')}
+              onChange={setSearch}
               disabled={isSubmitting}
             />
           </label>

@@ -1,3 +1,5 @@
+/* Application shell, navigation, sidebar, and global layout overlays. */
+
 .app-layout {
   height: 100vh;
   min-height: 100vh;
@@ -664,8 +666,8 @@
 }
 
 .conversation-search-modal {
-  width: min(680px, calc(100vw - 2rem));
-  height: min(560px, calc(100vh - 4rem));
+  width: min(720px, calc(100vw - 2rem));
+  height: min(620px, calc(100vh - 2rem));
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
@@ -675,14 +677,49 @@
 }
 
 .conversation-search-header {
-  min-height: 64px;
+  min-height: 80px;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) 40px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
   border-bottom: 1px solid var(--line);
   padding: 0 var(--space-6);
   color: var(--soft);
+}
+
+.conversation-search-query {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.conversation-search-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.conversation-search-clear {
+  min-height: 36px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  padding: 0 var(--space-2);
+  font-weight: 500;
+}
+
+.conversation-search-clear:hover,
+.conversation-search-clear:focus-visible {
+  background: var(--panel-3);
+}
+
+.conversation-search-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--line-strong);
 }
 
 .conversation-search-header input {
@@ -693,7 +730,7 @@
   background: transparent;
   color: var(--text);
   padding: 0;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
 }
 
 .conversation-search-header input::placeholder {
@@ -783,6 +820,15 @@
   .conversation-search-modal {
     width: 100%;
     height: calc(100vh - 1rem);
+  }
+
+  .conversation-search-header {
+    min-height: 68px;
+    gap: var(--space-2);
+  }
+
+  .conversation-search-actions {
+    gap: var(--space-1);
   }
 
   .conversation-search-header,

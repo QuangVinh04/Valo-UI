@@ -1,9 +1,10 @@
-import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, FileText, Loader2, Search, Trash2, X } from 'lucide-react';
+import { Download, FileText, Loader2, Trash2, X } from 'lucide-react';
 import ActionIconButton from '@/components/common/ActionIconButton';
 import IconButton from '@/components/common/IconButton';
 import Modal from '@/components/common/Modal';
+import SearchInput from '@/components/common/SearchInput';
 import { useToast } from '@/context/ToastContext';
 import { deleteAttachments, getAttachments } from '@/services/attachment.service';
 import type { AttachmentItem } from '@/types/attachment.type';
@@ -71,6 +72,23 @@ function StorageModal({ onClose }: StorageModalProps) {
     void loadAttachments();
   }, [submittedSearch]);
 
+  useEffect(() => {
+    if (!search.trim()) {
+      setSelectedIds([]);
+      setNextCursor(null);
+      setSubmittedSearch('');
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setSelectedIds([]);
+      setNextCursor(null);
+      setSubmittedSearch(search.trim());
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
   // Chọn hoặc bỏ chọn một tệp trong danh sách lưu trữ.
   const toggleAttachment = (id: string) => {
     setSelectedIds((current) => (
@@ -133,13 +151,6 @@ function StorageModal({ onClose }: StorageModalProps) {
     });
   };
 
-  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSelectedIds([]);
-    setNextCursor(null);
-    setSubmittedSearch(search.trim());
-  };
-
   return (
     <Modal
       backdropClassName="settings-modal-backdrop"
@@ -179,16 +190,13 @@ function StorageModal({ onClose }: StorageModalProps) {
               </div>
             </>
           ) : (
-            <form className="storage-search-bar" onSubmit={handleSearchSubmit}>
-              <input
-                value={search}
-                placeholder={t('settings.searchFilesPlaceholder')}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-              <button type="submit" aria-label={t('common.search')}>
-                <Search size={22} aria-hidden="true" />
-              </button>
-            </form>
+            <SearchInput
+              className="storage-search-bar"
+              value={search}
+              placeholder={t('settings.searchFilesPlaceholder')}
+              clearLabel={t('common.clearSearch')}
+              onChange={setSearch}
+            />
           )}
         </div>
 

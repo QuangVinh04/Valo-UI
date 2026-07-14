@@ -7,7 +7,6 @@ import { ChatProvider, useChat } from '@/hooks/useChat';
 import { usePermissions } from '@/hooks/usePermissions';
 import ChatSidebarRecents from '@/pages/chat/components/ChatSidebarRecents';
 import SearchConversationsModal from '@/pages/chat/components/SearchConversationsModal';
-import '@/styles/layout.css';
 
 const navItems = [
   { to: '/users', icon: Users, labelKey: 'layout.nav.users' },

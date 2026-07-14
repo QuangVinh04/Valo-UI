@@ -1,0 +1,14 @@
+/*
+ * Single stylesheet entry point.
+ * Layer order is explicit so route/module loading order cannot change the cascade.
+ */
+@layer foundation, components, layout, pages, utilities;
+
+@import './global.css' layer(foundation);
+@import './common.css' layer(components);
+@import './layout.css' layer(layout);
+@import './pages/home.css' layer(pages);
+@import './pages/chat.css' layer(pages);
+@import './pages/management.css' layer(pages);
+@import './pages/settings.css' layer(pages);
+@import './utilities.css' layer(utilities);

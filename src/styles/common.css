@@ -1,3 +1,72 @@
+/* Shared components. Page styles may size/position these blocks, not restyle internals. */
+
+/* Surfaces and feedback */
+.page-title {
+  margin: 0 0 1rem;
+}
+
+.panel-dark {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--panel-shadow);
+}
+
+.auth-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: var(--bg);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.state-row.error {
+  color: var(--danger);
+}
+
+.toast-region {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: var(--z-toast);
+  display: grid;
+  gap: 0.75rem;
+  width: min(380px, calc(100vw - 2.5rem));
+}
+
+.toast {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid var(--line-strong);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--panel-shadow);
+  padding: 0.85rem 1rem;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.toast-success {
+  border-left-color: #47d18c;
+}
+
+.toast-error {
+  border-left-color: var(--danger);
+}
+
+.toast-warning {
+  border-left-color: #f6c85f;
+}
+
+.toast-info {
+  border-left-color: var(--blue);
+}
+
+/* Labels and search */
 .form-kicker,
 .label {
   color: var(--blue-2);
@@ -8,6 +77,68 @@
   text-transform: none;
 }
 
+.search-input {
+  font-size: 1.1rem;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--modal-input-border);
+  border-radius: var(--radius-md);
+  background: var(--modal-input-bg);
+  color: var(--muted);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.search-input:focus-within {
+  border-color: #679ce8;
+  box-shadow: 0 0 0 3px rgba(36, 120, 230, 0.18);
+}
+
+.search-input-icon {
+  justify-self: center;
+  pointer-events: none;
+}
+
+.search-input > input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 0;
+  box-shadow: none;
+}
+
+.search-input > input::placeholder {
+  color: var(--soft);
+}
+
+.search-input-clear {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--muted);
+  padding: 0;
+}
+
+.search-input-clear:hover:not(:disabled),
+.search-input-clear:focus-visible {
+  background: var(--panel-3);
+  color: var(--text);
+}
+
+/* Buttons */
 .auth-submit,
 .btn-primary,
 .btn-blue {
@@ -169,22 +300,6 @@
   animation: action-icon-spin 0.9s linear infinite;
 }
 
-.action-icon-badge {
-  position: absolute;
-  right: -0.25rem;
-  top: -0.25rem;
-  min-width: 1.05rem;
-  height: 1.05rem;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--panel);
-  border-radius: var(--radius-full);
-  background: var(--danger);
-  color: var(--danger-text);
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1;
-}
 
 @keyframes action-icon-spin {
   to {
@@ -192,6 +307,7 @@
   }
 }
 
+/* Selection controls */
 .ui-checkmark {
   width: 20px;
   height: 20px;
@@ -243,6 +359,7 @@ input[type="checkbox"]:not(.member-checkbox-input):disabled {
   opacity: 0.58;
 }
 
+/* Shared settings modal */
 .settings-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -301,6 +418,16 @@ input[type="checkbox"]:not(.member-checkbox-input):disabled {
   background: var(--modal-input-bg);
   color: var(--text);
   padding: 0 1rem;
+}
+
+/* SearchInput owns its inner field; prevent generic settings fields from adding a second border. */
+.settings-modal .search-input > input {
+  min-height: 42px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
 }
 
 .settings-modal input.field-invalid {

@@ -1,12 +1,12 @@
-import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, Pencil, Plus, Search, Shield, Trash2, UserPlus } from 'lucide-react';
+import { Eye, Pencil, Plus, Shield, Trash2, UserPlus } from 'lucide-react';
 import ActionIconButton from '@/components/common/ActionIconButton';
 import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import IconButton from '@/components/common/IconButton';
 import Modal from '@/components/common/Modal';
+import SearchInput from '@/components/common/SearchInput';
 import { useGroups } from '@/hooks/useGroups';
-import '@/styles/pages/management.css';
 import GroupCreateModal from './groups/GroupCreateModal';
 import GroupDeleteModal from './groups/GroupDeleteModal';
 import GroupDetailsModal from './groups/GroupDetailsModal';
@@ -32,8 +32,10 @@ function GroupsView() {
     isDeletingSelectedGroups,
     search,
     canReadGroups,
+    canCreateGroups,
+    canUpdateGroups,
+    canDeleteGroups,
     setSearch,
-    applySearch,
     loadGroups,
     goToPage,
     openCreateModal,
@@ -72,13 +74,8 @@ function GroupsView() {
     setIsConfirmingDeleteSelected(false);
   }
 
-  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    applySearch();
-  }
-
   const groupTableColumns: Array<DataTableColumn<GroupViewModel>> = [
-    {
+    ...(canDeleteGroups ? [{
       key: 'select',
       header: (
         <label className="table-select-check">
@@ -103,7 +100,7 @@ function GroupsView() {
           <span className="sr-only">{group.name}</span>
         </label>
       ),
-    },
+    } satisfies DataTableColumn<GroupViewModel>] : []),
     {
       key: 'name',
       header: t('admin.groups.groupName'),
@@ -140,9 +137,15 @@ function GroupsView() {
       render: (group) => (
         <div className="row-actions">
           <IconButton icon={Eye} label={t('admin.groups.viewGroup', { name: group.name })} onClick={() => openGroupModal('details', group)} disabled={openingGroupId === group.id} />
-          <IconButton icon={UserPlus} label={t('admin.groups.manageMembersFor', { name: group.name })} onClick={() => openGroupModal('members', group)} disabled={openingGroupId === group.id} />
-          <IconButton icon={Pencil} label={t('admin.groups.updateGroup', { name: group.name })} onClick={() => openGroupModal('update', group)} disabled={openingGroupId === group.id} />
-          <IconButton icon={Trash2} label={t('admin.groups.deleteGroup', { name: group.name })} onClick={() => openGroupModal('delete', group)} />
+          {canUpdateGroups && (
+            <IconButton icon={UserPlus} label={t('admin.groups.manageMembersFor', { name: group.name })} onClick={() => openGroupModal('members', group)} disabled={openingGroupId === group.id} />
+          )}
+          {canUpdateGroups && (
+            <IconButton icon={Pencil} label={t('admin.groups.updateGroup', { name: group.name })} onClick={() => openGroupModal('update', group)} disabled={openingGroupId === group.id} />
+          )}
+          {canDeleteGroups && (
+            <IconButton icon={Trash2} label={t('admin.groups.deleteGroup', { name: group.name })} onClick={() => openGroupModal('delete', group)} />
+          )}
         </div>
       ),
     },
@@ -175,33 +178,34 @@ function GroupsView() {
           {hasSelectedGroups ? (
             <>
               <span>{t('admin.groups.groupsSelected', { count: selectedGroupIds.length })}</span>
-              <ActionIconButton
-                icon={Trash2}
-                label={t('common.delete')}
-                variant="danger"
-                onClick={() => setIsConfirmingDeleteSelected(true)}
-                disabled={isDeletingSelectedGroups}
-                isLoading={isDeletingSelectedGroups}
-              />
+              {canDeleteGroups && (
+                <ActionIconButton
+                  icon={Trash2}
+                  label={t('common.delete')}
+                  variant="danger"
+                  onClick={() => setIsConfirmingDeleteSelected(true)}
+                  disabled={isDeletingSelectedGroups}
+                  isLoading={isDeletingSelectedGroups}
+                />
+              )}
             </>
           ) : (
             <div className="table-toolbar">
-              <form className="table-search-bar" onSubmit={handleSearchSubmit}>
-                <input
-                  value={search}
-                  placeholder={t('admin.groups.searchPlaceholder')}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-                <button type="submit" aria-label={t('common.search')}>
-                  <Search size={22} aria-hidden="true" />
-                </button>
-              </form>
-              <ActionIconButton
-                icon={Plus}
-                label={t('common.add')}
-                variant="primary"
-                onClick={openCreateModal}
+              <SearchInput
+                className="table-search-bar"
+                value={search}
+                placeholder={t('admin.groups.searchPlaceholder')}
+                clearLabel={t('common.clearSearch')}
+                onChange={setSearch}
               />
+              {canCreateGroups && (
+                <ActionIconButton
+                  icon={Plus}
+                  label={t('common.add')}
+                  variant="primary"
+                  onClick={openCreateModal}
+                />
+              )}
             </div>
           )}
         </div>

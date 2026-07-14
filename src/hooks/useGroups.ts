@@ -27,6 +27,9 @@ export function useGroups() {
   const permissions = usePermissions();
   const toast = useToast();
   const canReadGroups = permissions.can('GROUP_R');
+  const canCreateGroups = permissions.can('GROUP_C');
+  const canUpdateGroups = permissions.can('GROUP_U');
+  const canDeleteGroups = permissions.can('GROUP_D');
   const [modal, setModal] = useState<GroupModalAction | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<GroupViewModel | null>(null);
   const [groups, setGroups] = useState<GroupListItemDto[]>([]);
@@ -75,6 +78,21 @@ export function useGroups() {
   useEffect(() => {
     void loadGroups();
   }, [loadGroups]);
+
+  useEffect(() => {
+    if (!search.trim()) {
+      setActiveSearch('');
+      setPage(1);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setActiveSearch(search.trim());
+      setPage(1);
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
   function openCreateModal() {
     // Chỉ mở modal tạo nhóm khi có quyền GROUP_C.
@@ -148,16 +166,6 @@ export function useGroups() {
 
   function setSearch(value: string) {
     setSearchInput(value);
-
-    if (!value.trim()) {
-      setActiveSearch('');
-      setPage(1);
-    }
-  }
-
-  function applySearch() {
-    setActiveSearch(search.trim());
-    setPage(1);
   }
 
   function goToPage(targetPage: number) {
@@ -220,8 +228,10 @@ export function useGroups() {
     isDeletingSelectedGroups,
     search,
     canReadGroups,
+    canCreateGroups,
+    canUpdateGroups,
+    canDeleteGroups,
     setSearch,
-    applySearch,
     loadGroups,
     goToPage,
     openCreateModal,

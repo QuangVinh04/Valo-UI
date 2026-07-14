@@ -7,7 +7,6 @@ import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
-import '@/styles/pages/home.css';
 
 type PasswordCheck = {
   key: string;

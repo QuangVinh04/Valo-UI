@@ -1,3 +1,5 @@
+/* Settings route and storage management modal composition. */
+
 .settings-page {
   display: grid;
   gap: 2rem;
@@ -241,63 +243,9 @@
 }
 
 .storage-search-bar {
-  position: relative;
-  flex: 0 1 630px;
-  width: min(420px, 100%);
-  max-width: 420px;
-  min-width: 0;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  border: 1px solid var(--modal-input-border);
-  border-radius: 8px;
-  background: var(--modal-input-bg);
-}
-
-.storage-search-bar,
-.storage-search-bar:focus,
-.storage-search-bar:focus-visible,
-.storage-search-bar input,
-.storage-search-bar input:focus,
-.storage-search-bar input:focus-visible,
-.storage-search-bar button,
-.storage-search-bar button:focus,
-.storage-search-bar button:focus-visible {
-  outline: none;
-}
-
-.settings-modal.storage-modal .storage-search-bar input {
   width: 100%;
-  min-width: 0;
-  min-height: 42px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--text);
-  padding: 0 3.35rem 0 1.35rem;
-  font: inherit;
-  letter-spacing: 0;
-  outline: none;
-  box-shadow: none;
-}
-
-.storage-search-bar button {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 48px;
-  min-height: 42px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-}
-
-.storage-search-bar:focus-within {
-  border-color: #679ce8;
-  box-shadow: none;
+  max-width: none;
+  flex: 1 1 auto;
 }
 
 .storage-selection-actions {
@@ -432,21 +380,6 @@
   width: 100%;
   margin: 1rem 1.8rem 0;
 }
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-
-
 
 @media (max-width: 1100px) {
   .settings-grid {

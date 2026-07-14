@@ -37,9 +37,7 @@ function ActionIconButton({
       title={label}
     >
       <ButtonIcon size={size} strokeWidth={2.2} aria-hidden="true" />
-      {badge !== undefined && badge !== null && (
-        <span className="action-icon-badge" aria-hidden="true">{badge}</span>
-      )}
+
     </button>
   );
 }

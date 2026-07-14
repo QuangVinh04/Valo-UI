@@ -1,3 +1,4 @@
+/* Management page shell and cards */
 .management-page {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -116,54 +117,11 @@
 }
 
 .table-search-bar {
-  display: flex;
-  align-items: center;
-  width: min(420px, 100%);
-  min-height: 44px;
-  border: 1px solid var(--modal-input-border);
-  border-radius: 8px;
-  background: var(--modal-input-bg);
-  overflow: hidden;
-}
-
-.table-search-bar input {
   width: 100%;
-  min-width: 0;
-  min-height: 42px;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  padding: 0 0.25rem 0 1.35rem;
-  font: inherit;
-  letter-spacing: 0;
-  outline: none;
+  flex: 1 1 auto;
 }
 
-.modal-body .table-search-bar input {
-  min-height: 42px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0 0.25rem 0 1.35rem;
-  box-shadow: none;
-}
-
-.table-search-bar button {
-  width: 48px;
-  min-height: 42px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 48px;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-}
-
-.table-search-bar:focus-within {
-  border-color: #679ce8;
-  box-shadow: 0 0 0 3px rgba(36, 120, 230, 0.18);
-}
-
+/* User filters */
 .selection-actions > span {
   color: var(--text);
   font-size: 0.95rem;
@@ -227,31 +185,39 @@
 .filter-panel input,
 .filter-panel select {
   width: 100%;
-  min-height: 38px;
+  min-height: 44px;
   border: 1px solid var(--modal-input-border);
   border-radius: 8px;
   background: var(--modal-input-bg);
   color: var(--text);
   padding: 0 0.85rem;
-  font: inherit;
+  font-family: inherit;
+  font-size: 1.0rem;
+  font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
 }
 
-.filter-input-with-icon {
-  position: relative;
+.filter-panel input::placeholder,
+.filter-panel select option {
+  font-size: 1.0rem;
+  font-weight: 400;
 }
 
-.filter-input-with-icon svg {
-  position: absolute;
-  left: 0.85rem;
-  top: 50%;
-  color: var(--muted);
-  transform: translateY(-50%);
+.filter-panel .search-input {
+  width: 100%;
+  min-height: 44px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
 }
 
-.filter-input-with-icon input {
-  padding-left: 2.4rem;
+.filter-panel .search-input > input,
+.modal-body .search-input > input {
+  min-height: 42px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
 }
 
 .filter-actions {
@@ -261,7 +227,7 @@
 }
 
 .filter-actions button {
-  min-height: 38px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -308,6 +274,7 @@ html[data-theme='light'] .btn-danger-link {
   color: #b42318;
 }
 
+/* Data tables and pagination */
 .data-table {
   --table-column-select: 56px;
   --table-column-primary: 360px;
@@ -592,6 +559,7 @@ html[data-theme='light'] .btn-danger-link {
   line-height: 1.5;
 }
 
+/* Management modals and forms */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1034,14 +1002,26 @@ html[data-theme='light'] .btn-danger-link {
   text-transform: none;
 }
 
+/* Member and group pickers */
 .member-search-field {
   display: block;
 }
 
+.member-search-field .search-input {
+  width: 100%;
+  margin-top: 0.7rem;
+}
+
 .member-picker-list {
+  height: min(216px, 32vh);
   display: grid;
+  align-content: start;
   gap: 0.55rem;
   margin-top: -0.6rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 0.25rem;
 }
 
 .member-picker-list button {
@@ -1057,8 +1037,7 @@ html[data-theme='light'] .btn-danger-link {
   text-align: left;
 }
 
-.member-picker-list strong,
-.group-picker-list strong {
+.member-picker-list strong {
   font-weight: 500;
 }
 
@@ -1068,35 +1047,6 @@ html[data-theme='light'] .btn-danger-link {
 
 .member-picker-list span {
   color: var(--muted);
-}
-
-.group-picker-list {
-  margin-top: 0.75rem;
-}
-
-.group-search-field {
-  margin-top: 0.75rem;
-}
-
-.group-search-field input {
-  display: block;
-}
-
-.group-picker-list button {
-  display: grid;
-  grid-template-columns: 1fr;
-  justify-items: start;
-  gap: 0.25rem;
-}
-
-.group-picker-list span {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  line-height: 1.35;
-}
-
-.group-picker-list + .tag-row {
-  margin-top: 0.85rem;
 }
 
 .tag-row {
@@ -1120,19 +1070,6 @@ html[data-theme='light'] .btn-danger-link {
 
 .checkbox-list .check-wrap {
   justify-content: flex-start;
-}
-
-.muted {
-  color: var(--soft);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
 }
 
 .detail-grid {
@@ -1416,6 +1353,7 @@ html[data-theme='light'] .btn-danger-link {
   color: var(--muted);
 }
 
+/* Responsive management layouts */
 @media (max-width: 1100px) {
   .page-hero {
     flex-direction: column;

@@ -7,7 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
 import { resendOtp, verifyOtp } from '@/services/auth.service';
-import '@/styles/pages/home.css';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 

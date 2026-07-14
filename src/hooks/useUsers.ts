@@ -40,6 +40,9 @@ export function useUsers() {
   const permissions = usePermissions();
   const toast = useToast();
   const canReadUsers = permissions.can('USER_R');
+  const canCreateUsers = permissions.can('USER_C');
+  const canUpdateUsers = permissions.can('USER_U');
+  const canDeleteUsers = permissions.can('USER_D');
   const [modal, setModal] = useState<UserModalAction | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null);
   const [users, setUsers] = useState<UserListItemDto[]>([]);
@@ -283,6 +286,9 @@ export function useUsers() {
     filterDraft,
     activeFilters,
     canReadUsers,
+    canCreateUsers,
+    canUpdateUsers,
+    canDeleteUsers,
     setIsFilterPanelOpen,
     setFilterDraft,
     loadUsers,

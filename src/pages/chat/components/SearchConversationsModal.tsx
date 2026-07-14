@@ -44,7 +44,7 @@ function SearchConversationsModal({ onClose }: SearchConversationsModalProps) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    const timeoutId = window.setTimeout(() => setDebouncedQuery(query.trim()), 400);
     return () => window.clearTimeout(timeoutId);
   }, [query]);
 
@@ -116,18 +116,35 @@ function SearchConversationsModal({ onClose }: SearchConversationsModalProps) {
       onClose={onClose}
     >
       <header className="conversation-search-header">
-        <Search size={20} aria-hidden="true" />
         <h2 className="sr-only" id="conversation-search-title">{t('chat.searchConversations')}</h2>
-        <input
-          ref={inputRef}
-          type="text"
-          role="searchbox"
-          value={query}
-          placeholder={t('chat.searchConversationsPlaceholder')}
-          aria-label={t('chat.searchConversations')}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <IconButton icon={X} label={t('common.close')} onClick={onClose} />
+        <div className="conversation-search-query">
+          <Search size={19} aria-hidden="true" />
+          <input
+            ref={inputRef}
+            type="text"
+            role="searchbox"
+            value={query}
+            placeholder={t('chat.searchConversationsPlaceholder')}
+            aria-label={t('chat.searchConversations')}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+        <div className="conversation-search-actions">
+          {query && (
+            <button
+              className="conversation-search-clear"
+              type="button"
+              onClick={() => {
+                setQuery('');
+                inputRef.current?.focus();
+              }}
+            >
+              {t('common.clear')}
+            </button>
+          )}
+          <span className="conversation-search-divider" aria-hidden="true" />
+          <IconButton icon={X} label={t('common.close')} onClick={onClose} />
+        </div>
       </header>
 
       <div className="conversation-search-results" aria-live="polite">

@@ -7,10 +7,14 @@ import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
-import '@/styles/pages/home.css';
 
 type LoginLocationState = {
   email?: string;
+};
+
+type LoginTouchedFields = {
+  username: boolean;
+  password: boolean;
 };
 
 function isValidEmail(value: string): boolean {
@@ -27,13 +31,30 @@ function LoginPage() {
   const [username, setUsername] = useState(locationState?.email ?? '');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const emailValidationError = username && !isValidEmail(username)
-    ? t('auth.emailFormatInvalid')
+  const [touchedFields, setTouchedFields] = useState<LoginTouchedFields>({
+    username: false,
+    password: false,
+  });
+  const emailValidationError = touchedFields.username
+    ? !username.trim()
+      ? t('auth.usernameRequired')
+      : !isValidEmail(username)
+        ? t('auth.emailFormatInvalid')
+        : ''
+    : '';
+  const passwordValidationError = touchedFields.password && !password
+    ? t('auth.passwordRequired')
     : '';
 
   // Route inactive accounts through email verification before workspace access.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    setTouchedFields({ username: true, password: true });
+    if (!username.trim() || !isValidEmail(username) || !password) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -67,16 +88,15 @@ function LoginPage() {
   return (
     <div className="home-shell">
       <Header />
-      <main className="home-main">
+      <main className="home-main login-main" >
         <section className="auth-card-wrap">
           <div className="auth-card">
             <h1>{t('auth.loginTitle')}</h1>
-            <p className="auth-subtitle">
-              {t('auth.loginSubtitle')}
-            </p>
 
-            <form className="auth-form" onSubmit={handleSubmit}>
-              <label htmlFor="username">{t('auth.username')}</label>
+            <form className="auth-form" onSubmit={handleSubmit} noValidate>
+              <label htmlFor="username">
+                {t('auth.username')}<span className="auth-required" aria-hidden="true">*</span>
+              </label>
               <input
                 className={emailValidationError ? 'field-invalid' : undefined}
                 id="username"
@@ -85,6 +105,7 @@ function LoginPage() {
                 placeholder="name@company.com"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
+                onBlur={() => setTouchedFields((current) => ({ ...current, username: true }))}
                 aria-invalid={Boolean(emailValidationError)}
                 aria-describedby={emailValidationError ? 'username-error' : undefined}
                 required
@@ -95,19 +116,30 @@ function LoginPage() {
                 </p>
               )}
 
-              <label htmlFor="password">{t('auth.password')}</label>
+              <label htmlFor="password">
+                {t('auth.password')}<span className="auth-required" aria-hidden="true">*</span>
+              </label>
               <div className="password-field">
                 <input
+                  className={passwordValidationError ? 'field-invalid' : undefined}
                   id="password"
                   type="password"
                   autoComplete="current-password"
                   placeholder={t('auth.passwordPlaceholder')}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
+                  onBlur={() => setTouchedFields((current) => ({ ...current, password: true }))}
+                  aria-invalid={Boolean(passwordValidationError)}
+                  aria-describedby={passwordValidationError ? 'password-error' : undefined}
                   required
                 />
                 <span aria-hidden="true"><LockKeyhole size={18} /></span>
               </div>
+              {passwordValidationError && (
+                <p className="auth-field-error" id="password-error" aria-live="polite">
+                  {passwordValidationError}
+                </p>
+              )}
 
               <button className="auth-submit" type="submit" disabled={isSubmitting}>
                 {isSubmitting ? t('auth.signingIn') : t('auth.login')}

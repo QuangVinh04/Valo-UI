@@ -1,3 +1,5 @@
+/* Chat route content and composer. Shell/sidebar styles live in ../layout.css. */
+
 .chat-page {
   min-height: 100vh;
 }
@@ -414,7 +416,7 @@
   outline: none;
   padding: 0.5rem 0.2rem;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 16px;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -450,7 +452,7 @@
   align-items: center;
   gap: 0.35rem;
   font: inherit;
-  font-size: 0.86rem;
+  font-size: 14px;
   font-weight: 500;
   outline: none;
   padding: 0 0.45rem 0 0.1rem;

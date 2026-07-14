@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
-import '@/styles/pages/management.css';
 
 type RequirePermissionProps = {
   permission?: string;

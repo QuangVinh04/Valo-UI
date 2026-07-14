@@ -1,10 +1,11 @@
-import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Search, Trash2, Users, X } from 'lucide-react';
+import { Plus, Trash2, Users, X } from 'lucide-react';
 import ActionIconButton from '@/components/common/ActionIconButton';
 import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import IconButton from '@/components/common/IconButton';
 import Modal from '@/components/common/Modal';
+import SearchInput from '@/components/common/SearchInput';
 import { useToast } from '@/context/ToastContext';
 import { getGroupMembers, removeGroupMembers } from '@/services/group.service';
 import type { GroupMemberDto } from '@/types/group.type';
@@ -78,6 +79,23 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
     }
   }, [activeMemberSearch, loadMembers, memberPage, memberTablePage]);
 
+  useEffect(() => {
+    if (!memberSearch.trim()) {
+      setSelectedMemberIds([]);
+      setMemberTablePage(1);
+      setActiveMemberSearch('');
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setSelectedMemberIds([]);
+      setMemberTablePage(1);
+      setActiveMemberSearch(memberSearch.trim());
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [memberSearch]);
+
   function toggleSelectedMember(userId: string) {
     setSelectedMemberIds((current) => (
       current.includes(userId)
@@ -139,13 +157,6 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
     setMemberPage('list');
     void loadMembers(1, '');
     onMembersChanged();
-  }
-
-  function handleMemberSearchSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSelectedMemberIds([]);
-    setMemberTablePage(1);
-    setActiveMemberSearch(memberSearch.trim());
   }
 
   function goToMemberPage(targetPage: number) {
@@ -269,16 +280,13 @@ function GroupMembersModal({ group, onClose, onMembersChanged }: GroupMembersMod
                 </>
               ) : (
                 <div className="table-toolbar">
-                  <form className="table-search-bar member-search-bar" onSubmit={handleMemberSearchSubmit}>
-                    <input
-                      value={memberSearch}
-                      placeholder={t('admin.groups.searchUsersPlaceholderLong')}
-                      onChange={(event) => setMemberSearch(event.target.value)}
-                    />
-                    <button type="submit" aria-label={t('common.search')}>
-                      <Search size={22} aria-hidden="true" />
-                    </button>
-                  </form>
+                  <SearchInput
+                    className="table-search-bar member-search-bar"
+                    value={memberSearch}
+                    placeholder={t('admin.groups.searchUsersPlaceholderLong')}
+                    clearLabel={t('common.clearSearch')}
+                    onChange={setMemberSearch}
+                  />
                   <ActionIconButton
                     icon={Plus}
                     label={t('common.add')}

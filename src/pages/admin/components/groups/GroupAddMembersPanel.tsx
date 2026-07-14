@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import SearchInput from '@/components/common/SearchInput';
 import { useToast } from '@/context/ToastContext';
 import { addGroupMembers } from '@/services/group.service';
 import type { GroupMemberDto } from '@/types/group.type';
@@ -33,7 +34,7 @@ function GroupAddMembersPanel({
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setDebouncedSearch(search.trim());
-    }, 300);
+    }, 400);
 
     return () => window.clearTimeout(timer);
   }, [search]);
@@ -156,14 +157,15 @@ function GroupAddMembersPanel({
       <div className="add-members-page">
         <label className="member-search-field">
           {t('admin.groups.searchUser')}
-          <input
+          <SearchInput
             placeholder={
               isLoadingUsers
                 ? t('admin.users.loadingUsers')
                 : t('admin.groups.searchUsersPlaceholder')
             }
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            clearLabel={t('common.clearSearch')}
+            onChange={setSearch}
             disabled={isAdding}
           />
         </label>

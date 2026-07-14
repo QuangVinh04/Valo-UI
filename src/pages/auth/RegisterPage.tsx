@@ -7,12 +7,18 @@ import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getErrorMessage } from '@/lib/error';
-import '@/styles/pages/home.css';
 
 type PasswordCheck = {
   labelKey: string;
   errorKey: string;
   isValid: boolean;
+};
+
+type RegisterTouchedFields = {
+  fullName: boolean;
+  email: boolean;
+  password: boolean;
+  confirmPassword: boolean;
 };
 
 function isValidEmail(value: string): boolean {
@@ -59,19 +65,57 @@ function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<RegisterTouchedFields>({
+    fullName: false,
+    email: false,
+    password: false,
+    confirmPassword: false,
+  });
   const passwordChecks = useMemo(() => getRegistrationPasswordChecks(password), [password]);
   const isPasswordStrong = passwordChecks.every((check) => check.isValid);
-  const passwordValidationError = password
-    ? passwordChecks.find((check) => !check.isValid)?.errorKey
-    : undefined;
-  const emailValidationError = email && !isValidEmail(email)
-    ? t('auth.emailFormatInvalid')
+  const fullNameValidationError = touchedFields.fullName && !fullName.trim()
+    ? t('auth.fullNameRequired')
     : '';
-  const doPasswordsMatch = !confirmPassword || password === confirmPassword;
+  const passwordValidationError = touchedFields.password
+    ? !password
+      ? 'auth.passwordRequired'
+      : passwordChecks.find((check) => !check.isValid)?.errorKey
+    : undefined;
+  const emailValidationError = touchedFields.email
+    ? !email.trim()
+      ? t('auth.emailRequired')
+      : !isValidEmail(email)
+        ? t('auth.emailFormatInvalid')
+        : ''
+    : '';
+  const confirmPasswordValidationError = touchedFields.confirmPassword
+    ? !confirmPassword
+      ? t('auth.confirmPasswordRequired')
+      : password !== confirmPassword
+        ? t('auth.passwordsDoNotMatch')
+        : ''
+    : '';
 
   // Create the account, then continue into OTP verification.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    setTouchedFields({
+      fullName: true,
+      email: true,
+      password: true,
+      confirmPassword: true,
+    });
+
+    if (
+      !fullName.trim()
+      || !email.trim()
+      || !isValidEmail(email)
+      || !password
+      || !confirmPassword
+    ) {
+      return;
+    }
 
     if (!isPasswordStrong) {
       toast.error(t('auth.passwordStrengthFailed'));
@@ -112,23 +156,32 @@ function RegisterPage() {
         <section className="auth-card-wrap">
           <div className="auth-card">
             <h1>{t('auth.createAccount')}</h1>
-            <p className="auth-subtitle">
-              {t('auth.registerSubtitle')}
-            </p>
-
-            <form className="auth-form" onSubmit={handleSubmit}>
-              <label htmlFor="fullName">{t('auth.fullName')}</label>
+            <form className="auth-form" onSubmit={handleSubmit} noValidate>
+              <label htmlFor="fullName">
+                {t('auth.fullName')}<span className="auth-required" aria-hidden="true">*</span>
+              </label>
               <input
+                className={fullNameValidationError ? 'field-invalid' : undefined}
                 id="fullName"
                 type="text"
                 autoComplete="name"
                 placeholder={t('auth.fullNamePlaceholder')}
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
+                onBlur={() => setTouchedFields((current) => ({ ...current, fullName: true }))}
+                aria-invalid={Boolean(fullNameValidationError)}
+                aria-describedby={fullNameValidationError ? 'register-full-name-error' : undefined}
                 required
               />
+              {fullNameValidationError && (
+                <p className="auth-field-error" id="register-full-name-error" aria-live="polite">
+                  {fullNameValidationError}
+                </p>
+              )}
 
-              <label htmlFor="registerEmail">{t('auth.emailAddress')}</label>
+              <label htmlFor="registerEmail">
+                {t('auth.emailAddress')}<span className="auth-required" aria-hidden="true">*</span>
+              </label>
               <input
                 className={emailValidationError ? 'field-invalid' : undefined}
                 id="registerEmail"
@@ -137,6 +190,7 @@ function RegisterPage() {
                 placeholder="name@company.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                onBlur={() => setTouchedFields((current) => ({ ...current, email: true }))}
                 aria-invalid={Boolean(emailValidationError)}
                 aria-describedby={emailValidationError ? 'register-email-error' : undefined}
                 required
@@ -146,7 +200,9 @@ function RegisterPage() {
                   {emailValidationError}
                 </p>
               )}
-              <label htmlFor="registerPassword">{t('auth.password')}</label>
+              <label htmlFor="registerPassword">
+                {t('auth.password')}<span className="auth-required" aria-hidden="true">*</span>
+              </label>
               <div className="password-field">
                 <input
                   className={passwordValidationError ? 'field-invalid' : undefined}
@@ -156,6 +212,7 @@ function RegisterPage() {
                   placeholder={t('auth.newPasswordPlaceholder')}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
+                  onBlur={() => setTouchedFields((current) => ({ ...current, password: true }))}
                   aria-invalid={Boolean(passwordValidationError)}
                   aria-describedby={passwordValidationError ? 'register-password-error' : 'register-password-hint'}
                   required
@@ -173,19 +230,26 @@ function RegisterPage() {
                 </div>
               )}
 
-              <label htmlFor="registerConfirmPassword">{t('auth.confirmPassword')}</label>
+              <label htmlFor="registerConfirmPassword">
+                {t('auth.confirmPassword')}<span className="auth-required" aria-hidden="true">*</span>
+              </label>
               <input
+                className={confirmPasswordValidationError ? 'field-invalid' : undefined}
                 id="registerConfirmPassword"
                 type="password"
                 autoComplete="new-password"
                 placeholder={t('auth.confirmPasswordPlaceholder')}
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
+                onBlur={() => setTouchedFields((current) => ({ ...current, confirmPassword: true }))}
                 required
-                aria-invalid={!doPasswordsMatch}
+                aria-invalid={Boolean(confirmPasswordValidationError)}
+                aria-describedby={confirmPasswordValidationError ? 'register-confirm-password-error' : undefined}
               />
-              {!doPasswordsMatch && (
-                <p className="auth-field-error">{t('auth.passwordsDoNotMatch')}</p>
+              {confirmPasswordValidationError && (
+                <p className="auth-field-error" id="register-confirm-password-error" aria-live="polite">
+                  {confirmPasswordValidationError}
+                </p>
               )}
 
               <button className="auth-submit" type="submit" disabled={isSubmitting}>

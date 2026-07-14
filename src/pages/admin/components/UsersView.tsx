@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, Filter, Pencil, Plus, RotateCcw, Search, Trash2, UserPlus } from 'lucide-react';
+import { Eye, Filter, Pencil, Plus, RotateCcw, Trash2, UserPlus } from 'lucide-react';
 import ActionIconButton from '@/components/common/ActionIconButton';
 import DataTable, { type DataTableColumn } from '@/components/common/DataTable';
 import IconButton from '@/components/common/IconButton';
 import Modal from '@/components/common/Modal';
+import SearchInput from '@/components/common/SearchInput';
 import { type UserFilters, useUsers } from '@/hooks/useUsers';
-import '@/styles/pages/management.css';
 import UserAssignGroupModal from './users/UserAssignGroupModal';
 import UserDeleteModal from './users/UserDeleteModal';
 import UserDetailsModal from './users/UserDetailsModal';
@@ -35,6 +35,9 @@ function UsersView() {
     filterDraft,
     activeFilters,
     canReadUsers,
+    canCreateUsers,
+    canUpdateUsers,
+    canDeleteUsers,
     setIsFilterPanelOpen,
     setFilterDraft,
     loadUsers,
@@ -67,6 +70,7 @@ function UsersView() {
   const showingTo = totalItems === 0 ? 0 : Math.min(page * limit, totalItems);
   const isAllUsersSelected = tableUsers.length > 0 && selectedUserIds.length === tableUsers.length;
   const hasSelectedUsers = selectedUserIds.length > 0;
+  const canSelectUsers = canUpdateUsers || canDeleteUsers;
   const activeFilterCount = [
     activeFilters.search.trim(),
     activeFilters.groupId,
@@ -85,7 +89,7 @@ function UsersView() {
   }
 
   const userTableColumns: Array<DataTableColumn<UserTableItem>> = [
-    {
+    ...(canSelectUsers ? [{
       key: 'select',
       header: (
         <label className="table-select-check">
@@ -110,7 +114,7 @@ function UsersView() {
           <span className="sr-only">{user.fullName}</span>
         </label>
       ),
-    },
+    } satisfies DataTableColumn<UserTableItem>] : []),
     {
       key: 'name',
       header: t('common.name'),
@@ -159,8 +163,12 @@ function UsersView() {
       render: (user) => (
         <div className="row-actions">
           <IconButton icon={Eye} label={t('admin.users.viewUser', { name: user.fullName })} onClick={() => openUserModal('details', user)} disabled={openingUserId === user.id} />
-          <IconButton icon={Pencil} label={t('admin.users.updateUser', { name: user.fullName })} onClick={() => openUserModal('update', user)} disabled={openingUserId === user.id} />
-          <IconButton icon={Trash2} label={t('admin.users.deleteUser', { name: user.fullName })} onClick={() => openUserModal('delete', user)} disabled={openingUserId === user.id} />
+          {canUpdateUsers && (
+            <IconButton icon={Pencil} label={t('admin.users.updateUser', { name: user.fullName })} onClick={() => openUserModal('update', user)} disabled={openingUserId === user.id} />
+          )}
+          {canDeleteUsers && (
+            <IconButton icon={Trash2} label={t('admin.users.deleteUser', { name: user.fullName })} onClick={() => openUserModal('delete', user)} disabled={openingUserId === user.id} />
+          )}
         </div>
       ),
     },
@@ -193,20 +201,24 @@ function UsersView() {
           {hasSelectedUsers ? (
             <>
               <span>{t('admin.users.usersSelected', { count: selectedUserIds.length })}</span>
-              <ActionIconButton
-                icon={Trash2}
-                label={t('common.delete')}
-                variant="danger"
-                onClick={() => setIsConfirmingDeleteSelected(true)}
-                disabled={isDeletingSelectedUsers}
-                isLoading={isDeletingSelectedUsers}
-              />
-              <ActionIconButton
-                icon={UserPlus}
-                label={t('common.add')}
-                onClick={openAssignGroupModal}
-                disabled={isDeletingSelectedUsers}
-              />
+              {canDeleteUsers && (
+                <ActionIconButton
+                  icon={Trash2}
+                  label={t('common.delete')}
+                  variant="danger"
+                  onClick={() => setIsConfirmingDeleteSelected(true)}
+                  disabled={isDeletingSelectedUsers}
+                  isLoading={isDeletingSelectedUsers}
+                />
+              )}
+              {canUpdateUsers && (
+                <ActionIconButton
+                  icon={UserPlus}
+                  label={t('common.add')}
+                  onClick={openAssignGroupModal}
+                  disabled={isDeletingSelectedUsers}
+                />
+              )}
             </>
           ) : (
             <div className="table-action-buttons">
@@ -216,12 +228,14 @@ function UsersView() {
                 onClick={() => setIsFilterPanelOpen((current) => !current)}
                 badge={activeFilterCount > 0 ? activeFilterCount : undefined}
               />
-              <ActionIconButton
-                icon={Plus}
-                label={t('admin.users.addUser')}
-                variant="primary"
-                onClick={openAddModal}
-              />
+              {canCreateUsers && (
+                <ActionIconButton
+                  icon={Plus}
+                  label={t('admin.users.addUser')}
+                  variant="primary"
+                  onClick={openAddModal}
+                />
+              )}
             </div>
           )}
         </div>
@@ -230,14 +244,12 @@ function UsersView() {
           <div className="filter-panel">
             <label>
               {t('common.search')}
-              <div className="filter-input-with-icon">
-                <Search size={16} aria-hidden="true" />
-                <input
-                  value={filterDraft.search}
-                  placeholder={t('admin.users.searchPlaceholder')}
-                  onChange={(event) => setFilterDraft((current) => ({ ...current, search: event.target.value }))}
-                />
-              </div>
+              <SearchInput
+                value={filterDraft.search}
+                placeholder={t('admin.users.searchPlaceholder')}
+                clearLabel={t('common.clearSearch')}
+                onChange={(search) => setFilterDraft((current) => ({ ...current, search }))}
+              />
             </label>
             <label>
               {t('common.group')}
