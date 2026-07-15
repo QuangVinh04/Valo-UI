@@ -126,7 +126,7 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
 
             {isUpdate
               ? t('admin.users.updateUserTitle')
-              : t('admin.users.addNewUser')}
+              : t('admin.users.inviteNewUserTitle')}
           </h2>
 
           <IconButton
@@ -199,6 +199,10 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
             />
             <span className="field-error" aria-hidden="true" />
           </label>
+
+          {!isUpdate && (
+            <p className="user-invite-notice">{t('admin.users.invitationNotice')}</p>
+          )}
         </div>
 
         <footer className="modal-footer">
@@ -213,10 +217,10 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
             disabled={isSubmitting}
           >
             {isSubmitting
-              ? t('admin.users.saving')
+              ? t(isUpdate ? 'admin.users.saving' : 'admin.users.sendingInvitation')
               : isUpdate
                 ? t('common.update')
-                : t('common.create')}
+                : t('admin.users.createAndInvite')}
           </button>
         </footer>
     </Modal>

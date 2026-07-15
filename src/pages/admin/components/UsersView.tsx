@@ -169,8 +169,18 @@ function UsersView() {
       header: t('admin.users.status'),
       className: 'table-column-status',
       render: (user) => (
-        <span className={`status-pill ${user.active ? 'status-active' : 'status-inactive'}`}>
-          {user.active ? t('admin.users.active') : t('admin.users.inactive')}
+        <span className={`status-pill ${
+          user.invitationEmailFailed
+            ? 'status-invitation-failed'
+            : user.active
+              ? 'status-active'
+              : 'status-inactive'
+        }`}>
+          {user.invitationEmailFailed
+            ? t('admin.users.invitationFailed')
+            : user.active
+              ? t('admin.users.active')
+              : t('admin.users.inactive')}
         </span>
       ),
     },

@@ -477,6 +477,11 @@ html[data-theme='light'] .btn-danger-link {
   color: var(--warning-pill-text);
 }
 
+.status-invitation-failed {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+}
+
 .row-actions {
   display: flex;
   justify-content: flex-end;

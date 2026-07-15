@@ -169,7 +169,7 @@ function SearchConversationsModal({ onClose }: SearchConversationsModalProps) {
         {!isLoading && nextCursor && (
           <button
             type="button"
-            className="conversation-search-load-more"
+            className="load-more-action conversation-search-load-more"
             disabled={isLoadingMore}
             onClick={() => void loadMore()}
           >

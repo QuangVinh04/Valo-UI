@@ -1,6 +1,6 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useToast } from '@/context/ToastContext';
@@ -19,43 +19,80 @@ function getPasswordErrorKey(password: string): string | undefined {
 function SetPasswordPage() {
   const { t } = useTranslation();
   const toast = useToast();
+  const newPasswordInputRef = useRef<HTMLInputElement>(null);
+  const confirmPasswordInputRef = useRef<HTMLInputElement>(null);
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const isResetFlow = location.pathname === '/reset-password';
+  const copy = isResetFlow
+    ? {
+        title: 'auth.resetPasswordTitle',
+        subtitle: 'auth.resetPasswordSubtitle',
+        submit: 'auth.resetPassword',
+        submitting: 'auth.resettingPassword',
+        success: 'auth.passwordResetSuccess',
+        failure: 'auth.resetPasswordFailed',
+        invalidLink: 'auth.invalidResetPasswordLink',
+      }
+    : {
+        title: 'auth.activateAccountTitle',
+        subtitle: 'auth.activateAccountSubtitle',
+        submit: 'auth.activateAccount',
+        submitting: 'auth.activatingAccount',
+        success: 'auth.accountActivatedSuccess',
+        failure: 'auth.activateAccountFailed',
+        invalidLink: 'auth.invalidInvitationLink',
+      };
   const token = searchParams.get('token')?.trim() ?? '';
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [touchedFields, setTouchedFields] = useState({
+    newPassword: false,
+    confirmPassword: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const passwordErrorKey = useMemo(
+  const passwordStrengthErrorKey = useMemo(
     () => (newPassword ? getPasswordErrorKey(newPassword) : undefined),
     [newPassword]
   );
+  const passwordErrorKey = touchedFields.newPassword
+    ? !newPassword
+      ? 'auth.passwordRequired'
+      : passwordStrengthErrorKey
+    : undefined;
   const passwordsMatch = Boolean(confirmPassword) && newPassword === confirmPassword;
-  const canSubmit = Boolean(token)
-    && Boolean(newPassword)
-    && !passwordErrorKey
-    && passwordsMatch
-    && !isSubmitting;
-
+  const confirmPasswordError = touchedFields.confirmPassword
+    ? !confirmPassword
+      ? t('auth.confirmPasswordRequired')
+      : newPassword !== confirmPassword
+        ? t('auth.passwordsDoNotMatch')
+        : ''
+    : '';
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!token) return;
-    if (getPasswordErrorKey(newPassword)) {
-      toast.error(t('auth.passwordStrengthFailed'));
+    setTouchedFields({ newPassword: true, confirmPassword: true });
+
+    if (!newPassword || passwordStrengthErrorKey) {
+      newPasswordInputRef.current?.focus();
+      if (newPassword) toast.error(t('auth.passwordStrengthFailed'));
       return;
     }
-    if (newPassword !== confirmPassword) {
-      toast.error(t('auth.passwordsDoNotMatch'));
+    if (!confirmPassword || newPassword !== confirmPassword) {
+      confirmPasswordInputRef.current?.focus();
+      if (confirmPassword) toast.error(t('auth.passwordsDoNotMatch'));
       return;
     }
 
     setIsSubmitting(true);
     try {
       await setPassword({ token, newPassword, confirmPassword });
-      toast.success(t('auth.passwordSetSuccess'));
+      toast.success(t(copy.success));
       navigate('/login', { replace: true });
     } catch (error) {
-      toast.error(getErrorMessage(error, t('auth.setPasswordFailed')));
+      toast.error(getErrorMessage(error, t(copy.failure)));
     } finally {
       setIsSubmitting(false);
     }
@@ -67,26 +104,33 @@ function SetPasswordPage() {
       <main className="home-main">
         <section className="auth-card-wrap">
           <div className="auth-card">
-            <h1>{t('auth.setPasswordTitle')}</h1>
-            <p className="auth-subtitle">{t('auth.setPasswordSubtitle')}</p>
+            <h1>{t(copy.title)}</h1>
+            <p className="auth-subtitle">{t(copy.subtitle)}</p>
 
             {!token ? (
               <div role="alert">
-                <p className="auth-field-error">{t('auth.invalidPasswordLink')}</p>
+                <p className="auth-field-error">{t(copy.invalidLink)}</p>
                 <p className="auth-switch">
-                  <Link to="/login">{t('auth.backToLogin')}</Link>
+                  <Link to={isResetFlow ? '/forgot-password' : '/login'}>
+                    {t(isResetFlow ? 'auth.requestNewResetLink' : 'auth.backToLogin')}
+                  </Link>
                 </p>
               </div>
             ) : (
-              <form className="auth-form" onSubmit={handleSubmit}>
-                <label htmlFor="token-new-password">{t('auth.newPassword')}</label>
+              <form className="auth-form" onSubmit={handleSubmit} noValidate>
+                <label htmlFor="token-new-password">
+                  {t('auth.newPassword')}<span className="auth-required" aria-hidden="true">*</span>
+                </label>
                 <input
+                  ref={newPasswordInputRef}
                   className={passwordErrorKey ? 'field-invalid' : undefined}
                   id="token-new-password"
                   type="password"
                   autoComplete="new-password"
+                  autoFocus
                   value={newPassword}
                   onChange={(event) => setNewPassword(event.target.value)}
+                  onBlur={() => setTouchedFields((current) => ({ ...current, newPassword: true }))}
                   aria-invalid={Boolean(passwordErrorKey)}
                   aria-describedby={passwordErrorKey ? 'token-password-error' : 'token-password-hint'}
                   required
@@ -101,25 +145,32 @@ function SetPasswordPage() {
                   </div>
                 )}
 
-                <label htmlFor="token-confirm-password">{t('auth.confirmPassword')}</label>
+                <label htmlFor="token-confirm-password">
+                  {t('auth.confirmPassword')}<span className="auth-required" aria-hidden="true">*</span>
+                </label>
                 <input
-                  className={confirmPassword && !passwordsMatch ? 'field-invalid' : undefined}
+                  ref={confirmPasswordInputRef}
+                  className={confirmPasswordError ? 'field-invalid' : undefined}
                   id="token-confirm-password"
                   type="password"
                   autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
-                  aria-invalid={Boolean(confirmPassword && !passwordsMatch)}
+                  onBlur={() => setTouchedFields((current) => ({ ...current, confirmPassword: true }))}
+                  aria-invalid={Boolean(confirmPasswordError)}
+                  aria-describedby={confirmPasswordError ? 'token-confirm-password-error' : undefined}
                   required
                 />
-                {confirmPassword && !passwordsMatch && (
-                  <p className="auth-field-error" aria-live="polite">{t('auth.passwordsDoNotMatch')}</p>
+                {confirmPasswordError && (
+                  <p className="auth-field-error" id="token-confirm-password-error" aria-live="polite">
+                    {confirmPasswordError}
+                  </p>
                 )}
 
-                <button className="auth-submit" type="submit" disabled={!canSubmit}>
+                <button className="auth-submit" type="submit" disabled={isSubmitting}>
                   {isSubmitting
-                    ? t('auth.updatingPassword')
-                    : t('auth.setPassword')}
+                    ? t(copy.submitting)
+                    : t(copy.submit)}
                 </button>
               </form>
             )}

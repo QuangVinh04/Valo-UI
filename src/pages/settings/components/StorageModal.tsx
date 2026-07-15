@@ -44,6 +44,7 @@ function StorageModal({ onClose }: StorageModalProps) {
   const remainingSelectedFileCount = Math.max(0, selectedCount - selectedFilePreview.length);
   const hasSearch = Boolean(submittedSearch.trim());
   const isTableEmpty = attachments.length === 0;
+  const isLoadingMore = isLoading && attachments.length > 0;
   const allVisibleSelected = attachments.length > 0
     && attachments.every((attachment) => selectedIds.includes(attachment.id));
 
@@ -252,17 +253,22 @@ function StorageModal({ onClose }: StorageModalProps) {
               </p>
             )}
 
-            {isLoading && (
+            {isLoading && !attachments.length && (
               <p className="storage-loading"><Loader2 size={16} aria-hidden="true" /> {t('settings.loading')}</p>
+            )}
+
+            {nextCursor && (
+              <button
+                type="button"
+                className="load-more-action storage-load-more"
+                disabled={isLoading}
+                onClick={() => loadAttachments(nextCursor)}
+              >
+                {isLoadingMore ? t('settings.loading') : t('settings.loadMore')}
+              </button>
             )}
           </div>
         </div>
-
-        {nextCursor && !isLoading && (
-          <button type="button" className="btn-muted storage-load-more" onClick={() => loadAttachments(nextCursor)}>
-            {t('settings.loadMore')}
-          </button>
-        )}
 
         <footer>
           <button type="button" className="btn-cancel" onClick={onClose} disabled={isDeleting}>

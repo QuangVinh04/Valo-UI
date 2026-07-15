@@ -21,6 +21,7 @@ function AppRoutes() {
       <Route path="/change-password" element={<ChangePasswordPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/set-password" element={<SetPasswordPage />} />
+      <Route path="/reset-password" element={<SetPasswordPage />} />
       <Route element={<AppLayout />}>
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/chat/:conversationId" element={<ChatPage />} />

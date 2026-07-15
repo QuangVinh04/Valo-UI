@@ -197,7 +197,7 @@ function ChatSidebarRecents() {
         {!chat.isLoading && chat.hasMoreConversations && (
           <button
             type="button"
-            className="sidebar-chat-load-more"
+            className="load-more-action sidebar-chat-load-more"
             disabled={chat.isLoadingMoreConversations}
             onClick={() => void chat.loadMoreConversations()}
           >
