@@ -34,6 +34,7 @@ export type Conversation = {
 export type StreamReadyEvent = {
   conversationId: string;
   userMessage: ChatMessage;
+  assistantMessage: ChatMessage;
 };
 
 export type StreamDoneEvent = {

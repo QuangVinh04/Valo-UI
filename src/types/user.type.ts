@@ -12,6 +12,7 @@ export type UserDto = {
   address: string | null;
   groups: UserGroupSummary[];
   active: boolean;
+  invitationEmailFailed: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -22,6 +23,7 @@ export type UserListItemDto = {
   email: string;
   groups: UserGroupSummary[];
   active: boolean;
+  invitationEmailFailed: boolean;
 };
 
 export type UserProfileUpdate = {
@@ -39,8 +41,6 @@ export type UserListFilters = {
 export type CreateUserPayload = {
   fullName: string;
   email: string;
-  password: string;
-  confirmPassword: string;
   phoneNumber?: string;
   address?: string;
 };

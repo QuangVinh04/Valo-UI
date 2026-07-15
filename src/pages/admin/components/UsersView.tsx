@@ -7,6 +7,8 @@ import IconButton from '@/components/common/IconButton';
 import Modal from '@/components/common/Modal';
 import SearchInput from '@/components/common/SearchInput';
 import { type UserFilters, useUsers } from '@/hooks/useUsers';
+import { useToast } from '@/context/ToastContext';
+import { resendInvitation } from '@/services/user.service';
 import UserAssignGroupModal from './users/UserAssignGroupModal';
 import UserDeleteModal from './users/UserDeleteModal';
 import UserDetailsModal from './users/UserDetailsModal';
@@ -15,9 +17,11 @@ import { toUserTableItem, type UserTableItem } from './users/user-view-model';
 
 function UsersView() {
   const { t } = useTranslation();
+  const toast = useToast();
   const usersState = useUsers();
   const selectAllRef = useRef<HTMLInputElement | null>(null);
   const [isConfirmingDeleteSelected, setIsConfirmingDeleteSelected] = useState(false);
+  const [resendingInvitationId, setResendingInvitationId] = useState<string | null>(null);
   const {
     modal,
     selectedUser,
@@ -86,6 +90,20 @@ function UsersView() {
   async function handleConfirmDeleteSelected() {
     await deleteSelectedUsers();
     setIsConfirmingDeleteSelected(false);
+  }
+
+  async function handleResendInvitation(user: UserTableItem) {
+    setResendingInvitationId(user.id);
+
+    try {
+      await resendInvitation(user.id);
+      toast.success(t('admin.users.invitationResent', { name: user.fullName }));
+      await loadUsers(page);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('admin.users.invitationResendFailed'));
+    } finally {
+      setResendingInvitationId(null);
+    }
   }
 
   const userTableColumns: Array<DataTableColumn<UserTableItem>> = [
@@ -163,6 +181,14 @@ function UsersView() {
       render: (user) => (
         <div className="row-actions">
           <IconButton icon={Eye} label={t('admin.users.viewUser', { name: user.fullName })} onClick={() => openUserModal('details', user)} disabled={openingUserId === user.id} />
+          {canCreateUsers && user.invitationEmailFailed && !user.active && (
+            <IconButton
+              icon={RotateCcw}
+              label={t('admin.users.resendInvitation', { name: user.fullName })}
+              onClick={() => void handleResendInvitation(user)}
+              disabled={resendingInvitationId === user.id}
+            />
+          )}
           {canUpdateUsers && (
             <IconButton icon={Pencil} label={t('admin.users.updateUser', { name: user.fullName })} onClick={() => openUserModal('update', user)} disabled={openingUserId === user.id} />
           )}

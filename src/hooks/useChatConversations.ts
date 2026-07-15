@@ -51,6 +51,8 @@ export function useChatConversations({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [modelName, setModelName] = useState(defaultModel);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMoreConversations, setIsLoadingMoreConversations] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [openingConversationId, setOpeningConversationId] = useState<string | null>(null);
   const historyResetVersionRef = useRef(0);
 
@@ -78,8 +80,10 @@ export function useChatConversations({
         if (ignore || historyResetVersionRef.current !== resetVersion) return;
 
         setConversations(result.data);
+        setNextCursor(result.meta?.nextCursor ?? null);
       } catch (err) {
         if (!ignore && historyResetVersionRef.current === resetVersion) {
+          setNextCursor(null);
           setError(err instanceof Error ? err.message : 'Cannot load conversations');
         }
       } finally {
@@ -98,6 +102,35 @@ export function useChatConversations({
 
   const activeConversationId = activeConversation?.id ?? null;
   const isOpeningConversation = openingConversationId !== null;
+
+  // Tải trang hội thoại kế tiếp bằng cursor và loại bỏ bản ghi trùng khi nối danh sách.
+  const loadMoreConversations = useCallback(async () => {
+    if (!nextCursor || isLoadingMoreConversations) return;
+
+    const cursor = nextCursor;
+    const resetVersion = historyResetVersionRef.current;
+    setIsLoadingMoreConversations(true);
+    setError('');
+
+    try {
+      const result = await getConversations({ cursor, limit: 20 });
+      if (historyResetVersionRef.current !== resetVersion) return;
+
+      setConversations((current) => {
+        const existingIds = new Set(current.map((conversation) => conversation.id));
+        return [...current, ...result.data.filter((conversation) => !existingIds.has(conversation.id))];
+      });
+      setNextCursor(result.meta?.nextCursor ?? null);
+    } catch (err) {
+      if (historyResetVersionRef.current === resetVersion) {
+        setError(err instanceof Error ? err.message : 'Cannot load more conversations');
+      }
+    } finally {
+      if (historyResetVersionRef.current === resetVersion) {
+        setIsLoadingMoreConversations(false);
+      }
+    }
+  }, [isLoadingMoreConversations, nextCursor, setError]);
 
   // Mở một hội thoại, ưu tiên dữ liệu cache để UI phản hồi nhanh rồi làm mới từ API.
   const selectConversation = useCallback(async (conversationId: string) => {
@@ -165,6 +198,8 @@ export function useChatConversations({
     clearPrompt();
     clearSelectedFiles();
     setIsLoading(false);
+    setIsLoadingMoreConversations(false);
+    setNextCursor(null);
     setError('');
     setOpeningConversationId(null);
 
@@ -220,6 +255,8 @@ export function useChatConversations({
     messages,
     modelName,
     isLoading,
+    isLoadingMoreConversations,
+    hasMoreConversations: nextCursor !== null,
     isOpeningConversation,
     openingConversationId,
     historyResetVersionRef,
@@ -228,6 +265,7 @@ export function useChatConversations({
     setMessages,
     setModelName,
     selectConversation,
+    loadMoreConversations,
     startNewChat,
     clearChatHistoryState,
     renameChat,
@@ -240,9 +278,12 @@ export function useChatConversations({
     messages,
     modelName,
     isLoading,
+    isLoadingMoreConversations,
+    nextCursor,
     isOpeningConversation,
     openingConversationId,
     selectConversation,
+    loadMoreConversations,
     startNewChat,
     clearChatHistoryState,
     renameChat,

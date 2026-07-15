@@ -2,10 +2,12 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from '@/layouts/AppLayout';
 import ChatPage from '@/pages/chat/ChatPage';
 import ChangePasswordPage from '@/pages/auth/ChangePasswordPage';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import GroupsPage from '@/pages/admin/GroupsPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import OtpVerificationPage from '@/pages/auth/OtpVerificationPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
+import SetPasswordPage from '@/pages/auth/SetPasswordPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import UsersPage from '@/pages/admin/UsersPage';
 
@@ -17,6 +19,8 @@ function AppRoutes() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/verify-otp" element={<OtpVerificationPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/set-password" element={<SetPasswordPage />} />
       <Route element={<AppLayout />}>
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/chat/:conversationId" element={<ChatPage />} />

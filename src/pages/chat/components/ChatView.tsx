@@ -1,6 +1,6 @@
 import { FormEvent, Fragment, ReactElement, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bot, Check, ChevronDown, Copy, Download, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
+import { Check, ChevronDown, Copy, Download, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
 import { useToast } from '@/context/ToastContext';
 import { chatModelOptions, type ChatModelKey, type SelectedChatFile, useChat } from '@/hooks/useChat';
@@ -357,7 +357,6 @@ function ChatMessageItem({
 
   return (
     <div className={assistantClassName}>
-      <div className="bot-avatar"><Bot size={20} aria-hidden="true" /></div>
       <div>
         <div className="assistant-content">
           {message.content ? (
@@ -365,13 +364,13 @@ function ChatMessageItem({
               {renderMarkdown(message.content)}
               {isStreaming && <span className="stream-cursor" aria-hidden="true" />}
             </>
-          ) : (
+          ) : isStreaming ? (
             <div className="thinking-indicator" aria-label={t('chat.assistantThinking')}>
               <span />
               <span />
               <span />
             </div>
-          )}
+          ) : null}
         </div>
         {!isStreaming && message.isUserStopped && (
           <p className="assistant-stopped-note">{t('chat.generationStopped')}</p>
@@ -381,16 +380,18 @@ function ChatMessageItem({
             <div className="assistant-meta">
               {(message.modelName || 'assistant').toUpperCase()} • {formatTime(message.createdAt)}
             </div>
-            <div className="message-actions">
-              <IconButton icon={Copy} label={t(copyLabelKey)} onClick={() => void copyMessage()} />
-              {canExportMessage && (
-                <IconButton
-                  icon={Download}
-                  label="Export DOCX"
-                  onClick={() => void handleExportDocx()}
-                />
-              )}
-            </div>
+            {message.content && (
+              <div className="message-actions">
+                <IconButton icon={Copy} label={t(copyLabelKey)} onClick={() => void copyMessage()} />
+                {canExportMessage && (
+                  <IconButton
+                    icon={Download}
+                    label="Export DOCX"
+                    onClick={() => void handleExportDocx()}
+                  />
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

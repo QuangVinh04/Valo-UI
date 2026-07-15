@@ -26,7 +26,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 3rem;
   padding:
     clamp(1.3rem, 4vh, 3rem)
     max(clamp(1rem, 2.4vw, 2rem), calc((100% - 980px) / 2 + 1rem))
@@ -114,11 +114,11 @@
   max-width: min(700px, 76%);
   margin-left: auto;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 18px;
   background: color-mix(in srgb, var(--panel) 86%, white 4%);
   padding: 0.75rem 0.95rem;
   line-height: 1.5;
-  font-size: 0.95rem;
+  font-size: 16px;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.14);
   animation: message-enter 180ms ease-out both;
 }
@@ -137,22 +137,14 @@
 }
 
 .assistant-msg {
-  width: min(760px, 100%);
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 0.75rem;
+  width: min(880px, 100%);
+  display: block;
+  margin-right: auto;
   animation: message-enter 180ms ease-out both;
 }
 
-.bot-avatar {
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--panel) 84%, transparent);
-  color: var(--blue-2);
+.assistant-msg > div {
+  width: 100%;
 }
 
 .assistant-content {
@@ -160,11 +152,6 @@
   gap: 0.8rem;
   min-width: 0;
   padding-top: 0.1rem;
-}
-
-.assistant-msg.streaming .bot-avatar {
-  border-color: color-mix(in srgb, var(--blue-2) 46%, var(--line));
-  box-shadow: 0 0 0 4px rgba(112, 168, 255, 0.08);
 }
 
 .assistant-content h3,
@@ -179,7 +166,7 @@
 .assistant-content li {
   margin: 0;
   color: var(--text);
-  font-size: 0.96rem;
+  font-size: 16px;
   line-height: 1.65;
 }
 
@@ -192,7 +179,7 @@
 .assistant-stopped-note {
   margin: 0.65rem 0 0;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 16px;
   font-style: italic;
   line-height: 1.5;
 }
@@ -215,7 +202,7 @@
 .assistant-content code {
   color: var(--text);
   font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 0.9rem;
+  font-size: 16px;
   line-height: 1.6;
 }
 
@@ -781,16 +768,6 @@
   .assistant-msg {
     max-width: 100%;
     width: 100%;
-  }
-
-  .assistant-msg {
-    grid-template-columns: 28px minmax(0, 1fr);
-    gap: 0.75rem;
-  }
-
-  .bot-avatar {
-    width: 28px;
-    height: 28px;
   }
 
   .chat-composer-wrap {

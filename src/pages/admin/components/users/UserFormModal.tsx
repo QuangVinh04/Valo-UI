@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UserPlus, UserRound, X } from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
@@ -16,46 +16,10 @@ type UserFormModalProps = {
   onSaved: () => void;
 };
 
-type RequiredField = 'fullName' | 'email' | 'password' | 'confirmPassword';
-
-type PasswordCheck = {
-  labelKey: string;
-  errorKey: string;
-  isValid: boolean;
-};
+type RequiredField = 'fullName' | 'email';
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
-
-function getPasswordChecks(password: string): PasswordCheck[] {
-  return [
-    {
-      labelKey: 'auth.passwordRuleLength',
-      errorKey: 'auth.passwordErrorLength',
-      isValid: password.length >= 8,
-    },
-    {
-      labelKey: 'auth.passwordRuleUppercase',
-      errorKey: 'auth.passwordErrorUppercase',
-      isValid: /[A-Z]/.test(password),
-    },
-    {
-      labelKey: 'auth.passwordRuleLowercase',
-      errorKey: 'auth.passwordErrorLowercase',
-      isValid: /[a-z]/.test(password),
-    },
-    {
-      labelKey: 'auth.passwordRuleNumber',
-      errorKey: 'auth.passwordErrorNumber',
-      isValid: /\d/.test(password),
-    },
-    {
-      labelKey: 'auth.passwordRuleSymbol',
-      errorKey: 'auth.passwordErrorSymbol',
-      isValid: /[^A-Za-z0-9]/.test(password),
-    },
-  ];
 }
 
 function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
@@ -66,20 +30,13 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
 
   const [fullName, setFullName] = useState(user?.fullName ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber ?? '');
   const [address, setAddress] = useState(user?.address ?? '');
   const [touchedFields, setTouchedFields] = useState<Record<RequiredField, boolean>>({
     fullName: false,
     email: false,
-    password: false,
-    confirmPassword: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const passwordChecks = useMemo(() => getPasswordChecks(password), [password]);
-  const isPasswordStrong = passwordChecks.every((check) => check.isValid);
-  const passwordRuleErrorKey = passwordChecks.find((check) => !check.isValid)?.errorKey;
 
   const fullNameError = touchedFields.fullName && !fullName.trim()
     ? t('admin.users.fullNameRequired')
@@ -90,12 +47,6 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
       : email.trim() && !isValidEmail(email)
         ? t('auth.emailFormatInvalid')
         : ''
-    : '';
-  const passwordError = !isUpdate && (password || touchedFields.password) && passwordRuleErrorKey
-    ? t(passwordRuleErrorKey)
-    : '';
-  const confirmPasswordError = !isUpdate && touchedFields.confirmPassword && password !== confirmPassword
-    ? t('auth.passwordsDoNotMatch')
     : '';
 
   function markFieldTouched(field: RequiredField) {
@@ -112,8 +63,6 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
       setTouchedFields({
         fullName: true,
         email: true,
-        password: true,
-        confirmPassword: true,
       });
 
       toast.error(t('admin.users.nameEmailRequired'));
@@ -123,16 +72,6 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
     if (!isUpdate && !isValidEmail(normalizedEmail)) {
       setTouchedFields((current) => ({ ...current, email: true }));
       toast.error(t('auth.emailFormatInvalid'));
-      return;
-    }
-
-    if (!isUpdate && (!isPasswordStrong || password !== confirmPassword)) {
-      setTouchedFields((current) => ({
-        ...current,
-        password: true,
-        confirmPassword: true,
-      }));
-      toast.error(!isPasswordStrong ? t('auth.passwordStrengthFailed') : t('auth.passwordsDoNotMatch'));
       return;
     }
 
@@ -151,8 +90,6 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
         await createUser({
           fullName: name,
           email: normalizedEmail,
-          password,
-          confirmPassword,
           phoneNumber: normalizedPhoneNumber,
           address: normalizedAddress,
         });
@@ -243,59 +180,6 @@ function UserFormModal({ mode, user, onClose, onSaved }: UserFormModalProps) {
               {emailError}
             </span>
           </label>
-
-          {!isUpdate && (
-            <>
-              <label>
-                <span className="form-label-text">
-                  {t('auth.password')}
-                  <span className="required-mark" aria-hidden="true">*</span>
-                </span>
-                <input
-                  className={passwordError ? 'field-invalid' : undefined}
-                  type="password"
-                  autoComplete="new-password"
-                  value={password}
-                  placeholder={t('auth.newPasswordPlaceholder')}
-                  onChange={(event) => setPassword(event.target.value)}
-                  onBlur={() => markFieldTouched('password')}
-                  aria-invalid={Boolean(passwordError)}
-                  aria-describedby={passwordError ? 'user-password-error' : 'user-password-hint'}
-                />
-                <span className="field-error" id="user-password-error" aria-live="polite">
-                  {passwordError}
-                </span>
-              </label>
-
-              {!passwordError && (
-                <div className="modal-password-rules" id="user-password-hint">
-                  <p>{t('auth.passwordRequirements')}</p>
-                </div>
-              )}
-
-              <label>
-                <span className="form-label-text">
-                  {t('auth.confirmPassword')}
-                  <span className="required-mark" aria-hidden="true">*</span>
-                </span>
-                <input
-                  className={confirmPasswordError ? 'field-invalid' : undefined}
-                  type="password"
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  placeholder={t('auth.confirmPasswordPlaceholder')}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  onBlur={() => markFieldTouched('confirmPassword')}
-                  aria-invalid={Boolean(confirmPasswordError)}
-                  aria-describedby="user-confirm-password-error"
-                />
-                <span className="field-error" id="user-confirm-password-error" aria-live="polite">
-                  {confirmPasswordError}
-                </span>
-              </label>
-            </>
-          )}
-
           <label>
             <span className="form-label-text">{t('admin.users.phoneNumber')}</span>
             <input

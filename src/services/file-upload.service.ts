@@ -428,6 +428,7 @@ function inferMimeFromName(name: string): string {
   if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) return 'image/jpeg';
   if (lowerName.endsWith('.txt')) return 'text/plain';
   if (lowerName.endsWith('.md')) return 'text/markdown';
+  if (lowerName.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
   if (lowerName.endsWith('.xls')) return 'application/vnd.ms-excel';
   if (lowerName.endsWith('.xlsx')) return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   return 'application/octet-stream';

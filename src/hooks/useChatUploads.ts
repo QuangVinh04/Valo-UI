@@ -10,19 +10,22 @@ export const chatFileLimits = {
   acceptedFileTypes: [
     '.pdf',
     '.txt',
+    '.docx',
     '.xls',
     '.xlsx',
     'application/pdf',
     'text/plain',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   ].join(','),
 };
 
-const supportedFileExtensions = new Set(['pdf', 'txt', 'xls', 'xlsx']);
+const supportedFileExtensions = new Set(['pdf', 'txt', 'docx', 'xls', 'xlsx']);
 const supportedFileMimes = new Set([
   'application/pdf',
   'text/plain',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ]);

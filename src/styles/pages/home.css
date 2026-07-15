@@ -221,6 +221,13 @@
   font-weight: 600;
 }
 
+.auth-forgot-link {
+  justify-self: end;
+  color: var(--blue-2);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
 .auth-footer {
   display: flex;
   justify-content: center;

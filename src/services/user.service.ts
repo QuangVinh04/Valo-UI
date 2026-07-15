@@ -113,6 +113,19 @@ export async function createUser(payload: CreateUserPayload): Promise<CreatedUse
   }
 }
 
+export async function resendInvitation(userId: string): Promise<boolean> {
+  try {
+    const response = await api.post<ApiResponse<boolean>>(`/users/${userId}/resend-invitation`);
+    if (!response.data.success || response.data.data === null) {
+      throw new AppError(response.data.message, response.status, response.data.errors);
+    }
+
+    return response.data.data;
+  } catch (error) {
+    handleServiceError(error);
+  }
+}
+
 export async function updateUser(userId: string, payload: UpdateUserPayload): Promise<UserProfileDto> {
   try {
     const response = await api.put<ApiResponse<UserProfileDto>>(`/users/${userId}`, payload);

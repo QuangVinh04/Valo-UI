@@ -175,6 +175,7 @@ export function useChatStreaming({
         ...event.userMessage,
         status: event.userMessage.status ?? 'PENDING',
       };
+      assistantMessage = event.assistantMessage;
       readyUserMessageId = userMessage.id;
 
       clearSelectedFiles();
@@ -269,7 +270,7 @@ export function useChatStreaming({
         },
       });
 
-      if (didStreamFail && !didCompleteStream) {
+      if (didStreamFail && !didCompleteStream && !readyUserMessageId) {
         cleanupUploadedFiles(fileUploads);
       }
     } catch (err) {
@@ -281,7 +282,7 @@ export function useChatStreaming({
         appendAssistantStatus(t('chat.generationError', { message }), 'error', 'FAILED');
       }
 
-      if (!didCompleteStream) {
+      if (!didCompleteStream && !readyUserMessageId) {
         cleanupUploadedFiles(fileUploads);
       }
     } finally {

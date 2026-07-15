@@ -72,6 +72,8 @@ function isPublicAuthRequest(url?: string): boolean {
     '/auth/register',
     '/auth/verify-otp',
     '/auth/resend-otp',
+    '/auth/forgot-password',
+    '/auth/set-password',
   ];
 
   return publicAuthPaths.some((path) => url.endsWith(path));
