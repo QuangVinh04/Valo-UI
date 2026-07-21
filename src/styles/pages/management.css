@@ -788,10 +788,7 @@ html[data-theme='light'] .btn-danger-link {
 
 .user-invite-notice {
   margin: 0;
-  padding: 0.85rem 1rem;
   color: var(--muted);
-  background: color-mix(in srgb, var(--blue-2) 9%, transparent);
-  border: 1px solid color-mix(in srgb, var(--blue-2) 24%, transparent);
   border-radius: 8px;
   font-size: 0.86rem;
   line-height: 1.5;
