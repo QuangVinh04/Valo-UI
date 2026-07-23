@@ -5,31 +5,30 @@ import { deleteGroups, getGroupById, getGroupMembers, getGroups } from '@/servic
 import type { GroupListItemDto } from '@/types/group.type';
 import { toGroupViewModel, type GroupViewModel } from '@/pages/admin/components/groups/group-view-model';
 import { usePermissions } from './usePermissions';
+import { PermissionConstant, type PermissionKey } from '@/constants/permission.constant';
+import { permissionDeniedMessages } from '@/constants/permission-denied-messages';
 
 export type GroupModalAction = 'create' | 'details' | 'update' | 'members' | 'delete';
 
-const groupActionPermissions: Record<Exclude<GroupModalAction, 'details'>, string> = {
-  create: 'GROUP_C',
-  update: 'GROUP_U',
-  members: 'GROUP_U',
-  delete: 'GROUP_D',
+const groupActionPermissions: Record<Exclude<GroupModalAction, 'details'>, PermissionKey> = {
+  create: PermissionConstant.GROUP_CREATE,
+  update: PermissionConstant.GROUP_UPDATE,
+  members: PermissionConstant.GROUP_UPDATE,
+  delete: PermissionConstant.GROUP_DELETE,
 };
 
 const permissionMessages: Record<string, string> = {
-  GROUP_R: 'admin.groups.cannotViewDetails',
-  GROUP_C: 'admin.groups.cannotCreate',
-  GROUP_U: 'admin.groups.cannotUpdate',
-  GROUP_D: 'admin.groups.cannotDelete',
+  ...permissionDeniedMessages,
 };
 
 export function useGroups() {
   const { t } = useTranslation();
   const permissions = usePermissions();
   const toast = useToast();
-  const canReadGroups = permissions.can('GROUP_R');
-  const canCreateGroups = permissions.can('GROUP_C');
-  const canUpdateGroups = permissions.can('GROUP_U');
-  const canDeleteGroups = permissions.can('GROUP_D');
+  const canReadGroups = permissions.can(PermissionConstant.GROUP_READ);
+  const canCreateGroups = permissions.can(PermissionConstant.GROUP_CREATE);
+  const canUpdateGroups = permissions.can(PermissionConstant.GROUP_UPDATE);
+  const canDeleteGroups = permissions.can(PermissionConstant.GROUP_DELETE);
   const [modal, setModal] = useState<GroupModalAction | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<GroupViewModel | null>(null);
   const [groups, setGroups] = useState<GroupListItemDto[]>([]);
@@ -44,13 +43,13 @@ export function useGroups() {
   const [search, setSearchInput] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
 
-  const showPermissionNotice = useCallback((permission: string) => {
+  const showPermissionNotice = useCallback((permission: PermissionKey) => {
     toast.warning(t(permissionMessages[permission] ?? 'common.noPagePermission'));
   }, [t, toast]);
 
   // Tải danh sách nhóm sau khi xác nhận người dùng có quyền xem nhóm.
   const loadGroups = useCallback(async (targetPage = page) => {
-    if (permissions.cannot('GROUP_R')) {
+    if (permissions.cannot(PermissionConstant.GROUP_READ)) {
       setGroups([]);
       setSelectedGroupIds([]);
       setTotalItems(0);
@@ -107,8 +106,8 @@ export function useGroups() {
 
   async function openGroupModal(action: Exclude<GroupModalAction, 'create'>, group: GroupViewModel) {
     // Kiểm tra quyền theo từng loại thao tác trước khi tải dữ liệu chi tiết.
-    if (action === 'details' && permissions.cannot('GROUP_R')) {
-      showPermissionNotice('GROUP_R');
+    if (action === 'details' && permissions.cannot(PermissionConstant.GROUP_READ)) {
+      showPermissionNotice(PermissionConstant.GROUP_READ);
       return;
     }
 

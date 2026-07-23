@@ -1,16 +1,19 @@
-import { Dispatch, MutableRefObject, SetStateAction, useCallback, useRef } from 'react';
+import { Dispatch, MutableRefObject, SetStateAction, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { getConversation, sendMessageStream } from '@/services/chat.service';
 import type { ChatMessage, Conversation, FileUpload, MessageStatus, StreamDoneEvent, StreamReadyEvent } from '@/types/chat.type';
 import type { ChatModelKey } from './chat-models';
 import type { SelectedChatFile } from './useChatUploads';
+import { getLatestMessagePath } from './chat-branches';
 
 type UseChatStreamingInput = {
   activeConversationId: string | null;
+  allMessages?: ChatMessage[];
   historyResetVersionRef: MutableRefObject<number>;
   isStreaming: boolean;
   modelName: ChatModelKey;
+  messages: ChatMessage[];
   prompt: string;
   selectedFiles: SelectedChatFile[];
   cleanupUploadedFiles: (fileUploads: FileUpload[]) => void;
@@ -24,7 +27,7 @@ type UseChatStreamingInput = {
 };
 
 function getConversationMessages(conversation: Conversation): ChatMessage[] {
-  return Array.isArray(conversation.messages) ? conversation.messages : [];
+  return getLatestMessagePath(conversation.messages);
 }
 
 function mergeConversation(current: Conversation, next: Conversation): Conversation {
@@ -65,9 +68,11 @@ function createPendingAssistantMessage(modelName: string): ChatMessage {
 
 export function useChatStreaming({
   activeConversationId,
+  allMessages,
   historyResetVersionRef,
   isStreaming,
   modelName,
+  messages,
   prompt,
   selectedFiles,
   cleanupUploadedFiles,
@@ -82,6 +87,37 @@ export function useChatStreaming({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const streamAbortControllerRef = useRef<AbortController | null>(null);
+  const knownMessagesRef = useRef<Map<string, Map<string, ChatMessage>>>(new Map());
+
+  const rememberMessages = useCallback((conversationId: string, nextMessages: ChatMessage[]) => {
+    const knownMessages = knownMessagesRef.current.get(conversationId) ?? new Map<string, ChatMessage>();
+    nextMessages.forEach((message, index) => {
+      const normalizedMessage = message.parentMessageId === undefined && index > 0
+        ? { ...message, parentMessageId: nextMessages[index - 1]?.id }
+        : message;
+      knownMessages.set(normalizedMessage.id, normalizedMessage);
+    });
+    knownMessagesRef.current.set(conversationId, knownMessages);
+  }, []);
+
+  useEffect(() => {
+    if (activeConversationId) {
+      rememberMessages(activeConversationId, allMessages ?? messages);
+    }
+  }, [activeConversationId, allMessages, messages, rememberMessages]);
+
+  const getKnownMessages = useCallback(() => {
+    const knownMessages = new Map(
+      activeConversationId
+        ? knownMessagesRef.current.get(activeConversationId)
+        : undefined
+    );
+
+    allMessages?.forEach((message) => knownMessages.set(message.id, message));
+    messages.forEach((message) => knownMessages.set(message.id, message));
+
+    return knownMessages;
+  }, [activeConversationId, allMessages, messages]);
 
   const stopGenerating = useCallback(() => {
     streamAbortControllerRef.current?.abort();
@@ -92,9 +128,15 @@ export function useChatStreaming({
     streamAbortControllerRef.current = null;
   }, []);
 
-  const sendPrompt = useCallback(async () => {
-    const content = prompt.trim();
-    const filesToSend = selectedFiles;
+  const sendPrompt = useCallback(async (branchInput?: {
+    question: string;
+    parentMessageId?: string;
+    retryMessageId?: string;
+    baseMessages: ChatMessage[];
+    fileUploads?: FileUpload[];
+  }) => {
+    const content = branchInput ? branchInput.question.trim() : prompt.trim();
+    const filesToSend = branchInput ? [] : selectedFiles;
     const hasPendingUploadsToSend = filesToSend.some((file) => (
       file.status === 'initializing'
       || file.status === 'uploading'
@@ -103,7 +145,7 @@ export function useChatStreaming({
     const hasFailedUploadsToSend = filesToSend.some((file) => file.status === 'error');
     const readyFiles = filesToSend.filter((file) => file.status === 'ready' && file.fileUpload);
 
-    if ((!content && !filesToSend.length) || isStreaming) return;
+    if ((!content && !filesToSend.length && !branchInput?.fileUploads?.length) || isStreaming) return;
     if (hasPendingUploadsToSend) {
       setError('Please wait for the file to finish uploading.');
       return;
@@ -115,7 +157,9 @@ export function useChatStreaming({
 
     const question = content || 'Please analyze the attached file.';
 
-    setPrompt('');
+    if (!branchInput) {
+      setPrompt('');
+    }
     setError('');
     setIsStreaming(true);
     const abortController = new AbortController();
@@ -176,10 +220,18 @@ export function useChatStreaming({
         status: event.userMessage.status ?? 'PENDING',
       };
       assistantMessage = event.assistantMessage;
-      readyUserMessageId = userMessage.id;
 
-      clearSelectedFiles();
-      setMessages((current) => [...current, userMessage, assistantMessage]);
+      if (!branchInput) {
+        clearSelectedFiles();
+      }
+      const nextMessages = branchInput?.retryMessageId
+        ? [...(branchInput.baseMessages ?? messages), assistantMessage]
+        : [...(branchInput?.baseMessages ?? messages), userMessage, assistantMessage];
+      if (!branchInput?.retryMessageId) {
+        readyUserMessageId = userMessage.id;
+      }
+      rememberMessages(event.conversationId, nextMessages);
+      setMessages(nextMessages);
       setActiveConversation((current) => current ?? {
         id: event.conversationId,
         title: question.slice(0, 50),
@@ -231,13 +283,16 @@ export function useChatStreaming({
       setMessages((current) => current.map((message) => (
         message.id === assistantMessage.id ? event.assistantMessage : message
       )));
+      rememberMessages(event.conversationId, [event.assistantMessage]);
 
       try {
         const conversation = await getConversation(event.conversationId);
         if (historyResetVersionRef.current !== resetVersion) return;
 
         setActiveConversation(conversation);
-        setMessages(getConversationMessages(conversation));
+        const refreshedMessages = getConversationMessages(conversation);
+        rememberMessages(conversation.id, refreshedMessages);
+        setMessages(refreshedMessages);
         setConversations((current) => upsertConversationAtTop(current, conversation));
       } catch {
         // The streamed messages are already visible; conversation refresh can be retried later.
@@ -246,13 +301,19 @@ export function useChatStreaming({
 
     let didCompleteStream = false;
     let didStreamFail = false;
-    const fileUploads = readyFiles.flatMap((file) => file.fileUpload ? [file.fileUpload] : []);
+    const newlyUploadedFiles = readyFiles.flatMap((file) => file.fileUpload ? [file.fileUpload] : []);
+    const fileUploads = branchInput?.fileUploads ?? newlyUploadedFiles;
+    const parentMessageId = branchInput
+      ? branchInput.parentMessageId
+      : (activeConversationId ? messages[messages.length - 1]?.id : undefined);
 
     try {
       await sendMessageStream({
         conversationId: activeConversationId,
         question,
         modelName,
+        parentMessageId,
+        retryMessageId: branchInput?.retryMessageId,
         title: activeConversationId ? undefined : question.slice(0, 50),
         fileUploads,
         signal: abortController.signal,
@@ -271,7 +332,7 @@ export function useChatStreaming({
       });
 
       if (didStreamFail && !didCompleteStream && !readyUserMessageId) {
-        cleanupUploadedFiles(fileUploads);
+        cleanupUploadedFiles(newlyUploadedFiles);
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
@@ -283,7 +344,7 @@ export function useChatStreaming({
       }
 
       if (!didCompleteStream && !readyUserMessageId) {
-        cleanupUploadedFiles(fileUploads);
+        cleanupUploadedFiles(newlyUploadedFiles);
       }
     } finally {
       if (streamAbortControllerRef.current === abortController) {
@@ -298,6 +359,7 @@ export function useChatStreaming({
     historyResetVersionRef,
     isStreaming,
     modelName,
+    messages,
     navigate,
     prompt,
     selectedFiles,
@@ -308,11 +370,127 @@ export function useChatStreaming({
     setMessages,
     setPrompt,
     t,
+    rememberMessages,
   ]);
+
+  const editMessage = useCallback(async (messageId: string, content: string) => {
+    if (!activeConversationId || isStreaming) return;
+
+    const messageIndex = messages.findIndex((message) => message.id === messageId);
+    const message = messages[messageIndex];
+    const nextContent = content.trim();
+    if (!message || message.senderType !== 'user' || !nextContent) return;
+
+    rememberMessages(activeConversationId, messages);
+    await sendPrompt({
+      question: nextContent,
+      parentMessageId: message.parentMessageId
+        ?? (messageIndex > 0 ? messages[messageIndex - 1]?.id : undefined),
+      baseMessages: messages.slice(0, messageIndex),
+      fileUploads: message.fileUploads,
+    });
+  }, [activeConversationId, isStreaming, messages, rememberMessages, sendPrompt]);
+
+  const retryAssistantMessage = useCallback(async (messageId: string) => {
+    if (!activeConversationId || isStreaming) return;
+
+    const messageIndex = messages.findIndex((message) => message.id === messageId);
+    const message = messages[messageIndex];
+    const userMessage = messageIndex > 0 ? messages[messageIndex - 1] : undefined;
+    if (
+      !message
+      || message.senderType !== 'assistant'
+      || !userMessage
+      || userMessage.senderType !== 'user'
+      || message.id.startsWith('assistant-')
+    ) {
+      return;
+    }
+
+    rememberMessages(activeConversationId, messages);
+    await sendPrompt({
+      question: userMessage.content || 'Please analyze the attached file.',
+      retryMessageId: message.id,
+      baseMessages: messages.slice(0, messageIndex),
+    });
+  }, [activeConversationId, isStreaming, messages, rememberMessages, sendPrompt]);
+
+  const getMessageBranchInfo = useCallback((messageId: string) => {
+    if (!activeConversationId) return { index: 1, count: 1 };
+
+    const currentMessage = messages.find((message) => message.id === messageId);
+    const knownMessages = getKnownMessages();
+    if (!currentMessage || !knownMessages.size) return { index: 1, count: 1 };
+
+    const siblings = [...knownMessages.values()]
+      .filter((message) => (
+        message.senderType === currentMessage.senderType
+        && message.parentMessageId === currentMessage.parentMessageId
+      ))
+      .sort((left, right) => (
+        new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()
+      ));
+    const currentIndex = siblings.findIndex((message) => message.id === messageId);
+
+    return {
+      index: currentIndex >= 0 ? currentIndex + 1 : 1,
+      count: Math.max(siblings.length, 1),
+    };
+  }, [activeConversationId, getKnownMessages, messages]);
+
+  const switchMessageBranch = useCallback((messageId: string, direction: -1 | 1) => {
+    if (!activeConversationId || isStreaming) return;
+
+    const knownMessages = getKnownMessages();
+    const currentMessage = messages.find((message) => message.id === messageId);
+    if (!knownMessages.size || !currentMessage) return;
+
+    const siblings = [...knownMessages.values()]
+      .filter((message) => (
+        message.senderType === currentMessage.senderType
+        && message.parentMessageId === currentMessage.parentMessageId
+      ))
+      .sort((left, right) => (
+        new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()
+      ));
+    const currentIndex = siblings.findIndex((message) => message.id === messageId);
+    const nextSibling = siblings[currentIndex + direction];
+    if (!nextSibling) return;
+
+    const path: ChatMessage[] = [];
+    const visited = new Set<string>();
+    let cursor: ChatMessage | undefined = nextSibling;
+
+    while (cursor && !visited.has(cursor.id)) {
+      path.unshift(cursor);
+      visited.add(cursor.id);
+      cursor = cursor.parentMessageId ? knownMessages.get(cursor.parentMessageId) : undefined;
+    }
+
+    cursor = nextSibling;
+    while (cursor) {
+      const children = [...knownMessages.values()]
+        .filter((message) => message.parentMessageId === cursor?.id)
+        .sort((left, right) => (
+          new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()
+        ));
+      const nextChild = children[children.length - 1];
+      if (!nextChild || visited.has(nextChild.id)) break;
+      path.push(nextChild);
+      visited.add(nextChild.id);
+      cursor = nextChild;
+    }
+
+    setMessages(path);
+  }, [activeConversationId, getKnownMessages, isStreaming, messages, setMessages]);
 
   return {
     abortStream,
+    editMessage,
+    getMessageBranchInfo,
+    retryAssistantMessage,
     sendPrompt,
+    switchMessageBranch,
     stopGenerating,
   };
 }

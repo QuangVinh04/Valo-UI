@@ -5,6 +5,7 @@ export type ChatMessage = {
   id: string;
   content: string;
   senderType: ChatRole;
+  parentMessageId?: string;
   status?: MessageStatus;
   modelName: string | null;
   createdAt: string;

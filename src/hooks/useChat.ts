@@ -41,6 +41,7 @@ function useChatState() {
   });
   const {
     conversations,
+    activeConversation,
     activeConversationId,
     messages,
     modelName,
@@ -63,13 +64,19 @@ function useChatState() {
   } = conversationsState;
   const {
     abortStream,
+    editMessage,
+    getMessageBranchInfo,
+    retryAssistantMessage,
     sendPrompt,
+    switchMessageBranch,
     stopGenerating,
   } = useChatStreaming({
     activeConversationId,
+    allMessages: activeConversation?.messages,
     historyResetVersionRef,
     isStreaming,
     modelName,
+    messages,
     prompt,
     selectedFiles,
     cleanupUploadedFiles,
@@ -129,6 +136,10 @@ function useChatState() {
     clearChatHistoryState,
     renameChat,
     deleteChat,
+    editMessage,
+    getMessageBranchInfo,
+    retryAssistantMessage,
+    switchMessageBranch,
     stopGenerating,
     sendPrompt,
   }), [
@@ -156,6 +167,10 @@ function useChatState() {
     clearChatHistoryState,
     renameChat,
     deleteChat,
+    editMessage,
+    getMessageBranchInfo,
+    retryAssistantMessage,
+    switchMessageBranch,
     stopGenerating,
     sendPrompt,
     setModelName,

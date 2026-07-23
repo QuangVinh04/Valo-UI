@@ -105,6 +105,8 @@ export async function sendMessageStream(
     conversationId?: string | null;
     question: string;
     modelName: string;
+    parentMessageId?: string;
+    retryMessageId?: string;
     title?: string;
     fileUploads?: FileUpload[];
     signal?: AbortSignal;
@@ -118,6 +120,8 @@ export async function sendMessageStream(
   const body = {
     question: input.question,
     modelName: input.modelName,
+    ...(input.parentMessageId ? { parentMessageId: input.parentMessageId } : {}),
+    ...(input.retryMessageId ? { retryMessageId: input.retryMessageId } : {}),
     ...(input.title ? { title: input.title } : {}),
     ...(input.fileUploads?.length ? { fileUploads: input.fileUploads } : {}),
   };

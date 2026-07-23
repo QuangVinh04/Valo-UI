@@ -2,11 +2,12 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import type { PermissionKey } from '@/constants/permission.constant';
 import { usePermissions } from '@/hooks/usePermissions';
 
 type RequirePermissionProps = {
-  permission?: string;
-  anyOf?: string[];
+  permission?: PermissionKey;
+  anyOf?: PermissionKey[];
   children: ReactNode;
 };
 

@@ -123,6 +123,52 @@
   animation: message-enter 180ms ease-out both;
 }
 
+.user-message {
+  width: min(700px, 100%);
+  margin-left: auto;
+}
+
+.user-message .user-bubble {
+  max-width: 100%;
+}
+
+.user-message-editing {
+  width: min(760px, 100%);
+}
+
+.user-message-editor {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.user-message-editor textarea {
+  width: 100%;
+  min-height: 74px;
+  max-height: 220px;
+  overflow-y: auto;
+  resize: vertical;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  padding: 0.2rem 0.3rem;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.user-message-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.user-message-editor-actions .btn-primary,
+.user-message-editor-actions .btn-cancel {
+  min-width: 88px;
+}
+
 .user-bubble p {
   margin: 0;
 }
@@ -273,8 +319,50 @@
 }
 
 .user-message-actions {
+  min-height: 34px;
+  align-items: center;
   justify-content: flex-end;
   margin-top: 8px;
+}
+
+.user-message-actions > button {
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.user-message:hover .user-message-actions > button,
+.user-message:focus-within .user-message-actions > button {
+  opacity: 1;
+}
+
+.message-branch-navigation {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  color: var(--action-text);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.message-actions .message-branch-navigation .message-branch-button {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  padding: 0;
+}
+
+.message-branch-navigation .message-branch-button:disabled {
+  cursor: default;
+  opacity: 0.32;
+}
+
+.message-branch-navigation span {
+  min-width: 42px;
+  text-align: center;
 }
 
 .message-files {
@@ -791,5 +879,11 @@
   .model-menu {
     right: -3rem;
     width: min(270px, calc(100vw - 1.5rem));
+  }
+}
+
+@media (hover: none) {
+  .user-message-actions > button {
+    opacity: 1;
   }
 }

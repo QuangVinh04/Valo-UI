@@ -2,6 +2,7 @@ import { api } from '@/lib/api-client';
 import { clearAuthState } from '@/lib/auth';
 import { AppError } from '@/errors/app-error';
 import type { ApiResponse } from '@/types/api.type';
+import { isPermissionKey, type PermissionKey } from '@/constants/permission.constant';
 import { handleServiceError } from './service-error.helper';
 import type {
   AuthUser,
@@ -118,7 +119,7 @@ export async function resendOtp(input: ResendOtpPayload): Promise<boolean> {
   }
 }
 
-export async function getCurrentUserPermissions(): Promise<string[]> {
+export async function getCurrentUserPermissions(): Promise<PermissionKey[]> {
   try {
     const response = await api.get<ApiResponse<string[]>>('/auth/permissions');
 
@@ -126,7 +127,7 @@ export async function getCurrentUserPermissions(): Promise<string[]> {
       throw new AppError(response.data.message, response.status, response.data.errors);
     }
 
-    return response.data.data ?? [];
+    return (response.data.data ?? []).filter(isPermissionKey);
   } catch (error) {
     handleServiceError(error);
   }

@@ -6,6 +6,8 @@ import type { GroupListItemDto } from '@/types/group.type';
 import { deleteUsers, getUserById, getUsers } from '@/services/user.service';
 import type { UserDto, UserListItemDto } from '@/types/user.type';
 import { usePermissions } from './usePermissions';
+import { PermissionConstant, type PermissionKey } from '@/constants/permission.constant';
+import { permissionDeniedMessages } from '@/constants/permission-denied-messages';
 
 export type UserModalAction = 'details' | 'add' | 'update' | 'delete' | 'assignGroup';
 
@@ -21,28 +23,25 @@ export const defaultUserFilters: UserFilters = {
   status: 'all',
 };
 
-const userActionPermissions: Record<Exclude<UserModalAction, 'details'>, string> = {
-  add: 'USER_C',
-  update: 'USER_U',
-  delete: 'USER_D',
-  assignGroup: 'USER_U',
+const userActionPermissions: Record<Exclude<UserModalAction, 'details'>, PermissionKey> = {
+  add: PermissionConstant.USER_CREATE,
+  update: PermissionConstant.USER_UPDATE,
+  delete: PermissionConstant.USER_DELETE,
+  assignGroup: PermissionConstant.USER_UPDATE,
 };
 
 const permissionMessages: Record<string, string> = {
-  USER_R: 'admin.users.cannotViewDetails',
-  USER_C: 'admin.users.cannotCreate',
-  USER_U: 'admin.users.cannotUpdate',
-  USER_D: 'admin.users.cannotDelete',
+  ...permissionDeniedMessages,
 };
 
 export function useUsers() {
   const { t } = useTranslation();
   const permissions = usePermissions();
   const toast = useToast();
-  const canReadUsers = permissions.can('USER_R');
-  const canCreateUsers = permissions.can('USER_C');
-  const canUpdateUsers = permissions.can('USER_U');
-  const canDeleteUsers = permissions.can('USER_D');
+  const canReadUsers = permissions.can(PermissionConstant.USER_READ);
+  const canCreateUsers = permissions.can(PermissionConstant.USER_CREATE);
+  const canUpdateUsers = permissions.can(PermissionConstant.USER_UPDATE);
+  const canDeleteUsers = permissions.can(PermissionConstant.USER_DELETE);
   const [modal, setModal] = useState<UserModalAction | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null);
   const [users, setUsers] = useState<UserListItemDto[]>([]);
@@ -68,13 +67,13 @@ export function useUsers() {
       : activeFilters.status === 'active',
   }), [activeFilters]);
 
-  const showPermissionNotice = useCallback((permission: string) => {
+  const showPermissionNotice = useCallback((permission: PermissionKey) => {
     toast.warning(t(permissionMessages[permission] ?? 'common.noPagePermission'));
   }, [t, toast]);
 
   // Tải lại danh sách người dùng theo trang hiện tại và bộ lọc đang áp dụng.
   const loadUsers = useCallback(async (targetPage = page) => {
-    if (!permissions.can('USER_R')) {
+    if (!permissions.can(PermissionConstant.USER_READ)) {
       setUsers([]);
       setTotalItems(0);
       setTotalPages(1);
@@ -103,7 +102,7 @@ export function useUsers() {
 
     // Lần tải đầu cần lấy cả danh sách người dùng và nhóm để phục vụ bộ lọc/gán nhóm.
     async function loadInitialData() {
-      if (!permissions.can('USER_R')) {
+      if (!permissions.can(PermissionConstant.USER_READ)) {
         setUsers([]);
         setTotalItems(0);
         setTotalPages(1);
@@ -175,8 +174,8 @@ export function useUsers() {
 
   async function openUserModal(action: Exclude<UserModalAction, 'add' | 'assignGroup'>, user: UserListItemDto) {
     // Mỗi modal cần dữ liệu chi tiết mới nhất để tránh sửa/xóa trên dữ liệu danh sách bị cũ.
-    if (action === 'details' && permissions.cannot('USER_R')) {
-      showPermissionNotice('USER_R');
+    if (action === 'details' && permissions.cannot(PermissionConstant.USER_READ)) {
+      showPermissionNotice(PermissionConstant.USER_READ);
       return;
     }
 

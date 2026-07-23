@@ -7,6 +7,7 @@ import { ChatProvider, useChat } from '@/hooks/useChat';
 import { usePermissions } from '@/hooks/usePermissions';
 import ChatSidebarRecents from '@/pages/chat/components/ChatSidebarRecents';
 import SearchConversationsModal from '@/pages/chat/components/SearchConversationsModal';
+import { permissionPolicy } from '@/constants/permission-policies';
 
 const navItems = [
   { to: '/users', icon: Users, labelKey: 'layout.nav.users' },
@@ -56,11 +57,11 @@ function AppLayoutContent() {
   const avatarInitial = accountDisplayName.trim().charAt(0).toUpperCase() || 'U';
   const visibleNavItems = navItems.filter((item) => {
     if (item.to === '/users') {
-      return permissions.any(['USER_R']);
+      return permissions.any(permissionPolicy.navigation.users);
     }
 
     if (item.to === '/groups') {
-      return permissions.any(['GROUP_R']);
+      return permissions.any(permissionPolicy.navigation.groups);
     }
 
     return true;

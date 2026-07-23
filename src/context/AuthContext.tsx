@@ -9,15 +9,16 @@ import {
 } from '@/services/auth.service';
 import { getCurrentUser } from '@/services/user.service';
 import type { AuthUser } from '@/types/auth.type';
+import type { PermissionKey } from '@/constants/permission.constant';
 
 type AuthContextValue = {
   isAuthenticated: boolean;
   authLoading: boolean;
   user: StoredAuthUser | null;
-  permissions: string[];
+  permissions: PermissionKey[];
   permissionsLoading: boolean;
-  hasPermission: (permission: string) => boolean;
-  hasAnyPermission: (permissions: string[]) => boolean;
+  hasPermission: (permission: PermissionKey) => boolean;
+  hasAnyPermission: (permissions: PermissionKey[]) => boolean;
   refreshAuth: () => void;
   login: (username: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
@@ -33,7 +34,7 @@ type AuthState = {
   isAuthenticated: boolean;
   authLoading: boolean;
   user: StoredAuthUser | null;
-  permissions: string[];
+  permissions: PermissionKey[];
   permissionsLoading: boolean;
 };
 

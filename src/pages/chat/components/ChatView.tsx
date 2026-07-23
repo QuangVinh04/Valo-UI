@@ -1,6 +1,22 @@
 import { FormEvent, Fragment, ReactElement, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, ChevronDown, Copy, Download, FileText, Image, Loader2, Paperclip, Send, Square, X } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Download,
+  FileText,
+  Image,
+  Loader2,
+  Paperclip,
+  Pencil,
+  RotateCcw,
+  Send,
+  Square,
+  X,
+} from 'lucide-react';
 import IconButton from '@/components/common/IconButton';
 import { useToast } from '@/context/ToastContext';
 import { chatModelOptions, type ChatModelKey, type SelectedChatFile, useChat } from '@/hooks/useChat';
@@ -307,9 +323,18 @@ function ChatMessageItem({
   isSyntheticError?: boolean;
 }) {
   const { t } = useTranslation();
+  const chat = useChat();
   const [copyLabelKey, setCopyLabelKey] = useState('chat.copyResponse');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(message.content);
 
   const toast = useToast();
+  const branchInfo = chat.getMessageBranchInfo(message.id);
+
+  useEffect(() => {
+    setEditContent(message.content);
+    setIsEditing(false);
+  }, [message.content, message.id]);
 
   const handleExportDocx = async () => {
     try {
@@ -336,13 +361,82 @@ function ChatMessageItem({
     const status = message.status ?? 'SUCCESS';
 
     return (
-      <>
-        <div className={`user-bubble ${status === 'FAILED' ? 'user-bubble-failed' : ''}`}>
-          {message.content && <p>{message.content}</p>}
-          <FileUploadList fileUploads={message.fileUploads} />
-        </div>
+      <div className={`user-message ${isEditing ? 'user-message-editing' : ''}`}>
+        {isEditing ? (
+          <form
+            className="user-message-editor panel-dark"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!editContent.trim() || editContent.trim() === message.content.trim()) return;
+              setIsEditing(false);
+              void chat.editMessage(message.id, editContent);
+            }}
+          >
+            <textarea
+              autoFocus
+              value={editContent}
+              onChange={(event) => setEditContent(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  setEditContent(message.content);
+                  setIsEditing(false);
+                }
+              }}
+              aria-label={t('chat.editMessage')}
+              rows={Math.min(Math.max(editContent.split('\n').length, 2), 8)}
+            />
+            <FileUploadList fileUploads={message.fileUploads} />
+            <div className="user-message-editor-actions">
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => {
+                  setEditContent(message.content);
+                  setIsEditing(false);
+                }}
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={!editContent.trim() || editContent.trim() === message.content.trim()}
+              >
+                {t('chat.sendPrompt')}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className={`user-bubble ${status === 'FAILED' ? 'user-bubble-failed' : ''}`}>
+            {message.content && <p>{message.content}</p>}
+            <FileUploadList fileUploads={message.fileUploads} />
+          </div>
+        )}
+        {!isEditing && (
+          <div className="message-actions user-message-actions">
+            {branchInfo.count > 1 && (
+              <MessageBranchNavigation
+                index={branchInfo.index}
+                count={branchInfo.count}
+                onPrevious={() => chat.switchMessageBranch(message.id, -1)}
+                onNext={() => chat.switchMessageBranch(message.id, 1)}
+              />
+            )}
+            <IconButton
+              icon={Copy}
+              label={t(copyLabelKey)}
+              onClick={() => void copyMessage()}
+            />
+            <IconButton
+              icon={Pencil}
+              label={t('chat.editMessage')}
+              onClick={() => setIsEditing(true)}
+              disabled={chat.isStreaming || status === 'PENDING'}
+            />
+          </div>
+        )}
         <div className="msg-time">{formatTime(message.createdAt)}</div>
-      </>
+      </div>
     );
   }
 
@@ -352,6 +446,9 @@ function ChatMessageItem({
     message.streamStatus === 'error' || (message.status === 'FAILED' && !message.isUserStopped) ? 'assistant-msg-error' : '',
   ].filter(Boolean).join(' ');
   const canExportMessage = message.senderType === 'assistant'
+    && !isSyntheticError
+    && !message.id.startsWith('assistant-');
+  const canRetryMessage = message.senderType === 'assistant'
     && !isSyntheticError
     && !message.id.startsWith('assistant-');
 
@@ -382,7 +479,22 @@ function ChatMessageItem({
             </div>
             {message.content && (
               <div className="message-actions">
+                {branchInfo.count > 1 && (
+                  <MessageBranchNavigation
+                    index={branchInfo.index}
+                    count={branchInfo.count}
+                    onPrevious={() => chat.switchMessageBranch(message.id, -1)}
+                    onNext={() => chat.switchMessageBranch(message.id, 1)}
+                  />
+                )}
                 <IconButton icon={Copy} label={t(copyLabelKey)} onClick={() => void copyMessage()} />
+                {canRetryMessage && (
+                  <IconButton
+                    icon={RotateCcw}
+                    label={t('chat.retryResponse')}
+                    onClick={() => void chat.retryAssistantMessage(message.id)}
+                  />
+                )}
                 {canExportMessage && (
                   <IconButton
                     icon={Download}
@@ -395,6 +507,42 @@ function ChatMessageItem({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function MessageBranchNavigation({
+  index,
+  count,
+  onPrevious,
+  onNext,
+}: {
+  index: number;
+  count: number;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="message-branch-navigation" aria-label={t('chat.messageVersions')}>
+      <IconButton
+        icon={ChevronLeft}
+        size={16}
+        className="message-branch-button"
+        onClick={onPrevious}
+        disabled={index <= 1}
+        label={t('chat.previousMessageVersion')}
+      />
+      <span>{index} / {count}</span>
+      <IconButton
+        icon={ChevronRight}
+        size={16}
+        className="message-branch-button"
+        onClick={onNext}
+        disabled={index >= count}
+        label={t('chat.nextMessageVersion')}
+      />
     </div>
   );
 }

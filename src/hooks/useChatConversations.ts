@@ -4,6 +4,7 @@ import { defaultModel, normalizeModelName } from './chat-models';
 import type { SelectedChatFile } from './useChatUploads';
 import { deleteConversation, getConversation, getConversations, renameConversation } from '@/services/chat.service';
 import type { ChatMessage, Conversation } from '@/types/chat.type';
+import { getLatestMessagePath } from './chat-branches';
 
 type UseChatConversationsInput = {
   selectedFilesRef: MutableRefObject<SelectedChatFile[]>;
@@ -14,7 +15,7 @@ type UseChatConversationsInput = {
 };
 
 function getConversationMessages(conversation: Conversation): ChatMessage[] {
-  return Array.isArray(conversation.messages) ? conversation.messages : [];
+  return getLatestMessagePath(conversation.messages);
 }
 
 function mergeConversation(current: Conversation, next: Conversation): Conversation {
